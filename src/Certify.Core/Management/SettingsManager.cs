@@ -236,7 +236,6 @@ namespace Certify.Management
             CoreAppSettings.Current.IsInstanceRegistered = prefs.IsInstanceRegistered;
             CoreAppSettings.Current.Language = prefs.Language;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
-            CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
             CoreAppSettings.Current.DefaultCertificateStore = prefs.DefaultCertificateStore;
 
             CoreAppSettings.Current.DefaultCertificateAuthority = prefs.DefaultCertificateAuthority;
@@ -245,14 +244,10 @@ namespace Certify.Management
             CoreAppSettings.Current.DefaultKeyCredentials = prefs.DefaultKeyCredentials;
             CoreAppSettings.Current.UseModernPFXAlgs = prefs.UseModernPFXAlgs;
 
-            if (prefs.CertificateCleanupMode == null)
-            {
-                CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
-            }
-            else
-            {
-                CoreAppSettings.Current.CertificateCleanupMode = (CertificateCleanupMode)prefs.CertificateCleanupMode;
-            }
+            // the mode is the setting users choose, the enabled flag is what cleanup is gated on, so keep the flag in step
+            var cleanupMode = prefs.CertificateCleanupMode ?? GetLegacyCertificateCleanupMode(prefs.EnableCertificateCleanup);
+            CoreAppSettings.Current.CertificateCleanupMode = cleanupMode;
+            CoreAppSettings.Current.EnableCertificateCleanup = cleanupMode != CertificateCleanupMode.None;
 
             CoreAppSettings.Current.EnableStatusReporting = prefs.EnableStatusReporting;
             CoreAppSettings.Current.NotificationEmail = prefs.NotificationEmail;
@@ -333,6 +328,51 @@ namespace Certify.Management
             return prefs;
         }
 
+        /// <summary>
+        /// Apply a core settings update sent from the management hub to this instance's current preferences. Only the
+        /// settings the hub manages are taken from the update, the rest are local to the instance, and a hub on a
+        /// different version may not know about them at all.
+        /// </summary>
+        public static void ApplyHubSettingsUpdate(Models.Preferences prefs, Models.Preferences update)
+        {
+            prefs.CertificateCleanupMode = update.CertificateCleanupMode;
+            prefs.EnableCertificateCleanup = update.EnableCertificateCleanup;
+            prefs.DefaultACMERetryInterval = update.DefaultACMERetryInterval;
+            prefs.DefaultCertificateAuthority = update.DefaultCertificateAuthority;
+            prefs.DefaultCertificateStore = update.DefaultCertificateStore;
+            prefs.DefaultKeyType = update.DefaultKeyType;
+            prefs.CsrCommonNameMode = update.CsrCommonNameMode;
+            prefs.DisableARIChecks = update.DisableARIChecks;
+
+            prefs.EnableAppTelematics = update.EnableAppTelematics;
+            prefs.EnableAutomaticCAFailover = update.EnableAutomaticCAFailover;
+            prefs.EnableExternalCertManagers = update.EnableExternalCertManagers;
+            prefs.EnableStatusReporting = update.EnableStatusReporting;
+            prefs.NotificationEmail = update.NotificationEmail;
+            prefs.EnableValidationProxyAPI = update.EnableValidationProxyAPI;
+            prefs.EnableHttpChallengeServer = update.EnableHttpChallengeServer;
+            prefs.IsInstanceRegistered = update.IsInstanceRegistered;
+
+            prefs.NtpServer = update.NtpServer;
+            prefs.RenewalIntervalDays = update.RenewalIntervalDays;
+            prefs.RenewalIntervalMode = update.RenewalIntervalMode;
+            prefs.StoreCertificateIntermediates = update.StoreCertificateIntermediates;
+            prefs.UseModernPFXAlgs = update.UseModernPFXAlgs;
+
+            prefs.CertificateManagers = update.CertificateManagers;
+
+            prefs.MaintenanceWindows = update.MaintenanceWindows;
+            prefs.DefaultMaintenanceWindowId = update.DefaultMaintenanceWindowId;
+        }
+
+        /// <summary>
+        /// Cleanup mode for settings which predate it and only have the enabled flag
+        /// </summary>
+        private static CertificateCleanupMode GetLegacyCertificateCleanupMode(bool isCleanupEnabled)
+        {
+            return isCleanupEnabled ? CertificateCleanupMode.AfterExpiry : CertificateCleanupMode.None;
+        }
+
         public static void SaveAppSettings()
         {
             var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
@@ -404,10 +444,7 @@ namespace Certify.Management
                         CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);
 
                         // init new settings if not set
-                        if (CoreAppSettings.Current.CertificateCleanupMode == null)
-                        {
-                            CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
-                        }
+                        CoreAppSettings.Current.CertificateCleanupMode ??= GetLegacyCertificateCleanupMode(CoreAppSettings.Current.EnableCertificateCleanup);
                     }
                 }
                 else
