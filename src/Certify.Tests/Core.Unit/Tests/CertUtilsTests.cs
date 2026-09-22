@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Certify.Shared.Core.Utils.PKI;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -271,6 +272,62 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.Contains("-----BEGIN", keyPem, "Should contain PEM BEGIN marker");
             Assert.Contains("PRIVATE KEY", keyPem, "Should contain PRIVATE KEY marker");
             Assert.Contains("-----END", keyPem, "Should contain PEM END marker");
+        }
+
+        [TestMethod, Description("Test private key extraction as a password protected PKCS#8 key")]
+        public void TestGetCertKeyPemWithExportPassword()
+        {
+            var pfxBytes = File.ReadAllBytes("Assets/dummycert.pfx");
+
+            var keyPem = CertUtils.GetCertKeyPem(pfxBytes, TEST_PASSWORD, exportPwd: "export-pwd");
+
+            Assert.Contains("-----BEGIN ENCRYPTED PRIVATE KEY-----", keyPem, "Key should be encrypted PKCS#8");
+
+            using var cert = X509CertificateLoader.LoadPkcs12(pfxBytes, TEST_PASSWORD, X509KeyStorageFlags.EphemeralKeySet);
+            using AsymmetricAlgorithm publicKey = (AsymmetricAlgorithm)cert.GetRSAPublicKey() ?? cert.GetECDsaPublicKey();
+            using AsymmetricAlgorithm privateKey = publicKey is RSA ? RSA.Create() : ECDsa.Create();
+
+            Assert.Throws<CryptographicException>(() => privateKey.ImportFromEncryptedPem(keyPem, "wrong-pwd"), "Key should not decrypt with the wrong password");
+
+            privateKey.ImportFromEncryptedPem(keyPem, "export-pwd");
+
+            CollectionAssert.AreEqual(publicKey.ExportSubjectPublicKeyInfo(), privateKey.ExportSubjectPublicKeyInfo(), "Decrypted key should match the certificate public key");
+        }
+
+        [TestMethod, Description("Test PEM export with a key export password only encrypts the private key")]
+        public void TestExportWithPrivateKeyAndExportPassword()
+        {
+            var pfxBytes = File.ReadAllBytes("Assets/dummycert.pfx");
+
+            var pem = CertUtils.GetCertComponentsAsPEMString(pfxBytes, TEST_PASSWORD, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate, keyExportPwd: "export-pwd");
+
+            Assert.Contains("-----BEGIN ENCRYPTED PRIVATE KEY-----", pem, "Key should be encrypted PKCS#8");
+            Assert.IsGreaterThanOrEqualTo(1, CountPemCertificates(pem), "Should contain the end entity certificate");
+        }
+
+        [TestMethod, Description("Test PFX re-export with a new password")]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void TestGetPfxWithNewPassword(bool useModernAlgorithms)
+        {
+            var pfxBytes = File.ReadAllBytes("Assets/dummycert.pfx");
+
+            // re-encrypt twice so a source password other than blank is also covered
+            var firstPfx = CertUtils.GetPfxWithNewPassword(pfxBytes, TEST_PASSWORD, "first-pwd", useModernAlgorithms);
+            var newPfx = CertUtils.GetPfxWithNewPassword(firstPfx, "first-pwd", "export-pwd", useModernAlgorithms);
+
+            Assert.Throws<CryptographicException>(() => X509CertificateLoader.LoadPkcs12(newPfx, "first-pwd", X509KeyStorageFlags.EphemeralKeySet), "PFX should not load with the previous password");
+
+            using var original = X509CertificateLoader.LoadPkcs12(pfxBytes, TEST_PASSWORD, X509KeyStorageFlags.EphemeralKeySet);
+            using var exported = X509CertificateLoader.LoadPkcs12(newPfx, "export-pwd", X509KeyStorageFlags.EphemeralKeySet);
+
+            Assert.AreEqual(original.Thumbprint, exported.Thumbprint);
+            Assert.IsTrue(exported.HasPrivateKey, "Exported PFX should include the private key");
+
+            var originalCollection = X509CertificateLoader.LoadPkcs12Collection(pfxBytes, TEST_PASSWORD, X509KeyStorageFlags.EphemeralKeySet);
+            var exportedCollection = X509CertificateLoader.LoadPkcs12Collection(newPfx, "export-pwd", X509KeyStorageFlags.EphemeralKeySet);
+
+            Assert.HasCount(originalCollection.Count, exportedCollection, "Exported PFX should include the same certificates");
         }
 
         [TestMethod, Description("Test ARI CertID generation from X509Certificate2")]

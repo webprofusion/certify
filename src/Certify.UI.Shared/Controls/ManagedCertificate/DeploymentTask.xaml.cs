@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using Certify.Config;
 using Certify.Models.Config;
 using Certify.UI.Shared;
@@ -103,6 +105,39 @@ namespace Certify.UI.Controls.ManagedCertificate
                 // create a new challenge config based on new credentialsSelectedItem
                 EditModel.SelectedItem.ChallengeProvider = credential.ProviderType;
                 EditModel.SelectedItem.ChallengeCredentialKey = credential.StorageKey;
+            }
+        }
+
+        private void AddParameterCredential_Click(object sender, RoutedEventArgs e)
+        {
+            // add a new stored credential for a parameter of type StoredCredential, then select it
+            var button = (Button)sender;
+            var parameter = (ProviderParameter)button.DataContext;
+
+            var cred = new Windows.EditCredential
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            cred.Item.ProviderType = parameter.ExtendedConfig;
+
+            cred.ShowDialog();
+
+            if (cred.Item?.StorageKey != null)
+            {
+                var options = ((Panel)button.Parent).Children.OfType<ComboBox>().First();
+
+                BindingOperations.GetBindingExpression(options, ItemsControl.ItemsSourceProperty)?.UpdateTarget();
+                options.SelectedValue = cred.Item.StorageKey;
+            }
+        }
+
+        private void DeploymentTaskParams_SourceUpdated(object sender, DataTransferEventArgs e)
+        {
+            // a parameter value was edited, update which parameters apply. Deferred as this can regenerate the control raising the event.
+            if ((e.TargetObject as FrameworkElement)?.DataContext is ProviderParameter parameter)
+            {
+                Dispatcher.BeginInvoke(() => EditModel.OnParameterValueChanged(parameter));
             }
         }
 

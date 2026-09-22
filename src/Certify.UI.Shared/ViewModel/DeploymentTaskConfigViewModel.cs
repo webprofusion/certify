@@ -257,11 +257,7 @@ namespace Certify.UI.ViewModel
 
             if (EditableParameters != null)
             {
-                SelectedItem.Parameters = new List<ProviderParameterSetting>();
-                foreach (var p in EditableParameters)
-                {
-                    SelectedItem.Parameters.Add(new ProviderParameterSetting(p.Key, p.Value));
-                }
+                SelectedItem.Parameters = ProviderParameter.GetApplicableSettings(EditableParameters);
             }
         }
 
@@ -313,6 +309,21 @@ namespace Certify.UI.ViewModel
                 {
                     SelectedItem.Parameters.Remove(r);
                 }
+            }
+
+            // only show parameters which apply given the current values of the parameters they depend on
+            var parameters = EditableParameters;
+            CollectionViewSource.GetDefaultView(parameters).Filter = p => ((ProviderParameter)p).IsApplicable(parameters);
+        }
+
+        /// <summary>
+        /// Call when a parameter value has been edited, to update which parameters apply
+        /// </summary>
+        internal void OnParameterValueChanged(ProviderParameter parameter)
+        {
+            if (parameter != null && EditableParameters?.Any(p => p.DependsOnKey == parameter.Key) == true)
+            {
+                CollectionViewSource.GetDefaultView(EditableParameters).Refresh();
             }
         }
 

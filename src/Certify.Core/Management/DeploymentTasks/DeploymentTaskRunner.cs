@@ -25,7 +25,7 @@ namespace Certify.Core.Management.DeploymentTasks
     {
         private readonly List<IDeploymentTaskProviderPlugin> _deploymentTaskProviders;
         private readonly ICredentialsManager _credentialsManager;
-        private readonly string _powershellExecutionPolicy;
+        private readonly DeploymentContext _context;
         private readonly TelemetryManager _telemetry;
         private readonly LogLevel _logLevel;
 
@@ -37,19 +37,19 @@ namespace Certify.Core.Management.DeploymentTasks
         /// used to unlock stored credentials for tasks which reference one. Only required when a task in the list sets
         /// ChallengeCredentialKey
         /// </param>
-        /// <param name="powershellExecutionPolicy">execution policy passed to tasks which run powershell</param>
+        /// <param name="context">service settings passed to each task (e.g. powershell execution policy)</param>
         /// <param name="telemetry">optional, for task completion/failure events</param>
         /// <param name="logLevel">level for the per-item logger created when the caller does not supply a log</param>
         public DeploymentTaskRunner(
             List<IDeploymentTaskProviderPlugin> deploymentTaskProviders,
             ICredentialsManager credentialsManager,
-            string powershellExecutionPolicy,
+            DeploymentContext context,
             TelemetryManager telemetry = null,
             LogLevel logLevel = LogLevel.Information)
         {
             _deploymentTaskProviders = deploymentTaskProviders;
             _credentialsManager = credentialsManager;
-            _powershellExecutionPolicy = powershellExecutionPolicy;
+            _context = context;
             _telemetry = telemetry;
             _logLevel = logLevel;
         }
@@ -264,7 +264,7 @@ namespace Certify.Core.Management.DeploymentTasks
                     task.TaskConfig.DateLastExecuted = DateTimeOffset.UtcNow;
 
                     wasTaskExecuted = true;
-                    taskResults = await task.Execute(log, _credentialsManager, result, new DeploymentContext { PowershellExecutionPolicy = _powershellExecutionPolicy }, isPreviewOnly: isPreviewOnly, cancellationToken: CancellationToken.None);
+                    taskResults = await task.Execute(log, _credentialsManager, result, _context, isPreviewOnly: isPreviewOnly, cancellationToken: CancellationToken.None);
 
                     if (!isPreviewOnly)
                     {

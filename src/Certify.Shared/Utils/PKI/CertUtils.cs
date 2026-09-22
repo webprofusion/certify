@@ -3,9 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Org.BouncyCastle.Asn1.Nist;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 
 namespace Certify.Shared.Core.Utils.PKI
@@ -24,6 +27,8 @@ namespace Certify.Shared.Core.Utils.PKI
 
     public static class CertUtils
     {
+        private const int EncryptedKeyIterationCount = 100_000;
+
         public static string CertDerToPem(byte[] der)
         {
             using var writer = new StringWriter();
@@ -41,14 +46,15 @@ namespace Certify.Shared.Core.Utils.PKI
         /// <param name="pwd">private key password</param>
         /// <param name="flags">Flags for component types to export</param>
         /// <param name="strictExport">If true, only export certificates from the PFX file, do not include certificates from the local certificate store</param>
+        /// <param name="keyExportPwd">If set, the private key is exported as an encrypted PKCS#8 key protected by this password</param>
         /// <returns></returns>
-        public static byte[] GetCertComponentsAsPEMBytes(byte[] pfxData, string pwd, ExportFlags flags, bool strictExport = false)
+        public static byte[] GetCertComponentsAsPEMBytes(byte[] pfxData, string pwd, ExportFlags flags, bool strictExport = false, string keyExportPwd = null)
         {
-            var pem = GetCertComponentsAsPEMString(pfxData, pwd, flags, strictExport);
+            var pem = GetCertComponentsAsPEMString(pfxData, pwd, flags, strictExport, keyExportPwd);
             return System.Text.Encoding.ASCII.GetBytes(pem);
         }
 
-        public static string GetCertComponentsAsPEMString(byte[] pfxData, string pwd, ExportFlags flags, bool strictExport = false)
+        public static string GetCertComponentsAsPEMString(byte[] pfxData, string pwd, ExportFlags flags, bool strictExport = false, string keyExportPwd = null)
         {
             // See also https://www.digicert.com/ssl-support/pem-ssl-creation.htm
 
@@ -78,7 +84,7 @@ namespace Certify.Shared.Core.Utils.PKI
 
                 if (flags.HasFlag(ExportFlags.PrivateKey))
                 {
-                    var key = GetCertKeyPem(pfxData, pwd);
+                    var key = GetCertKeyPem(pfxData, pwd, keyExportPwd);
                     writer.Write(key);
                 }
 
@@ -289,8 +295,9 @@ namespace Certify.Shared.Core.Utils.PKI
         /// </summary>
         /// <param name="pfxData"></param>
         /// <param name="pwd"></param>
+        /// <param name="exportPwd">If set, the key is written as an encrypted PKCS#8 key (PBES2, AES-256-CBC, PBKDF2 HMAC-SHA256) protected by this password</param>
         /// <returns></returns>
-        public static string GetCertKeyPem(byte[] pfxData, string pwd)
+        public static string GetCertKeyPem(byte[] pfxData, string pwd, string exportPwd = null)
         {
             var pkcsStore = new Pkcs12StoreBuilder().Build();
             pkcsStore.Load(new MemoryStream(pfxData), pwd.ToCharArray());
@@ -304,9 +311,60 @@ namespace Certify.Shared.Core.Utils.PKI
 
             using (var writer = new StringWriter())
             {
-                new PemWriter(writer).WriteObject(key);
+                if (string.IsNullOrEmpty(exportPwd))
+                {
+                    new PemWriter(writer).WriteObject(key);
+                }
+                else
+                {
+                    var random = new SecureRandom();
+                    var salt = new byte[16];
+                    random.NextBytes(salt);
+
+                    var encryptedKey = EncryptedPrivateKeyInfoFactory.CreateEncryptedPrivateKeyInfo(NistObjectIdentifiers.IdAes256Cbc, PkcsObjectIdentifiers.IdHmacWithSha256, exportPwd.ToCharArray(), salt, EncryptedKeyIterationCount, random, key);
+
+                    new PemWriter(writer).WriteObject(new Org.BouncyCastle.Utilities.IO.Pem.PemObject("ENCRYPTED PRIVATE KEY", encryptedKey.GetEncoded()));
+                }
+
                 writer.Flush();
                 return writer.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Re-encrypt PFX data with a different password
+        /// </summary>
+        /// <param name="pfxData"></param>
+        /// <param name="pwd">current password</param>
+        /// <param name="newPwd">password to protect the resulting PFX</param>
+        /// <param name="useModernAlgorithms">If true, private keys are encrypted using AES-256 (not supported by Windows Server 2016 and older), otherwise 3DES</param>
+        /// <returns></returns>
+        public static byte[] GetPfxWithNewPassword(byte[] pfxData, string pwd, string newPwd, bool useModernAlgorithms)
+        {
+            var builder = new Pkcs12StoreBuilder();
+
+            builder.SetCertAlgorithm(PkcsObjectIdentifiers.PbeWithShaAnd3KeyTripleDesCbc);
+
+            if (useModernAlgorithms)
+            {
+                builder.SetKeyAlgorithm(NistObjectIdentifiers.IdAes256Cbc, PkcsObjectIdentifiers.IdHmacWithSha256);
+            }
+            else
+            {
+                builder.SetKeyAlgorithm(PkcsObjectIdentifiers.PbeWithShaAnd3KeyTripleDesCbc);
+            }
+
+            var pkcsStore = builder.Build();
+
+            using (var input = new MemoryStream(pfxData))
+            {
+                pkcsStore.Load(input, (pwd ?? "").ToCharArray());
+            }
+
+            using (var output = new MemoryStream())
+            {
+                pkcsStore.Save(output, (newPwd ?? "").ToCharArray(), new SecureRandom());
+                return output.ToArray();
             }
         }
 

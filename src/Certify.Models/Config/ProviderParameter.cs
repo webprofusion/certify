@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace Certify.Models.Config
@@ -13,6 +14,9 @@ namespace Certify.Models.Config
         Select = 4,
         MultiSelect = 5,
         RadioButton = 6,
+        /// <summary>
+        /// Value is the storage key of a stored credential, ExtendedConfig is the required credential type (e.g. StandardAuthTypes.STANDARD_AUTH_PASSWORD)
+        /// </summary>
         StoredCredential = 8,
         Integer = 16
     }
@@ -57,7 +61,45 @@ namespace Certify.Models.Config
         /// </summary>
         public string? ExtendedConfig { get; set; }
 
+        /// <summary>
+        /// Optional key of another parameter this parameter depends on. If set, this parameter only applies (is shown, and its value kept on save) while that parameter has one of the <see cref="DependsOnValues"/>
+        /// </summary>
+        public string? DependsOnKey { get; set; }
+
+        /// <summary>
+        /// Values of the <see cref="DependsOnKey"/> parameter for which this parameter applies
+        /// </summary>
+        public string[]? DependsOnValues { get; set; }
+
         // NOTE: this object is cloneable, so any new properties have to be added to Clone()
+
+        /// <summary>
+        /// Returns true if this parameter applies given the current values of the other parameters in its set (see <see cref="DependsOnKey"/>)
+        /// </summary>
+        public bool IsApplicable(IEnumerable<ProviderParameter> parameters)
+        {
+            if (string.IsNullOrEmpty(DependsOnKey))
+            {
+                return true;
+            }
+
+            var dependencyValue = parameters.FirstOrDefault(p => p?.Key == DependsOnKey)?.Value;
+
+            return dependencyValue != null && DependsOnValues?.Contains(dependencyValue) == true;
+        }
+
+        /// <summary>
+        /// Get the settings to store for a set of edited parameters. Parameters which do not currently apply are omitted, so a value which no longer applies is cleared rather than kept
+        /// </summary>
+        public static List<ProviderParameterSetting> GetApplicableSettings(IEnumerable<ProviderParameter> parameters)
+        {
+            var list = parameters.Where(p => p != null).ToList();
+
+            return list
+                .Where(p => p.IsApplicable(list))
+                .Select(p => new ProviderParameterSetting(p.Key!, p.Value!))
+                .ToList();
+        }
 
         /// <summary>
         /// Returns a parsed version of OptionsList converted into a key/value dictionary
@@ -108,6 +150,8 @@ namespace Certify.Models.Config
                 OptionsList = OptionsList,
                 Type = Type,
                 ExtendedConfig = ExtendedConfig,
+                DependsOnKey = DependsOnKey,
+                DependsOnValues = DependsOnValues?.ToArray(),
                 IsMultiLine = IsMultiLine,
                 IsRequired = IsRequired
             };

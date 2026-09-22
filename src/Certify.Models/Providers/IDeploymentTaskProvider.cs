@@ -13,6 +13,11 @@ namespace Certify.Providers.DeploymentTasks
     public class DeploymentContext
     {
         public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
+
+        /// <summary>
+        /// If true, tasks which build PFX files should use modern encryption algorithms (as per the UseModernPFXAlgs preference)
+        /// </summary>
+        public bool UseModernPFXAlgs { get; set; }
     }
 
     public class DeploymentTaskExecutionParams
