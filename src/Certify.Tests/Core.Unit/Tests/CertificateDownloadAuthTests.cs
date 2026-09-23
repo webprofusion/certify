@@ -29,10 +29,10 @@ namespace Certify.Core.Tests.Unit
     /// controller rather than against the access control primitives underneath it.
     ///
     /// This endpoint hands out private keys and has two quite different authorization routes: an ordinary caller
-    /// authorized by their own roles, which is additionally subject to the domain restrictions on those roles, and a
-    /// managed instance collecting a certificate it subscribes to, which authorizes by signed request and is
-    /// deliberately not domain scoped. Whether each route applies the right one of those is a property of the
-    /// endpoint's wiring, so it is only visible from here.
+    /// authorized by their own roles, and a managed instance collecting a certificate it subscribes to, which
+    /// authorizes by signed request. Both are then subject to the domain restrictions on the roles of the principal
+    /// they were authorized as. Whether each route applies the right ones of those is a property of the endpoint's
+    /// wiring, so it is only visible from here.
     /// </summary>
     [TestClass]
     public class CertificateDownloadAuthTests
@@ -103,7 +103,8 @@ namespace Certify.Core.Tests.Unit
         /// <summary>
         /// A managed instance collecting a subscribed certificate holds the joining credentials, which do not grant
         /// certificate download. It authorizes by a separate route: the joining action, then a valid request
-        /// signature, then its own principal's access to that specific certificate.
+        /// signature, then its own principal's access to that specific certificate, and finally that principal's
+        /// domain restrictions against the identifiers on the certificate.
         /// </summary>
         [TestMethod]
         [Description("A managed instance with a valid signature and access to the certificate gets it")]
@@ -145,14 +146,31 @@ namespace Certify.Core.Tests.Unit
             AssertUnauthorized(result);
         }
 
+        [TestMethod]
+        [Description("A managed instance restricted to a domain gets a subscribed certificate within that scope")]
+        public async Task Download_SignedManagedInstance_ReturnsSubscribedCertificateWithinScope()
+        {
+            var client = CreateClient(
+                domainRestriction: "*.example.com",
+                grantsDownload: false,
+                grantsJoin: true,
+                instancePrincipalMayDownload: true);
+
+            var controller = CreateController(client.Object, JoiningPrincipal(), signRequest: true);
+
+            var result = await controller.Download(InstanceId, ManagedCertId, "pfx");
+
+            AssertCertificateReturned(result);
+        }
+
         /// <summary>
-        /// The subscription route is deliberately not domain scoped: an instance collects the certificates it has
-        /// been subscribed to, and which those are is decided by the tag scope on its role rather than by domain
-        /// rules. A domain restriction on the joining principal must not silently start filtering them.
+        /// The tag scope on the instance's role decides which certificates it is subscribed to, but a domain
+        /// restriction on that role narrows it further, and the subscription listing already leaves out the
+        /// certificates outside it. Knowing an instance id and a managed cert id must not get past that.
         /// </summary>
         [TestMethod]
-        [Description("A managed instance is not subject to domain restrictions on the subscription route")]
-        public async Task Download_SignedManagedInstance_IsNotDomainScoped()
+        [Description("A managed instance restricted to a different domain is refused a certificate its tag scope allows")]
+        public async Task Download_SignedManagedInstance_IsRefusedOutsideItsDomainScope()
         {
             var client = CreateClient(
                 domainRestriction: "*.permitted.com",
@@ -164,7 +182,7 @@ namespace Certify.Core.Tests.Unit
 
             var result = await controller.Download(InstanceId, ManagedCertId, "pfx");
 
-            AssertCertificateReturned(result);
+            AssertUnauthorized(result, "not permitted by the domain restrictions");
         }
 
         #endregion
@@ -244,7 +262,7 @@ namespace Certify.Core.Tests.Unit
         /// <summary>
         /// A backend which answers the access questions the endpoint asks, and serves the certificate.
         /// </summary>
-        /// <param name="domainRestriction">Domain Match rule on the caller's authorizing role, or null for none.</param>
+        /// <param name="domainRestriction">Domain Match rule on the authorizing role, whichever principal is being evaluated, or null for none.</param>
         /// <param name="grantsDownload">Whether the caller's own roles grant certificate download.</param>
         /// <param name="grantsJoin">Whether the caller's own roles grant hub joining.</param>
         /// <param name="instancePrincipalMayDownload">Whether the instance's own principal may download this certificate.</param>

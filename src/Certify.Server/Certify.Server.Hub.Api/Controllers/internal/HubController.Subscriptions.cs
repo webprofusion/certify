@@ -137,7 +137,8 @@ namespace Certify.Server.Hub.Api.Controllers
             var allInstanceItems = _mgmtStateProvider.GetManagedInstanceItems();
 
             // Domain restrictions on the principal's roles are Domain Match rules and apply to every identifier on
-            // a cert, matching what the download endpoint enforces. Resolved once here rather than per item.
+            // a cert, matching what the download endpoint enforces on both of its routes - a principal downloading
+            // by its own roles, and a managed instance collecting a subscription. Resolved once here, not per item.
             var domainRules = await GetDomainRestrictionRulesForPrincipal(
                 _client,
                 securityPrincipalId,
