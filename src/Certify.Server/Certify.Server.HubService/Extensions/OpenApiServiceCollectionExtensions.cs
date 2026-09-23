@@ -98,6 +98,17 @@ internal static class OpenApiServiceCollectionExtensions
                 schema.Format = "binary";
             }
 
+            // Numbers are also read from strings (the web JSON defaults), so they are described as "integer or
+            // string" with a numeric pattern. Generated clients can't represent that (NSwag emits a named type it
+            // never defines), so describe them as plain numbers. Numeric strings are still accepted.
+            if (schema.Type is { } type
+                && type.HasFlag(JsonSchemaType.String)
+                && (type.HasFlag(JsonSchemaType.Integer) || type.HasFlag(JsonSchemaType.Number)))
+            {
+                schema.Type = type & ~JsonSchemaType.String;
+                schema.Pattern = null;
+            }
+
             return Task.CompletedTask;
         });
     }

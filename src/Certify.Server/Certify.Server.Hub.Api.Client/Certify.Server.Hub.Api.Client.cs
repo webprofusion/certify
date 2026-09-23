@@ -3304,7 +3304,7 @@ namespace Certify.Server.Hub.Api
         /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
         /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, object page, object pageSize)
+        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize)
         {
             return GetHubManagedItemsAsync(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged, page, pageSize, System.Threading.CancellationToken.None);
         }
@@ -3320,7 +3320,7 @@ namespace Certify.Server.Hub.Api
         /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
         /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, object page, object pageSize, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -4164,6 +4164,10 @@ namespace Certify.Server.Hub.Api
         /// <summary>
         /// Returns managed certificate summaries that the authenticated calling instance is permitted to pull.
         /// <br/>Authenticated via X-Client-ID / X-Client-Secret + X-Certify-HubAssignedId headers (hub joining credentials).
+        /// <br/>
+        /// <br/>The credentials are resolved by the authentication middleware, which only runs for an endpoint carrying an
+        /// <br/>authorization requirement. Without [AuthorizedApi] here the ApiToken scheme never ran, so however good the
+        /// <br/>caller's credentials were there was no authenticated principal to check and every request was refused.
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -4176,6 +4180,10 @@ namespace Certify.Server.Hub.Api
         /// <summary>
         /// Returns managed certificate summaries that the authenticated calling instance is permitted to pull.
         /// <br/>Authenticated via X-Client-ID / X-Client-Secret + X-Certify-HubAssignedId headers (hub joining credentials).
+        /// <br/>
+        /// <br/>The credentials are resolved by the authentication middleware, which only runs for an endpoint carrying an
+        /// <br/>authorization requirement. Without [AuthorizedApi] here the ApiToken scheme never ran, so however good the
+        /// <br/>caller's credentials were there was no authenticated principal to check and every request was refused.
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -7351,7 +7359,7 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>Log file as LogItem list</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, object maxLines)
+        public virtual System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, int? maxLines)
         {
             return DownloadLogAsync(instanceId, managedCertId, maxLines, System.Threading.CancellationToken.None);
         }
@@ -7362,7 +7370,7 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>Log file as LogItem list</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, object maxLines, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, int? maxLines, System.Threading.CancellationToken cancellationToken)
         {
             if (managedCertId == null)
                 throw new System.ArgumentNullException("managedCertId");
@@ -12080,7 +12088,7 @@ namespace Certify.Server.Hub.Api
         /// Get system log content for a managed instance [Generated]
         /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetSystemLogAsync(string instanceId, string logName, object maxLines)
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetSystemLogAsync(string instanceId, string logName, int maxLines)
         {
             return GetSystemLogAsync(instanceId, logName, maxLines, System.Threading.CancellationToken.None);
         }
@@ -12090,7 +12098,7 @@ namespace Certify.Server.Hub.Api
         /// Get system log content for a managed instance [Generated]
         /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetSystemLogAsync(string instanceId, string logName, object maxLines, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetSystemLogAsync(string instanceId, string logName, int maxLines, System.Threading.CancellationToken cancellationToken)
         {
             if (instanceId == null)
                 throw new System.ArgumentNullException("instanceId");
