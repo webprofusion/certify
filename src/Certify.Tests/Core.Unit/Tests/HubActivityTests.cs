@@ -429,6 +429,26 @@ namespace Certify.Core.Tests.Unit
         private static readonly DateTimeOffset Now = new DateTimeOffset(2026, 9, 23, 12, 0, 0, TimeSpan.Zero);
 
         [TestMethod]
+        public void TagFilter_KeepsActivityOfInstancesWithMatchingTags_ButNotHubActivity()
+        {
+            var filtered = new HubActivityService.ViewScope
+            {
+                CanListInstances = true,
+                IsTagFiltered = true,
+                MatchingInstanceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "contoso-server" }
+            };
+
+            Assert.IsTrue(filtered.Permits(new ActivityRecordScope("CONTOSO-SERVER", null, ActivityCategory.Instance)));
+            Assert.IsFalse(filtered.Permits(new ActivityRecordScope("fabrikam-server", null, ActivityCategory.Instance)));
+            Assert.IsFalse(filtered.Permits(new ActivityRecordScope(null, null, ActivityCategory.Hub)));
+
+            var unfiltered = new HubActivityService.ViewScope { CanListInstances = true };
+
+            Assert.IsTrue(unfiltered.Permits(new ActivityRecordScope("fabrikam-server", null, ActivityCategory.Instance)));
+            Assert.IsTrue(unfiltered.Permits(new ActivityRecordScope(null, null, ActivityCategory.Hub)));
+        }
+
+        [TestMethod]
         public void Attention_ForARequestWaitingOnAPerson()
         {
             var item = new ManagedCertificate { Id = "1", Name = "shop.example.com", LastRenewalStatus = RequestState.Paused, RenewalFailureMessage = "Create the DNS record\r\nmore detail" };

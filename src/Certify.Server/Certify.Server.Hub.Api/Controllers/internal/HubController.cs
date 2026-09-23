@@ -378,20 +378,22 @@ namespace Certify.Server.Hub.Api.Controllers
 
             }
 
+            // instance tags are held in the item tag store rather than on the stored instance record, and are returned
+            // with each instance so that clients can show and filter by them
+            var instanceTags = await GetItemTagsByItemId(TaggedItemTypes.ManagedInstance);
+
+            foreach (var instance in allKnownInstances)
+            {
+                instance.Tags = instanceTags.TryGetValue(instance.Id ?? "", out var itemTags) ? itemTags : [];
+            }
+
             var scopes = TagScopeFilter.ParseAll(tagScopes);
 
             var results = (IEnumerable<ManagedInstanceInfo>)allKnownInstances;
 
             if (scopes.Count > 0)
             {
-                // instance tags are held in the item tag store rather than on the stored instance record
-                var instanceTags = await GetItemTagsByItemId(TaggedItemTypes.ManagedInstance);
-
-                results = results.Where(i =>
-                {
-                    instanceTags.TryGetValue(i.Id ?? "", out var itemTags);
-                    return TagScopeFilter.Matches(itemTags, scopes, requireAllTags, includeUntagged);
-                });
+                results = results.Where(i => TagScopeFilter.Matches(i.Tags, scopes, requireAllTags, includeUntagged));
             }
 
             // Return all instances (both connected and disconnected) ordered by display title

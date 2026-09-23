@@ -245,8 +245,8 @@ namespace Certify.Models.Hub
         public string? Keyword { get; set; }
 
         /// <summary>
-        /// Limit item events to items matching these tag scopes ("category" or "category=value"). Events which do not
-        /// relate to an item are not shown when tag scopes are set.
+        /// Limit item events to items matching these tag scopes ("category" or "category=value"). Instance events are
+        /// limited to instances whose own tags match, and hub events are not shown when tag scopes are set.
         /// </summary>
         public List<string>? TagScopes { get; set; }
 

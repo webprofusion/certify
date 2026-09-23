@@ -76,6 +76,11 @@ namespace Certify.Server.Hub.Api.Services.Activity
             public Dictionary<string, (string InstanceId, ManagedCertificate Item)> VisibleItems { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 
             /// <summary>
+            /// The instances whose own tags match the tag filter, when one is applied
+            /// </summary>
+            public HashSet<string> MatchingInstanceIds { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+
+            /// <summary>
             /// True when the visible items have to be checked for each record, rather than every item record being visible
             /// </summary>
             public bool IsItemRestricted => !Visibility.IsUnrestricted || IsTagFiltered;
@@ -91,8 +96,8 @@ namespace Certify.Server.Hub.Api.Services.Activity
                     return IsItemRestricted ? VisibleItems.ContainsKey(record.ManagedItemId) : Visibility.HasAction;
                 }
 
-                // instance and hub activity is not tagged, so a tag filter leaves it out
-                return !IsTagFiltered && CanListInstances;
+                // instance activity follows the instance's own tags, while hub activity has none, so a tag filter leaves it out
+                return CanListInstances && (!IsTagFiltered || (record.InstanceId != null && MatchingInstanceIds.Contains(record.InstanceId)));
             }
 
             /// <summary>
@@ -114,7 +119,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
             if (visibility.HasAction)
             {
                 var needsTags = scopes.Count > 0 || visibility.RequiresTags;
-                var tagsByItem = needsTags ? await GetItemTagsByItemIdAsync() : new Dictionary<string, List<ItemTag>>();
+                var tagsByItem = needsTags ? await GetItemTagsByItemIdAsync(TaggedItemTypes.ManagedCertificate) : new Dictionary<string, List<ItemTag>>();
 
                 foreach (var instanceItems in _stateProvider.GetManagedInstanceItems().Values)
                 {
@@ -147,22 +152,39 @@ namespace Certify.Server.Hub.Api.Services.Activity
                 }
             }
 
+            var matchingInstanceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (scopes.Count > 0 && canListInstances)
+            {
+                // instance tags are keyed by the instance record id, not the instance id
+                var instanceTags = await GetItemTagsByItemIdAsync(TaggedItemTypes.ManagedInstance);
+
+                foreach (var instance in await GetKnownInstancesAsync())
+                {
+                    if (instanceTags.TryGetValue(instance.Id ?? "", out var tags) && TagScopeFilter.Matches(tags, scopes, requireAllTags))
+                    {
+                        matchingInstanceIds.Add(instance.InstanceId);
+                    }
+                }
+            }
+
             return new ViewScope
             {
                 Visibility = visibility,
                 CanListInstances = canListInstances,
                 IsTagFiltered = scopes.Count > 0,
-                VisibleItems = visibleItems
+                VisibleItems = visibleItems,
+                MatchingInstanceIds = matchingInstanceIds
             };
         }
 
-        private async Task<Dictionary<string, List<ItemTag>>> GetItemTagsByItemIdAsync()
+        private async Task<Dictionary<string, List<ItemTag>>> GetItemTagsByItemIdAsync(string itemType)
         {
             var result = new Dictionary<string, List<ItemTag>>(StringComparer.OrdinalIgnoreCase);
 
             try
             {
-                var tags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedCertificate, null, PrincipalAccess.SystemAuthContext);
+                var tags = await _client.GetAllHubItemTags(null, null, itemType, null, PrincipalAccess.SystemAuthContext);
 
                 foreach (var tag in tags ?? [])
                 {
@@ -376,10 +398,12 @@ namespace Certify.Server.Hub.Api.Services.Activity
                 }
             }
 
-            // instances
-            if (scope.CanListInstances && !scope.IsTagFiltered)
+            // instances, where a tag filter keeps those whose own tags match it
+            if (scope.CanListInstances)
             {
-                items.AddRange(await GetInstanceAttentionAsync(knownInstances, filter.InstanceId, now));
+                var instances = scope.IsTagFiltered ? knownInstances.Where(i => scope.MatchingInstanceIds.Contains(i.InstanceId)).ToList() : knownInstances;
+
+                items.AddRange(await GetInstanceAttentionAsync(instances, filter.InstanceId, now));
             }
 
             return items
