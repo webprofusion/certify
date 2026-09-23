@@ -94,6 +94,17 @@ namespace Certify.Models.Hub
         public const string NotificationManagedItemRequestProgress = "NotificationManagedItemRequestProgress";
 
         /// <summary>
+        /// Notification from an instance of something to record in the hub activity history, with an
+        /// <see cref="ActivityEvent"/> as the value. Instances hold these while disconnected and send them on reconnect.
+        /// </summary>
+        public const string NotificationActivityEvent = "NotificationActivityEvent";
+
+        /// <summary>
+        /// Notification from an instance that a request run has finished, with the <see cref="RequestRun"/> as the value
+        /// </summary>
+        public const string NotificationRequestRun = "NotificationRequestRun";
+
+        /// <summary>
         /// Command sent to an instance to indicate the source certificate for one of its certificate subscriptions
         /// has changed and should be fetched.
         /// </summary>

@@ -432,6 +432,9 @@ namespace Certify.Management
                 }
             }
 
+            // the renewal plan is not stored, but those receiving the update (the hub's cached copy, the UI) expect it
+            managedCertificate.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(managedCertificate, GetRenewalPrefs());
+
             // report request state to status hub clients
             _statusReporting?.ReportManagedCertificateUpdated(managedCertificate);
 

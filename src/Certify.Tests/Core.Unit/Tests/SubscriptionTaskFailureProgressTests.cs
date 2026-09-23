@@ -32,6 +32,12 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             public List<RequestProgressState> Reports { get; } = new();
 
+            /// <summary>
+            /// Reports of an outcome. Each deployment task also reports running progress as it starts and finishes,
+            /// which is not an outcome
+            /// </summary>
+            public List<RequestProgressState> Outcomes => Reports.Where(r => r.CurrentState != RequestState.Running).ToList();
+
             public void Report(RequestProgressState value) => Reports.Add(value);
         }
 
@@ -165,9 +171,9 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(tasksRan, "The task list should have been evaluated");
             Assert.IsFalse(result.IsSuccess, "A failed deployment task makes the request a failed one");
 
-            Assert.HasCount(1, progress.Reports, "The task failure should be reported as request progress, the request progress is otherwise left saying the request succeeded");
+            Assert.HasCount(1, progress.Outcomes, "The task failure should be reported as request progress, the request progress is otherwise left saying the request succeeded");
 
-            var report = progress.Reports[0];
+            var report = progress.Outcomes[0];
 
             Assert.AreEqual(RequestState.Error, report.CurrentState, "The reported state should match the failure recorded against the item");
             Assert.AreEqual(result.Message, report.Message, "The reported message should describe the deployment task which failed");
@@ -184,7 +190,7 @@ namespace Certify.Tests.Core.Unit.Tests
             await PerformPostRequestTasks(manager, item, GetSuccessfulPrimaryRequestResult(item), isFinalRequestStage: true, progress);
 
             Assert.AreEqual(RequestState.Error, item.LastRenewalStatus, "The item itself should record the failed request");
-            Assert.AreEqual(item.RenewalFailureMessage, progress.Reports.Single().Message, "The request progress and the item should describe the same failure");
+            Assert.AreEqual(item.RenewalFailureMessage, progress.Outcomes.Single().Message, "The request progress and the item should describe the same failure");
         }
 
         [TestMethod, Description("A successful task run of a subscription request reports no further progress")]
@@ -203,7 +209,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(tasksRan, "The task list should have been evaluated");
             Assert.IsTrue(result.IsSuccess, "The request succeeded and no task failed");
 
-            Assert.IsEmpty(progress.Reports, "The successful outcome was already reported by the subscription request itself");
+            Assert.IsEmpty(progress.Outcomes, "The successful outcome was already reported by the subscription request itself");
         }
 
         [TestMethod, Description("A failed deployment task of a standard request is left for the caller to report")]
@@ -223,7 +229,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(tasksRan, "The task list should have been evaluated");
             Assert.IsFalse(result.IsSuccess, "A failed deployment task makes the request a failed one");
 
-            Assert.IsEmpty(progress.Reports, "A standard request resolves its final status after the tasks have run and reports it there, reporting here would report the request outcome twice");
+            Assert.IsEmpty(progress.Outcomes, "A standard request resolves its final status after the tasks have run and reports it there, reporting here would report the request outcome twice");
         }
     }
 }

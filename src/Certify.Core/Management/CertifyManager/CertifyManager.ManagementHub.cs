@@ -397,6 +397,8 @@ namespace Certify.Management
         {
             client.UpdateCachedInstanceInfo(GetManagedInstanceInfo());
             _managementServerClient = client;
+
+            FlushPendingHubActivity();
         }
 
         public async Task<HubInfo> GetHubInfo()
@@ -829,6 +831,8 @@ namespace Certify.Management
                     _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
                     _managementServerClient.OnConnectionReconnected += _managementServerClient_OnConnectionReconnected;
                     _managementServerClient.OnConnectionClosed += _managementServerClient_OnConnectionClosed;
+
+                    FlushPendingHubActivity();
 
                     await _managementServerClient.ConnectAsync(GetHubConnectionTokenAsync);
 

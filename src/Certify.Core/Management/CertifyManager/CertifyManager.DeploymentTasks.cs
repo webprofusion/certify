@@ -263,7 +263,10 @@ namespace Certify.Management
             // run applicable deployment tasks (whether success or failed), powershell
             log.Information($"Performing Post-Request (Deployment) Tasks..");
 
-            var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PostRequestTasks, forceTaskExecute: false, evaluateAgainstPrimaryRequestStatus: true);
+            EnterRequestStage(managedCertificate, RequestStage.Deployment);
+
+            var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PostRequestTasks, forceTaskExecute: false, evaluateAgainstPrimaryRequestStatus: true,
+                reportTaskProgress: (msg, state) => ReportProgress(progress, new RequestProgressState(state, msg, managedCertificate), logThisEvent: false));
 
             var postRequestTasks = new ActionStep
             {
@@ -354,7 +357,7 @@ namespace Certify.Management
         /// Required, because an inappropriate default would silently run (or skip) the wrong tasks
         /// </param>
         /// <returns></returns>
-        internal async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute, bool evaluateAgainstPrimaryRequestStatus)
+        internal async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute, bool evaluateAgainstPrimaryRequestStatus, Action<string, RequestState> reportTaskProgress = null)
         {
             var runner = new DeploymentTaskRunner(
                 _pluginManager.DeploymentTaskProviders,
@@ -363,7 +366,7 @@ namespace Certify.Management
                 _tc,
                 _loggingLevelSwitch);
 
-            return await runner.Run(log, isPreviewOnly, skipDeferredTasks, result, taskList, forceTaskExecute, evaluateAgainstPrimaryRequestStatus);
+            return await runner.Run(log, isPreviewOnly, skipDeferredTasks, result, taskList, forceTaskExecute, evaluateAgainstPrimaryRequestStatus, reportTaskProgress);
         }
 
         private DeploymentContext GetDeploymentContext() => new DeploymentContext

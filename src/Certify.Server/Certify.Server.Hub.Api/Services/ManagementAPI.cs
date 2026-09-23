@@ -24,6 +24,8 @@ namespace Certify.Server.Hub.Api.Services
         IInstanceManagementStateProvider _mgmtStateProvider;
         IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
         Certify.Management.ICertifyManager _certifyManager = default!;
+        private readonly Activity.ActivityRecorder? _activity;
+        private readonly Activity.HubActivityService? _activityService;
 
         ILogger<ManagementAPI> _log;
 
@@ -47,13 +49,17 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="mgmtHubContext">The management hub context for SignalR communication.</param>
         /// <param name="certifyManager">The in-process Certify manager instance.</param>
         /// <param name="log"></param>
-        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, Certify.Management.ICertifyManager certifyManager, ILogger<ManagementAPI> log)
+        /// <param name="activity">optional, records changes made through the hub in the hub activity history</param>
+        /// <param name="activityService">optional, answers the hub activity and overview queries</param>
+        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, Certify.Management.ICertifyManager certifyManager, ILogger<ManagementAPI> log,
+            Activity.ActivityRecorder? activity = null, Activity.HubActivityService? activityService = null)
         {
             _mgmtStateProvider = mgmtStateProvider;
             _mgmtHubContext = mgmtHubContext;
             _log = log;
             _certifyManager = certifyManager;
-
+            _activity = activity;
+            _activityService = activityService;
         }
 
         /// <summary>
@@ -491,11 +497,18 @@ namespace Certify.Server.Hub.Api.Services
                         new("managedCert", JsonSerializer.Serialize(managedCert))
                     };
 
+            var isNewItem = string.IsNullOrWhiteSpace(managedCert.Id) || GetCachedManagedCertificate(instanceId, managedCert.Id) == null;
+
             var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.UpdateManagedItem);
 
             if (result != null)
             {
                 _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result);
+
+                if (_activity != null && !string.IsNullOrWhiteSpace(result.Id))
+                {
+                    await _activity.ItemChangedAsync(instanceId, result.Id, result.Name, isNewItem ? ActivityEventTypes.ItemAdded : ActivityEventTypes.ItemUpdated, authContext);
+                }
             }
 
             return result;
@@ -517,10 +530,18 @@ namespace Certify.Server.Hub.Api.Services
                         new("managedCertId", managedCertId)
                     };
 
+            var removedTitle = GetCachedManagedCertificate(instanceId, managedCertId)?.Name;
+
             var result = await PerformInstanceCommandTaskWithResult<ActionResult>(instanceId, args, ManagementHubCommands.RemoveManagedItem);
 
             if (result.IsSuccess)
             {
+                // recorded while the item is still known, so it can be decided who may see the removal
+                if (_activity != null)
+                {
+                    await _activity.ItemChangedAsync(instanceId, managedCertId, removedTitle, ActivityEventTypes.ItemRemoved, authContext);
+                }
+
                 _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
                 await RemoveHubItemTagsForItem(TaggedItemTypes.ManagedCertificate, managedCertId, authContext);
             }
@@ -730,6 +751,15 @@ namespace Certify.Server.Hub.Api.Services
                         new("taskId", taskId)
                 };
 
+            if (_activity != null)
+            {
+                var taskName = GetCachedManagedCertificate(instanceId, managedCertificateId)?
+                    .PostRequestTasks?.FirstOrDefault(t => t.Id == taskId)?.TaskName;
+
+                await _activity.ItemChangedAsync(instanceId, managedCertificateId, null, ActivityEventTypes.ItemTaskExecuted, currentAuthContext,
+                    detail: string.IsNullOrWhiteSpace(taskName) ? null : $"Task \"{taskName}\"");
+            }
+
             var result = await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.ExecuteDeploymentTask);
 
             // a deployment task may take more time to execute than the SignalR/messaging timeout
@@ -932,6 +962,13 @@ namespace Certify.Server.Hub.Api.Services
 
             var cmd = new InstanceCommandRequest(ManagementHubCommands.PerformManagedItemRequest, args);
 
+            // recorded first: the hub's own instance performs the request before the command returns, and the run
+            // which follows is credited to whoever asked for it
+            if (_activity != null)
+            {
+                await _activity.ItemChangedAsync(instanceId, managedCertId, null, ActivityEventTypes.ItemRequested, currentAuthContext);
+            }
+
             await SendCommandWithNoResult(instanceId, cmd);
         }
 
@@ -942,7 +979,14 @@ namespace Certify.Server.Hub.Api.Services
                  new("managedCertId",managedCertId)
              };
 
-            return await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.ResetManagedItemStatus);
+            var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.ResetManagedItemStatus);
+
+            if (result != null && _activity != null)
+            {
+                await _activity.ItemChangedAsync(instanceId, managedCertId, result.Name, ActivityEventTypes.ItemStatusReset, currentAuthContext);
+            }
+
+            return result;
         }
 
         /// <summary>

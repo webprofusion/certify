@@ -1,4 +1,6 @@
-﻿namespace Certify.Models.Hub
+﻿using System;
+
+namespace Certify.Models.Hub
 {
     /// <summary>
     /// Hub level feature settings, stored as a single item in the configuration data store
@@ -27,6 +29,41 @@
         /// Settings for the hub Managed ACME feature
         /// </summary>
         public ManagedAcmeSettings ManagedAcme { get; set; } = new ManagedAcmeSettings();
+
+        /// <summary>
+        /// Settings for the hub activity history
+        /// </summary>
+        public ActivitySettings Activity { get; set; } = new ActivitySettings();
+    }
+
+    /// <summary>
+    /// Settings for the hub activity history (activity events and request run history)
+    /// </summary>
+    public class ActivitySettings
+    {
+        public const int DefaultRetentionDays = 90;
+        public const int MinRetentionDays = 7;
+        public const int MaxRetentionDays = 730;
+
+        /// <summary>
+        /// Number of days activity events and request runs are kept before being removed
+        /// </summary>
+        public int RetentionDays { get; set; } = DefaultRetentionDays;
+
+        /// <summary>
+        /// The retention period, limited to the supported range
+        /// </summary>
+        public static int ResolveRetentionDays(ActivitySettings? settings)
+        {
+            var days = settings?.RetentionDays ?? DefaultRetentionDays;
+
+            if (days <= 0)
+            {
+                return DefaultRetentionDays;
+            }
+
+            return Math.Min(Math.Max(days, MinRetentionDays), MaxRetentionDays);
+        }
     }
 
     /// <summary>

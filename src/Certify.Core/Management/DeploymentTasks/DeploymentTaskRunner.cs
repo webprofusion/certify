@@ -120,8 +120,9 @@ namespace Certify.Core.Management.DeploymentTasks
         /// certificate request took place and the tasks always apply (pre-request tasks, explicit redeployment).
         /// Required, because an inappropriate default would silently run (or skip) the wrong tasks
         /// </param>
+        /// <param name="reportTaskProgress">optional, told as each task starts and finishes so the request progress can show it</param>
         /// <returns></returns>
-        internal async Task<List<ActionStep>> Run(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute, bool evaluateAgainstPrimaryRequestStatus)
+        internal async Task<List<ActionStep>> Run(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute, bool evaluateAgainstPrimaryRequestStatus, Action<string, RequestState> reportTaskProgress = null)
         {
             if (taskList == null || !taskList.Any())
             {
@@ -185,8 +186,12 @@ namespace Certify.Core.Management.DeploymentTasks
             var taskTriggerReason = "Task will run for any status";
             var primaryRequestSucceeded = !evaluateAgainstPrimaryRequestStatus || result?.PrimaryRequest?.Status == RequestState.Success;
 
+            var taskNumber = 0;
+
             foreach (var task in deploymentTasks)
             {
+                taskNumber++;
+
                 if (ShouldSkipTaskBecausePreviousTaskFailed(previousActionStep?.HasError == true, task.TaskConfig.RunIfLastStepFailed, task.TaskConfig.TaskTrigger, primaryRequestSucceeded))
                 {
                     shouldRunCurrentTask = false;
@@ -263,8 +268,22 @@ namespace Certify.Core.Management.DeploymentTasks
                     log?.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
                     task.TaskConfig.DateLastExecuted = DateTimeOffset.UtcNow;
 
+                    reportTaskProgress?.Invoke($"Running task \"{task.TaskConfig.TaskName}\" ({taskNumber} of {deploymentTasks.Count})", RequestState.Running);
+
                     wasTaskExecuted = true;
                     taskResults = await task.Execute(log, _credentialsManager, result, _context, isPreviewOnly: isPreviewOnly, cancellationToken: CancellationToken.None);
+
+                    if (taskResults?.All(t => t.IsSuccess) == true)
+                    {
+                        reportTaskProgress?.Invoke($"Task \"{task.TaskConfig.TaskName}\" completed", RequestState.Running);
+                    }
+                    else
+                    {
+                        // reported as progress, not as an outcome: the request's outcome is resolved and reported once
+                        // all its tasks have run
+                        var failure = taskResults?.FirstOrDefault(t => !t.IsSuccess)?.Message;
+                        reportTaskProgress?.Invoke($"Task \"{task.TaskConfig.TaskName}\" failed{(string.IsNullOrWhiteSpace(failure) ? "" : ": " + failure)}", RequestState.Running);
+                    }
 
                     if (!isPreviewOnly)
                     {

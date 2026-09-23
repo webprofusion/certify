@@ -171,10 +171,13 @@ namespace Certify.Management
         private void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false)
         {
             bool isStatusChanged;
+            bool wasProblem;
 
             lock (_systemStatusItemsLock)
             {
                 var existing = _systemStatusItems.FirstOrDefault(s => s.Key == systemStatusKey);
+
+                wasProblem = existing != null && (existing.HasError || existing.HasWarning);
 
                 isStatusChanged = existing == null
                     || existing.Description != description
@@ -190,6 +193,8 @@ namespace Certify.Management
             if (isStatusChanged)
             {
                 _serviceLog?.Information($"Status: {title} - {description} ");
+
+                ReportSystemStatusChange(systemStatusKey, title, description, wasProblem, hasError, hasWarning);
             }
         }
 
@@ -668,6 +673,19 @@ namespace Certify.Management
         /// <param name="logThisEvent"></param>
         public void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
         {
+            // record the message against its request run, stamping it with the run's id, stage and stage timings
+            if (!state.IsFinal)
+            {
+                if (state.CurrentState == RequestState.Queued && state.ManagedCertificate != null)
+                {
+                    // a renewal pass queuing the item: the run which follows belongs to the pass
+                    var pass = _currentRenewalPass;
+                    _runTracker.Queue(state.ManagedCertificate.Id, state.ManagedCertificate.Name, pass?.Trigger ?? RequestTrigger.RenewAll, state.TriggerReason, pass?.BatchId);
+                }
+
+                _runTracker.Apply(state);
+            }
+
             if (progress != null)
             {
                 progress.Report(state);

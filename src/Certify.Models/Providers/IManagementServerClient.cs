@@ -26,6 +26,12 @@ namespace Certify.Client
         void SendInstanceInfo(Guid commandId, bool isCommandResponse = true);
         void SendNotificationToManagementHub(string msgCommandType, object updateMsg);
 
+        /// <summary>
+        /// Send a notification which must not be lost to a disconnection, such as an activity event. If not currently
+        /// connected the notification is held (up to a limit, oldest discarded first) and sent once connected again.
+        /// </summary>
+        void QueueNotificationToManagementHub(string msgCommandType, object updateMsg);
+
         void UpdateCachedInstanceInfo(ManagedInstanceInfo instanceInfo);
     }
 }

@@ -5,6 +5,7 @@ using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Providers;
 using Certify.Server.Hub.Api.Middleware;
+using Certify.Server.Hub.Api.Services.Activity;
 using Certify.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -35,6 +36,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         private UserInterfaceStatusBroadcaster _uiStatus;
         private ICertifyManager? _certifyManager;
         private ICertifyInternalApiClient? _backendClient;
+        private readonly ActivityRecorder? _activity;
         private readonly string _localInstanceId = default!;
         private bool _hasLocalInstance => _certifyManager != null;
 
@@ -46,18 +48,21 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="uiStatus"></param>
         /// <param name="backendClient"></param>
         /// <param name="certifyManager"></param>
+        /// <param name="activity">optional, records instance activity in the hub activity history</param>
         public InstanceManagementHub(
             IInstanceManagementStateProvider stateProvider,
             ILogger<InstanceManagementHub> logger,
             UserInterfaceStatusBroadcaster uiStatus,
             ICertifyInternalApiClient backendClient,
-            ICertifyManager? certifyManager = null
+            ICertifyManager? certifyManager = null,
+            ActivityRecorder? activity = null
             )
         {
             _stateProvider = stateProvider;
             _logger = logger;
             _uiStatus = uiStatus;
             _certifyManager = certifyManager;
+            _activity = activity;
             _backendClient = backendClient;
 
             // If we have a local certify manager, register it as a special local instance
@@ -98,6 +103,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 IsAuthenticated = true
             }
            );
+
+            if (_activity != null)
+            {
+                _ = _activity.InstanceConnectedAsync(hubAssignedId);
+            }
 
             // at this stage we don't know which instance id this is, we need to issue a command for it to identify itself before it can participate
             IssueCommandViaSignalR(new InstanceCommandRequest(ManagementHubCommands.GetInstanceInfo));
@@ -171,6 +181,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             if (instanceId != null)
             {
                 _stateProvider.UpdateInstanceConnectionStatus(instanceId, ConnectionStatus.Disconnected);
+
+                // a later connection by the same instance (e.g. an automatic reconnect which replaced this one) means it
+                // is not actually disconnected
+                if (_activity != null && !_stateProvider.GetConnectedInstances().Any(i => string.Equals(i.InstanceId, instanceId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _ = _activity.InstanceDisconnectedAsync(instanceId, exception?.Message);
+                }
 
                 if (exception != null)
                 {
@@ -324,6 +341,24 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 {
                     await HandleSubscriptionUpdateRequest(instanceId, result.Value);
                 }
+                else if (result.CommandType == ManagementHubCommands.NotificationActivityEvent && result.Value != null && _activity != null)
+                {
+                    var activityEvent = System.Text.Json.JsonSerializer.Deserialize<ActivityEvent>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
+
+                    if (activityEvent != null)
+                    {
+                        await _activity.RecordFromInstanceAsync(instanceId, activityEvent);
+                    }
+                }
+                else if (result.CommandType == ManagementHubCommands.NotificationRequestRun && result.Value != null && _activity != null)
+                {
+                    var run = System.Text.Json.JsonSerializer.Deserialize<RequestRun>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
+
+                    if (run != null)
+                    {
+                        await _activity.RecordRunFromInstanceAsync(instanceId, run);
+                    }
+                }
             }
         }
 
@@ -422,6 +457,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 {
                     _logger?.LogWarning(ex, "Failed to queue external certificate push update for target {targetInstanceId} item {targetItemId} from source {sourceInstanceId}/{sourceItemId}.", target.TargetInstanceId, target.TargetManagedCertificateId, sourceInstanceId, updatedManagedCertificate.Id);
                 }
+            }
+
+            if (_activity != null)
+            {
+                await _activity.SubscriptionPushedAsync(sourceInstanceId, updatedManagedCertificate, targets.Count);
             }
         }
 
@@ -587,6 +627,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     instanceInfo.DateRegistered = storedInstance.DateRegistered;
                     instanceInfo.Description = storedInstance.Description;
                     instanceInfo.IsPendingConnection = false;
+                }
+
+                // compared with what was stored before it is updated below, to record the instance joining or changing
+                // version or licence
+                if (_activity != null)
+                {
+                    await _activity.InstanceInfoReceivedAsync(storedInstance, instanceInfo);
                 }
 
                 // update our cached instance info

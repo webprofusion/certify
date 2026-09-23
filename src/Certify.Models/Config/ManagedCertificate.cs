@@ -158,6 +158,21 @@ namespace Certify.Models
     {
         public RequestState? Status { get; set; }
         public string? Message { get; set; }
+
+        /// <summary>
+        /// For a stage of a request run, which stage this is
+        /// </summary>
+        public RequestStage? Stage { get; set; }
+
+        /// <summary>
+        /// For a stage of a request run, when the stage started
+        /// </summary>
+        public DateTimeOffset? Started { get; set; }
+
+        /// <summary>
+        /// For a stage of a request run, when the stage finished, or null while it is in progress
+        /// </summary>
+        public DateTimeOffset? Completed { get; set; }
     }
 
     public class ManagedCertificate : BindableBase

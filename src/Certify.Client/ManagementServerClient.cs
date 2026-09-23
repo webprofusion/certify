@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models.Hub;
@@ -117,6 +118,7 @@ namespace Certify.Client
                 {
                     Log($"[ManagementServerClient] Reconnected to hub. ConnectionId: {connectionId}");
                     OnConnectionReconnected?.Invoke();
+                    FlushQueuedNotifications();
                     return Task.CompletedTask;
                 };
 
@@ -145,6 +147,9 @@ namespace Certify.Client
             {
                 _connectionSync.Release();
             }
+
+            // anything held while disconnected goes now the connection is up
+            FlushQueuedNotifications();
         }
 
         public async Task Disconnect()
@@ -309,6 +314,68 @@ namespace Certify.Client
             {
                 Log($"[ManagementServerClient] Error sending notification ({msgCommandType}): {ex.Message}");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// The most notifications held while disconnected. Older ones are discarded first, as a long outage is better
+        /// represented by its most recent activity than by none at all.
+        /// </summary>
+        internal const int MaxQueuedNotifications = 500;
+
+        private readonly ConcurrentQueue<(string CommandType, object Message)> _queuedNotifications = new ConcurrentQueue<(string, object)>();
+        private int _isFlushingQueue = 0;
+
+        /// <summary>
+        /// Send a notification which must not be lost to a disconnection. If not connected it is held and sent (in
+        /// order) once the connection is available again.
+        /// </summary>
+        public void QueueNotificationToManagementHub(string msgCommandType, object updateMsg)
+        {
+            _queuedNotifications.Enqueue((msgCommandType, updateMsg));
+
+            while (_queuedNotifications.Count > MaxQueuedNotifications)
+            {
+                _queuedNotifications.TryDequeue(out _);
+            }
+
+            FlushQueuedNotifications();
+        }
+
+        /// <summary>
+        /// Number of notifications currently held waiting for a connection
+        /// </summary>
+        public int QueuedNotificationCount => _queuedNotifications.Count;
+
+        private void FlushQueuedNotifications()
+        {
+            // one flush at a time, so notifications are sent in the order they were queued
+            if (Interlocked.CompareExchange(ref _isFlushingQueue, 1, 0) != 0)
+            {
+                return;
+            }
+
+            try
+            {
+                while (_connection?.State == HubConnectionState.Connected && _queuedNotifications.TryPeek(out var next))
+                {
+                    try
+                    {
+                        SendNotificationToManagementHub(next.CommandType, next.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        // left queued for the next attempt
+                        Log($"[ManagementServerClient] Error sending queued notification ({next.CommandType}): {ex.Message}");
+                        return;
+                    }
+
+                    _queuedNotifications.TryDequeue(out _);
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _isFlushingQueue, 0);
             }
         }
 

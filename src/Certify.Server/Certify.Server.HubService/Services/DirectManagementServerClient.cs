@@ -94,6 +94,10 @@ namespace Certify.Server.HubService.Services
             _managementHub.ReceiveCommandResult(result);
         }
 
+        /// <inheritdoc/>
+        /// <remarks>The hub's own instance is always connected, so nothing is ever held back</remarks>
+        public void QueueNotificationToManagementHub(string msgCommandType, object updateMsg) => SendNotificationToManagementHub(msgCommandType, updateMsg);
+
         /// <summary>
         /// Updates the cached instance information.
         /// </summary>

@@ -60,7 +60,7 @@ namespace Certify.Management
 
             progressTrackers.TryAdd(item.Id, progressTracker);
 
-            reportProgress(progressTracker, new RequestProgressState(RequestState.Queued, $"Queued for renewal: {renewalReason}", item), false);
+            reportProgress(progressTracker, new RequestProgressState(RequestState.Queued, string.IsNullOrWhiteSpace(renewalReason) ? "Queued for renewal" : $"Queued for renewal: {renewalReason}", item) { TriggerReason = renewalReason }, false);
 
             return progressTracker;
         }
@@ -73,8 +73,8 @@ namespace Certify.Management
                 Action<IProgress<RequestProgressState>, RequestProgressState, bool> reportProgress,
                 Func<string, Task<bool>> isManagedCertificateRunning,
                 RenewalRequestHandler performCertificateRequest,
-                CancellationToken cancellationToken
-
+                CancellationToken cancellationToken,
+                Action<ManagedCertificate, string> reportDeferred = null
                 )
         {
 
@@ -145,7 +145,7 @@ namespace Certify.Management
 
                     managedCertificateBatch.Add(item);
 
-                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, reportProgress);
+                    var progressTracker = SetupProgressTracker(item, renewalReason, progressTrackers, reportProgress);
 
                     renewalTasks.Add(
                     new Task<CertificateRequestResult>(
@@ -294,6 +294,11 @@ namespace Certify.Management
 
                                     if (!isSiteRunning)
                                     {
+                                        if (isRenewalRequired)
+                                        {
+                                            reportDeferred?.Invoke(item, "Target site is not running and 'Include Stopped Sites' preference is False.");
+                                        }
+
                                         isRenewalRequired = false;
                                         renewalReason = "Target site is not running and 'Include Stopped Sites' preference is False. Renewal will not be attempted.";
                                     }
@@ -306,10 +311,18 @@ namespace Certify.Management
                                     isRenewalRequired = false;
                                     renewalReason = renewalDueCheck.Reason;
 
+                                    reportDeferred?.Invoke(item, renewalReason);
+
                                     if (!prefs.SuppressSkippedItems)
                                     {
                                         serviceLog?.Information($"Skipping renewal for '{item.Name}': {renewalReason}");
                                     }
+                                }
+
+                                if (isRenewalRequired && renewalDueCheck.IsRenewalOnHold && settings.Mode == RenewalMode.Auto)
+                                {
+                                    // held back after repeated failures, the next attempt is spaced out
+                                    reportDeferred?.Invoke(item, renewalDueCheck.Reason);
                                 }
 
                                 // the wait after repeated failures paces the scheduled pass. A person asking for a
@@ -324,7 +337,7 @@ namespace Certify.Management
                                 {
                                     batch.Add(item);
 
-                                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, reportProgress);
+                                    var progressTracker = SetupProgressTracker(item, renewalReason, progressTrackers, reportProgress);
 
                                     renewalTasks.Add(
                                         new Task<CertificateRequestResult>(

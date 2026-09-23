@@ -321,6 +321,10 @@ namespace Certify.Management
 
                     if (item != null)
                     {
+                        var previousScheduledRenewal = item.DateNextScheduledRenewalAttempt;
+                        var wasRevoked = item.CertificateRevoked;
+                        string expeditedReason = null;
+
                         // remember that we have checked these items recently
                         if (completedOcspUpdateChecks.Contains(i))
                         {
@@ -368,10 +372,36 @@ namespace Certify.Management
                                 }
 
                                 _serviceLog.Information($"Expediting renewal for {item.Name} due to: {reason}");
+
+                                expeditedReason = reason;
                             }
                         }
 
+                        item.RenewalPlan = null;
+
                         await _itemManager.Update(item);
+
+                        // a change to when the item will renew (or to its revocation) is reported like any other item
+                        // update, so the hub and UI see it; the check dates alone are not worth reporting
+                        if (previousScheduledRenewal != item.DateNextScheduledRenewalAttempt || wasRevoked != item.CertificateRevoked)
+                        {
+                            lock (_lastUpdateIdLock)
+                            {
+                                _lastUpdateId++;
+                            }
+
+                            item.InstanceId = _serverConfig.HubAssignedInstanceId;
+                            item.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, GetRenewalPrefs());
+
+                            _ = _statusReporting?.ReportManagedCertificateUpdated(item);
+
+                            ReportManagedItemUpdateToMgmtHub(item);
+                        }
+
+                        if (expeditedReason != null)
+                        {
+                            ReportRenewalBroughtForward(item, expeditedReason, isRevocation: itemsOcspRevoked.Contains(item.Id) || itemsOcspExpired.Contains(item.Id));
+                        }
                     }
                     else
                     {

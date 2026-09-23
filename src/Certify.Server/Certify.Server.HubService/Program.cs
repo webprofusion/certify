@@ -330,6 +330,13 @@ builder.Services.AddTransient<ManagementAPI>();
 builder.Services.AddSingleton<ExternalSubscriberNotificationService>();
 builder.Services.AddSingleton<UserInterfaceStatusBroadcaster>();
 
+// hub activity history: activity events, request runs and status snapshots, kept in the hub's own local database
+var activityStore = new Certify.Server.Hub.Api.Services.Activity.ActivityStore(Certify.Server.Hub.Api.Services.Activity.ActivityStore.GetDefaultDatabasePath());
+await activityStore.InitAsync();
+builder.Services.AddSingleton(activityStore);
+builder.Services.AddSingleton<Certify.Server.Hub.Api.Services.Activity.ActivityRecorder>();
+builder.Services.AddSingleton<Certify.Server.Hub.Api.Services.Activity.HubActivityService>();
+
 // used to directly talk back to the management server process instead of connecting back via SignalR
 builder.Services.AddTransient<IInstanceManagementHub, InstanceManagementHub>();
 
@@ -513,6 +520,17 @@ statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
 app.Start();
 
 app.Logger.LogInformation($"Server started {string.Join(";", app.Urls)}");
+
+// the hub starting and stopping bound the instance connection history: connections before a restart are not current
+var activityRecorder = app.Services.GetRequiredService<Certify.Server.Hub.Api.Services.Activity.ActivityRecorder>();
+var hubVersion = typeof(ManagementAPI).Assembly.GetName().Version?.ToString();
+
+await activityRecorder.HubLifecycleAsync(isStarting: true, hubVersion);
+
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    activityRecorder.HubLifecycleAsync(isStarting: false, hubVersion).Wait(TimeSpan.FromSeconds(5));
+});
 
 AddSystemStatusItem(
     SystemStatusCategories.HUB_API,

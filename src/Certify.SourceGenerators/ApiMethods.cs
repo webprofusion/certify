@@ -1442,6 +1442,129 @@ namespace Certify.SourceGenerators
                     },
                     RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
                 },
+
+                // hub activity history and overview, answered by the hub from what it has recorded and cached. Each
+                // result is limited to the items (and instances) the caller may see
+                new()
+                {
+                    OperationName = "GetActivity",
+                    OperationMethod = HttpPost,
+                    Comment = "Query the hub activity feed, newest first",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "query",
+                    ReturnType = "Certify.Models.Hub.ActivityQueryResult",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "query", "Certify.Models.Hub.ActivityQuery" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList)]
+                },
+                new()
+                {
+                    OperationName = "GetActivityTotals",
+                    OperationMethod = HttpPost,
+                    Comment = "Get daily totals of certificate request outcomes and deferred renewals",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "totals",
+                    ReturnType = "ICollection<Certify.Models.Hub.ActivityDailyTotal>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "query", "Certify.Models.Hub.ActivityTotalsQuery" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList)]
+                },
+                new()
+                {
+                    OperationName = "GetRequestRuns",
+                    OperationMethod = HttpPost,
+                    Comment = "Query certificate request run history, newest first",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "runs",
+                    ReturnType = "Certify.Models.Hub.RequestRunQueryResult",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "query", "Certify.Models.Hub.RequestRunQuery" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList)]
+                },
+                new()
+                {
+                    OperationName = "GetRequestRun",
+                    OperationMethod = HttpGet,
+                    Comment = "Get a certificate request run with its stages and messages",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "runs/{runId}",
+                    ReturnType = "Certify.Models.Hub.RequestRun",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "runId", "string" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList)]
+                },
+                new()
+                {
+                    OperationName = "GetAttentionItems",
+                    OperationMethod = HttpPost,
+                    Comment = "Get the certificates and instances which need attention",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "attention",
+                    ReturnType = "ICollection<Certify.Models.Hub.AttentionItem>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "filter", "Certify.Models.Hub.HubViewFilter" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList)]
+                },
+                new()
+                {
+                    OperationName = "GetUpcomingRenewals",
+                    OperationMethod = HttpPost,
+                    Comment = "Get the renewals planned over the coming days, and certificates expiring before a renewal is planned",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "upcoming",
+                    ReturnType = "Certify.Models.Hub.UpcomingRenewals",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "query", "Certify.Models.Hub.UpcomingRenewalsQuery" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList)]
+                },
+                new()
+                {
+                    OperationName = "GetInstanceConnectionHistory",
+                    OperationMethod = HttpPost,
+                    Comment = "Get when each managed instance was connected, not responding or disconnected over a period",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "instances/connections",
+                    ReturnType = "ICollection<Certify.Models.Hub.InstanceConnectionHistory>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "query", "Certify.Models.Hub.InstanceConnectionQuery" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)]
+                },
+                new()
+                {
+                    OperationName = "GetStatusSummaryBaseline",
+                    OperationMethod = HttpPost,
+                    Comment = "Get the certificate status counts as they stood about a day ago, to compare with the current counts",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Activity",
+                    PublicAPIRoute = "summary/baseline",
+                    ReturnType = "Certify.Models.Hub.StatusSummaryBaseline",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "filter", "Certify.Models.Hub.HubViewFilter" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList)]
+                },
             };
         }
     }

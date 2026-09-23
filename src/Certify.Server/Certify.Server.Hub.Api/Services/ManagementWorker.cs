@@ -14,11 +14,20 @@ namespace Certify.Server.Hub.Api.Services
         IInstanceManagementStateProvider _stateProvider;
 
         private ManagementAPI _mgmtAPI;
+        private readonly Activity.ActivityRecorder? _activityRecorder;
+        private readonly Activity.HubActivityService? _activityService;
 
         private const int StaleInstanceCacheExpiryMinutes = 30;
         private int _updateFrequency = 30;
         private string _serviceName = "[Management Worker]";
         private bool _isBatchRunning = false;
+
+        private static readonly TimeSpan SnapshotInterval = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan PurgeInterval = TimeSpan.FromHours(6);
+
+        private readonly HashSet<string> _unresponsiveInstances = new(StringComparer.OrdinalIgnoreCase);
+        private DateTimeOffset _lastSnapshot = DateTimeOffset.MinValue;
+        private DateTimeOffset _lastPurge = DateTimeOffset.MinValue;
 
         /// <summary>
         /// Create a new instance of the management worker
@@ -27,12 +36,79 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="hubContext"></param>
         /// <param name="stateProvider"></param>
         /// <param name="mgmtAPI"></param>
-        public ManagementWorker(ILogger<ManagementWorker> logger, IHubContext<InstanceManagementHub> hubContext, IInstanceManagementStateProvider stateProvider, ManagementAPI mgmtAPI)
+        /// <param name="activityRecorder">optional, records instances which stop and resume responding</param>
+        /// <param name="activityService">optional, records status snapshots and removes expired activity history</param>
+        public ManagementWorker(ILogger<ManagementWorker> logger, IHubContext<InstanceManagementHub> hubContext, IInstanceManagementStateProvider stateProvider, ManagementAPI mgmtAPI,
+            Activity.ActivityRecorder? activityRecorder = null, Activity.HubActivityService? activityService = null)
         {
             _logger = logger;
             _hubContext = hubContext;
             _stateProvider = stateProvider;
             _mgmtAPI = mgmtAPI;
+            _activityRecorder = activityRecorder;
+            _activityService = activityService;
+        }
+
+        /// <summary>
+        /// Record instances which have stopped (or resumed) sending their regular heartbeat while connected
+        /// </summary>
+        internal async Task CheckInstanceResponsiveness(IEnumerable<Certify.Models.Hub.ManagedInstanceInfo> connectedInstances, DateTimeOffset now)
+        {
+            if (_activityRecorder == null)
+            {
+                return;
+            }
+
+            var connectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var instance in connectedInstances)
+            {
+                if (string.IsNullOrWhiteSpace(instance.InstanceId) || !connectedIds.Add(instance.InstanceId))
+                {
+                    continue;
+                }
+
+                var isStale = now - instance.DateLastReported > Activity.HubActivityService.UnresponsiveAfter;
+
+                if (isStale && _unresponsiveInstances.Add(instance.InstanceId))
+                {
+                    await _activityRecorder.InstanceResponsivenessChangedAsync(instance.InstanceId, isResponsive: false, instance.DateLastReported);
+                }
+                else if (!isStale && _unresponsiveInstances.Remove(instance.InstanceId))
+                {
+                    await _activityRecorder.InstanceResponsivenessChangedAsync(instance.InstanceId, isResponsive: true, instance.DateLastReported);
+                }
+            }
+
+            // an instance which disconnected is recorded as disconnected, not as having recovered
+            _unresponsiveInstances.RemoveWhere(id => !connectedIds.Contains(id));
+        }
+
+        private async Task PerformActivityMaintenance(DateTimeOffset now)
+        {
+            if (_activityService == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (now - _lastSnapshot > SnapshotInterval)
+                {
+                    _lastSnapshot = now;
+                    await _activityService.RecordStatusSnapshotsAsync();
+                }
+
+                if (now - _lastPurge > PurgeInterval)
+                {
+                    _lastPurge = now;
+                    await _activityService.PurgeExpiredHistoryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{svc} activity history maintenance failed", _serviceName);
+            }
         }
 
         /// <summary>
@@ -117,6 +193,11 @@ namespace Certify.Server.Hub.Api.Services
                         // Schedule a full refresh of managed items since something has changed
                         _ = _mgmtAPI.RefreshInstanceManagedItems(instanceId, null);
                     }
+
+                    var now = DateTimeOffset.UtcNow;
+
+                    CheckInstanceResponsiveness(instances, now).GetAwaiter().GetResult();
+                    PerformActivityMaintenance(now).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {

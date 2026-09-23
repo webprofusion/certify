@@ -16,6 +16,12 @@ namespace Certify.Providers
         /// channel so that clients already subscribed to it receive these without any change.
         /// </summary>
         public const string NotificationActionRequired = "NotificationActionRequired";
+
+        /// <summary>
+        /// Sent as the first argument of <see cref="SendMsg"/> for a newly recorded hub activity event, with a
+        /// serialized ActivityEvent as the second
+        /// </summary>
+        public const string NotificationActivityEvent = "NotificationActivityEvent";
     }
     public interface IStatusReporting
     {

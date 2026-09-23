@@ -1476,6 +1476,9 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task<CertificateRequestResult> PerformSubscriptionRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, SubscriptionRequestMode requestMode, CancellationToken cancellationToken = default)
         {
+            // fetching from the source is this request's certificate stage; deploying it moves on to deployment
+            EnterRequestStage(managedCertificate, RequestStage.Certificate);
+
             var result = new CertificateRequestResult(managedCertificate)
             {
                 IsSuccess = false

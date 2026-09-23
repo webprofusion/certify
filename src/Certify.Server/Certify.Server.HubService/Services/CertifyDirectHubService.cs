@@ -26,16 +26,22 @@ namespace Certify.Server.HubService.Services
     {
         private ICertifyManager _certifyManager;
         private IDataProtectionProvider _dataProtectionProvider;
+        private IServiceProvider? _services;
 
         /// <summary>
         /// Initializes a new instance of the CertifyHubService class.
         /// </summary>
         /// <param name="certifyManager">Used to manage certification processes within the service.</param>
         /// <param name="dataProtectionProvider">Provides data protection functionalities for secure data handling.</param>
-        public CertifyDirectHubService(ICertifyManager certifyManager, IDataProtectionProvider dataProtectionProvider)
+        /// <param name="services">
+        /// optional, used to reach the hub activity recorder when it is needed. The recorder itself depends on this
+        /// service, so it cannot be taken as a dependency here.
+        /// </param>
+        public CertifyDirectHubService(ICertifyManager certifyManager, IDataProtectionProvider dataProtectionProvider, IServiceProvider? services = null)
         {
             _certifyManager = certifyManager;
             _dataProtectionProvider = dataProtectionProvider;
+            _services = services;
         }
 
         private ServiceControllers.AccessController _accessController(AuthContext authContext)
@@ -136,7 +142,23 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Add(item);
         public Task<ActionResult> UpdateHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Update(item);
         public Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances(AuthContext authContext) => _managedInstanceController(authContext).List();
-        public Task<ActionResult> RemoveHubManagedInstance(string id, AuthContext authContext) => _managedInstanceController(authContext).Remove(id);
+        public async Task<ActionResult> RemoveHubManagedInstance(string id, AuthContext authContext)
+        {
+            var activity = _services?.GetService<Certify.Server.Hub.Api.Services.Activity.ActivityRecorder>();
+
+            // the instance's title is read while it is still known
+            var title = activity != null ? await activity.GetInstanceTitleAsync(id) : null;
+
+            var result = await _managedInstanceController(authContext).Remove(id);
+
+            if (result?.IsSuccess == true && activity != null)
+            {
+                activity.NoteInstanceTitle(id, title);
+                await activity.InstanceRemovedAsync(id, authContext);
+            }
+
+            return result!;
+        }
         public Task<HubInfo> GetHubInfo(AuthContext authContext) => _systemController(authContext).GetHubInfo();
 
         public async Task<List<ManagedCertificateSummary>> GetHubSubscribableManagedCertificates(AuthContext authContext = null)

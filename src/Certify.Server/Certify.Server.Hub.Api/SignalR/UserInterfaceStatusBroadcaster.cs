@@ -74,7 +74,17 @@ namespace Certify.Server.Hub.Api.SignalR
                 ManagedCertificate = state.ManagedCertificate,
                 IsPreviewMode = state.IsPreviewMode,
                 IsSkipped = state.IsSkipped,
-                MessageCreated = state.MessageCreated
+                MessageCreated = state.MessageCreated,
+                RunId = state.RunId,
+                Stage = state.Stage,
+                Trigger = state.Trigger,
+                TriggerReason = state.TriggerReason,
+                BatchId = state.BatchId,
+                RunStarted = state.RunStarted,
+                WaitUntil = state.WaitUntil,
+                IsFinal = state.IsFinal,
+                Stages = state.Stages,
+                UserActions = state.UserActions
             };
 
             return SendToItemViewers(
@@ -123,6 +133,46 @@ namespace Certify.Server.Hub.Api.SignalR
                     StatusHubMessages.SendMsg,
                     StatusHubMessages.NotificationActionRequired,
                     System.Text.Json.JsonSerializer.Serialize(diagnostic));
+            }
+        }
+
+        /// <summary>
+        /// Send a newly recorded activity event to the clients which may see it: an event about a managed item goes to
+        /// those who may see the item, any other event (instance or hub activity) to those who may list managed instances
+        /// </summary>
+        public async Task SendActivityEvent(ActivityEvent activityEvent)
+        {
+            var payload = System.Text.Json.JsonSerializer.Serialize(activityEvent);
+
+            if (!string.IsNullOrWhiteSpace(activityEvent.ManagedItemId))
+            {
+                await SendToItemViewers(
+                    activityEvent.InstanceId,
+                    activityEvent.ManagedItemId,
+                    item: null,
+                    clients => clients.SendAsync(StatusHubMessages.SendMsg, StatusHubMessages.NotificationActivityEvent, payload));
+
+                return;
+            }
+
+            var connectionIds = new List<string>();
+
+            foreach (var audience in GetAudiences())
+            {
+                var mayListInstances = await GetCachedAccess(
+                    $"ui-status-instances:{audience.Key}",
+                    () => PrincipalAccess.IsAuthorized(_client, audience.AuthContext, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)),
+                    fallback: false);
+
+                if (mayListInstances)
+                {
+                    connectionIds.AddRange(audience.ConnectionIds);
+                }
+            }
+
+            if (connectionIds.Count > 0)
+            {
+                await _hubContext.Clients.Clients(connectionIds).SendAsync(StatusHubMessages.SendMsg, StatusHubMessages.NotificationActivityEvent, payload);
             }
         }
 
