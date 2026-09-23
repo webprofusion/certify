@@ -32,7 +32,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
     {
         private IInstanceManagementStateProvider _stateProvider;
         private ILogger<InstanceManagementHub> _logger;
-        private IHubContext<UserInterfaceStatusHub> _uiStatusHub;
+        private UserInterfaceStatusBroadcaster _uiStatus;
         private ICertifyManager? _certifyManager;
         private ICertifyInternalApiClient? _backendClient;
         private readonly string _localInstanceId = default!;
@@ -43,20 +43,20 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// </summary>
         /// <param name="stateProvider"></param>
         /// <param name="logger"></param>
-        /// <param name="uiStatusHub"></param>
+        /// <param name="uiStatus"></param>
         /// <param name="backendClient"></param>
         /// <param name="certifyManager"></param>
         public InstanceManagementHub(
             IInstanceManagementStateProvider stateProvider,
             ILogger<InstanceManagementHub> logger,
-            IHubContext<UserInterfaceStatusHub> uiStatusHub,
+            UserInterfaceStatusBroadcaster uiStatus,
             ICertifyInternalApiClient backendClient,
             ICertifyManager? certifyManager = null
             )
         {
             _stateProvider = stateProvider;
             _logger = logger;
-            _uiStatusHub = uiStatusHub;
+            _uiStatus = uiStatus;
             _certifyManager = certifyManager;
             _backendClient = backendClient;
 
@@ -278,7 +278,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     {
                         var previousManagedCertificate = GetCachedManagedCertificate(instanceId, updatedManagedCertificate.Id);
 
-                        await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, updatedManagedCertificate);
+                        await _uiStatus.SendManagedItemUpdated(updatedManagedCertificate);
 
                         _stateProvider.UpdateCachedManagedInstanceItem(instanceId, updatedManagedCertificate);
 
@@ -291,12 +291,15 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress && result.Value != null)
                 {
                     var progressState = System.Text.Json.JsonSerializer.Deserialize<RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
-                    if (progressState?.ManagedCertificate != null)
+                    if (progressState != null)
                     {
-                        progressState.ManagedCertificate.InstanceId = instanceId;
-                    }
+                        if (progressState.ManagedCertificate != null)
+                        {
+                            progressState.ManagedCertificate.InstanceId = instanceId;
+                        }
 
-                    await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, progressState);
+                        await _uiStatus.SendRequestProgress(progressState);
+                    }
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem && result.Value != null)
                 {
@@ -313,15 +316,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                         managedItemId = result.Value.Trim().Trim('"');
                     }
 
-                    await _uiStatusHub.Clients.All.SendAsync(
-                        StatusHubMessages.SendMsg,
-                        ManagementHubCommands.NotificationRemovedManagedItem,
-                        System.Text.Json.JsonSerializer.Serialize(new
-                        {
-                            InstanceId = instanceId,
-                            ManagedItemId = managedItemId,
-                            Action = "deleted"
-                        }));
+                    await _uiStatus.SendManagedItemRemoved(instanceId, managedItemId);
 
                     _stateProvider.DeleteCachedManagedInstanceItem(instanceId, managedItemId);
                 }

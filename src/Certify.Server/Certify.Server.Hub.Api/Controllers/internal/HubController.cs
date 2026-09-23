@@ -104,10 +104,10 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             var scopes = TagScopeFilter.ParseAll(tagScopes);
-            var userTagScopes = await GetCallerTagScopes(_client);
+            var visibility = await ManagedItemVisibility.Resolve(_client, CurrentAuthContext);
 
             // when nothing needs per-item evaluation we can use the pre-aggregated summaries reported by each instance
-            if (scopes.Count == 0 && string.IsNullOrWhiteSpace(keyword) && userTagScopes?.Any() != true)
+            if (scopes.Count == 0 && string.IsNullOrWhiteSpace(keyword) && visibility.IsUnrestricted)
             {
                 var aggregate = string.IsNullOrEmpty(instanceId)
                     ? await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext)
@@ -116,21 +116,21 @@ namespace Certify.Server.Hub.Api.Controllers
                 return new OkObjectResult(aggregate ?? new StatusSummary { InstanceId = instanceId ?? string.Empty });
             }
 
-            var list = await GetFilteredManagedItems(instanceId, keyword, null, tagScopes, requireAllTags, includeUntagged, userTagScopes);
+            var list = await GetFilteredManagedItems(instanceId, keyword, null, tagScopes, requireAllTags, includeUntagged, visibility);
 
             return new OkObjectResult(SummariseManagedItems(list, instanceId));
         }
 
         /// <summary>
-        /// Build the set of managed certificate summaries matching the given criteria, including the tag scope
-        /// restrictions which apply to the current user.
+        /// Build the set of managed certificate summaries matching the given criteria, limited to the items the
+        /// current user may see.
         /// </summary>
-        private async Task<List<ManagedCertificateSummary>> GetFilteredManagedItems(string? instanceId, string? keyword, string? health, IEnumerable<string>? tagScopes, bool requireAllTags, bool includeUntagged, List<TagScope>? userTagScopes = null)
+        private async Task<List<ManagedCertificateSummary>> GetFilteredManagedItems(string? instanceId, string? keyword, string? health, IEnumerable<string>? tagScopes, bool requireAllTags, bool includeUntagged, ManagedItemVisibility? visibility = null)
         {
             var scopes = TagScopeFilter.ParseAll(tagScopes);
 
-            // if the user has scoped tags on their assigned roles they can only see items matching those tags
-            userTagScopes ??= await GetCallerTagScopes(_client);
+            // the tag scopes and domain restrictions on the user's assigned roles limit which items they can see
+            visibility ??= await ManagedItemVisibility.Resolve(_client, CurrentAuthContext);
 
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
             var instances = _mgmtStateProvider.GetConnectedInstances();
@@ -178,8 +178,9 @@ namespace Certify.Server.Hub.Api.Controllers
                         continue;
                     }
 
-                    // a user restricted to tag scopes can never see untagged items
-                    if (userTagScopes?.Any() == true && !TagScopeFilter.Matches(tags, userTagScopes, matchAll: false))
+                    var identifiers = i.GetCertificateIdentifiers();
+
+                    if (!visibility.Permits(tags, identifiers.Select(id => id.Value)))
                     {
                         continue;
                     }
@@ -192,8 +193,8 @@ namespace Certify.Server.Hub.Api.Controllers
                         Title = i.Name ?? "",
                         OS = instance?.OS,
                         ClientDetails = i.SourceId != null ? i.SourceName : instance?.ClientName,
-                        PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
-                        Identifiers = i.GetCertificateIdentifiers(),
+                        PrimaryIdentifier = identifiers.FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? identifiers.FirstOrDefault(),
+                        Identifiers = identifiers,
                         DateRenewed = i.DateRenewed,
                         DateExpiry = i.DateExpiry,
                         Comments = i.Comments ?? "",

@@ -132,6 +132,23 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
+    /// Sent to UI clients when a managed item is updated or removed, serialized as the second argument of the status
+    /// hub SendMessage with <see cref="ManagementHubCommands.NotificationUpdatedManagedItem"/> or
+    /// <see cref="ManagementHubCommands.NotificationRemovedManagedItem"/> as the first. Only the item's ids are sent, a
+    /// client which needs the item itself fetches it from the hub API.
+    /// </summary>
+    public class ManagedItemChangeNotification
+    {
+        public string InstanceId { get; set; } = string.Empty;
+        public string ManagedItemId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// "updated" or "deleted"
+        /// </summary>
+        public string Action { get; set; } = string.Empty;
+    }
+
+    /// <summary>
     /// A command that can be sent asynchronously to an instance (each instance is a hub client)
     /// </summary>
     public class InstanceCommandRequest

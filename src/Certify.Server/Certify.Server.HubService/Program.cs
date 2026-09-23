@@ -15,7 +15,6 @@ using Certify.Server.HubService.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Primitives;
@@ -329,6 +328,7 @@ builder.Services.TryAddTransient<ManagedInstanceRequestAuthValidator>();
 
 builder.Services.AddTransient<ManagementAPI>();
 builder.Services.AddSingleton<ExternalSubscriberNotificationService>();
+builder.Services.AddSingleton<UserInterfaceStatusBroadcaster>();
 
 // used to directly talk back to the management server process instead of connecting back via SignalR
 builder.Services.AddTransient<IInstanceManagementHub, InstanceManagementHub>();
@@ -419,8 +419,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Both hubs require an authenticated caller. The status hub carries managed certificate state for every
-// connected instance, so an anonymous connection to it is a live feed of managed domains and config.
+// Both hubs require an authenticated caller. The status hub carries managed item progress and changes, sent to
+// each connection only for the items its caller may see, so it needs a caller to evaluate.
 // Clients present their token via the access_token query string, which the JWT bearer middleware is
 // configured to read for these two paths (see AuthenticationExtension).
 //
@@ -460,11 +460,10 @@ AddSystemStatusItem(
 
 // configure initialization of UI status hub, backend management hub etc
 
-var statusHubContext = app.Services.GetRequiredService<IHubContext<UserInterfaceStatusHub>>();
 var externalSubscriberNotificationService = app.Services.GetRequiredService<ExternalSubscriberNotificationService>();
 
 // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
-var statusReporting = new UserInterfaceStatusHubReporting(statusHubContext);
+var statusReporting = new UserInterfaceStatusHubReporting(app.Services.GetRequiredService<UserInterfaceStatusBroadcaster>());
 
 var certifyManager = app.Services.GetRequiredService<ICertifyManager>();
 

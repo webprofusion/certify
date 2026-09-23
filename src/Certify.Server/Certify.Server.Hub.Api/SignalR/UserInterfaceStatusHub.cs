@@ -1,6 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Certify.Models;
 using Certify.Providers;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -11,7 +12,7 @@ namespace Certify.Server.Hub.Api.SignalR
     /// </summary>
     public class UserInterfaceStatusHubReporting : IStatusReporting
     {
-        private IHubContext<UserInterfaceStatusHub> _hubContext;
+        private readonly UserInterfaceStatusBroadcaster _broadcaster;
 
         /// <summary>
         /// Event raised when a progress update is available
@@ -26,10 +27,10 @@ namespace Certify.Server.Hub.Api.SignalR
         /// <summary>
         /// constructor
         /// </summary>
-        /// <param name="hubContext"></param>
-        public UserInterfaceStatusHubReporting(IHubContext<UserInterfaceStatusHub> hubContext)
+        /// <param name="broadcaster"></param>
+        public UserInterfaceStatusHubReporting(UserInterfaceStatusBroadcaster broadcaster)
         {
-            _hubContext = hubContext;
+            _broadcaster = broadcaster;
         }
 
         /// <summary>
@@ -45,7 +46,7 @@ namespace Certify.Server.Hub.Api.SignalR
                 OnRequestProgressStateUpdated.Invoke(state);
             }
 
-            await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, state);
+            await _broadcaster.SendRequestProgress(state);
 
         }
 
@@ -63,7 +64,7 @@ namespace Certify.Server.Hub.Api.SignalR
                 OnManagedCertificateUpdated.Invoke(item);
             }
 
-            await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, item);
+            await _broadcaster.SendManagedItemUpdated(item);
         }
 
         /// <summary>
@@ -75,43 +76,32 @@ namespace Certify.Server.Hub.Api.SignalR
         {
             Debug.WriteLine($"Sending diagnostic action required message to UI: {diagnostic.Title}");
 
-            await _hubContext.Clients.All.SendAsync(
-                StatusHubMessages.SendMsg,
-                StatusHubMessages.NotificationActionRequired,
-                System.Text.Json.JsonSerializer.Serialize(diagnostic));
+            await _broadcaster.SendDiagnosticActionRequired(diagnostic);
         }
-    }
-
-    /// <summary>
-    /// Status Hub interface
-    /// </summary>
-    public interface IUserInterfaceStatusHub
-    {
-        /// <summary>
-        /// Send progress result back to subscribed UIs
-        /// </summary>
-        /// <param name="state"></param>
-        /// <returns></returns>
-        Task SendRequestProgressState(RequestProgressState state);
-
-        /// <summary>
-        /// Send managed certificate update to subscribers
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        Task SendManagedCertificateUpdate(ManagedCertificate item);
     }
 
     /// <summary>
     /// Status hub
     ///
     /// Connections are authenticated by the JWT bearer middleware during the negotiate/handshake request, so a client
-    /// presenting a missing, invalid or expired token is rejected with a 401 and never receives status updates. This
-    /// hub broadcasts managed certificate state for every connected instance, so it must not accept anonymous clients.
+    /// presenting a missing, invalid or expired token is rejected with a 401 and never receives status updates. Each
+    /// connection is then tracked against the caller it authenticated as, and <see cref="UserInterfaceStatusBroadcaster"/>
+    /// sends it only the updates that caller may see.
     /// </summary>
     [Authorize]
-    public class UserInterfaceStatusHub : Hub<IUserInterfaceStatusHub>
+    public class UserInterfaceStatusHub : Microsoft.AspNetCore.SignalR.Hub
     {
+        private readonly UserInterfaceStatusBroadcaster _broadcaster;
+
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="broadcaster"></param>
+        public UserInterfaceStatusHub(UserInterfaceStatusBroadcaster broadcaster)
+        {
+            _broadcaster = broadcaster;
+        }
+
         /// <summary>
         /// Handle connection event
         /// </summary>
@@ -119,6 +109,15 @@ namespace Certify.Server.Hub.Api.SignalR
         public override Task OnConnectedAsync()
         {
             Debug.WriteLine("StatusHub: Client connected to status stream..");
+
+            // a connection with no security principal to evaluate is left untracked, and so is sent nothing
+            var authContext = PrincipalAccess.GetAuthContext(Context.User);
+
+            if (authContext != null)
+            {
+                _broadcaster.AddConnection(Context.ConnectionId, authContext);
+            }
+
             return base.OnConnectedAsync();
         }
 
@@ -130,6 +129,9 @@ namespace Certify.Server.Hub.Api.SignalR
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             Debug.WriteLine("StatusHub: Client disconnected from status stream..");
+
+            _broadcaster.RemoveConnection(Context.ConnectionId);
+
             return base.OnDisconnectedAsync(exception);
         }
     }

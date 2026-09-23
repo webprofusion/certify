@@ -1,6 +1,5 @@
 ﻿using System.Net.Http.Headers;
 using System.Linq;
-using System.Security.Claims;
 using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
@@ -19,7 +18,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Special auth context used internally for operations where the requesting user may not be authorized to query system state
         /// </summary>
-        internal AuthContext SystemAuthContext = new AuthContext { UserId = StandardSecurityPrincipals.System };
+        internal AuthContext SystemAuthContext = PrincipalAccess.SystemAuthContext;
 
         /// <summary>
         /// Check resource action access for the current user
@@ -27,36 +26,8 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="internalApiClient"></param>
         /// <param name="check"></param>
         /// <returns></returns>
-        internal async Task<bool> IsAuthorized(ICertifyInternalApiClient internalApiClient, AccessCheck check)
-        {
-            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
-            {
-                return false;
-            }
-
-            /// if check does not specify security principal use the current user
-            if (check.SecurityPrincipalId == null)
-            {
-                check.SecurityPrincipalId = CurrentAuthContext.UserId;
-            }
-
-            // An API access token is issued scoped to specific role assignments, and being authenticated as a
-            // principal is not authority to act as every role that principal holds. The scope arrives as claims on
-            // the request, but only the check itself crosses to the access control store, so it has to be carried
-            // there or the token is evaluated against the principal's full role set.
-            //
-            // This only applies when the check is about the principal the caller authenticated as: an explicit
-            // security principal id asks whether some other principal has access, which the caller's own token
-            // scope does not narrow.
-            if (check.SecurityPrincipalId == CurrentAuthContext.UserId
-                && !(check.ScopedAssignedRoles?.Count > 0)
-                && CurrentAuthContext.ScopedAssignedRoles?.Count > 0)
-            {
-                check.ScopedAssignedRoles = CurrentAuthContext.ScopedAssignedRoles;
-            }
-
-            return await internalApiClient.CheckSecurityPrincipalHasAccess(check, CurrentAuthContext);
-        }
+        internal Task<bool> IsAuthorized(ICertifyInternalApiClient internalApiClient, AccessCheck check)
+            => PrincipalAccess.IsAuthorized(internalApiClient, CurrentAuthContext, check);
 
         /// <summary>
         /// Check resource action access for the given API access token
@@ -164,39 +135,12 @@ namespace Certify.Server.Hub.Api.Controllers
         /// An empty list means the principal is unrestricted; null means the scope could not be evaluated and the
         /// caller should fail closed rather than treat the principal as unrestricted.
         /// </summary>
-        internal async Task<List<string>?> GetDomainRestrictionRulesForPrincipal(
+        internal Task<List<string>?> GetDomainRestrictionRulesForPrincipal(
             ICertifyInternalApiClient internalApiClient,
             string? securityPrincipalId,
             string resourceActionId,
             ICollection<string>? scopedAssignedRoles = null)
-        {
-            if (string.IsNullOrWhiteSpace(securityPrincipalId))
-            {
-                return null;
-            }
-
-            var check = new AccessCheck
-            {
-                SecurityPrincipalId = securityPrincipalId,
-                ResourceType = ResourceTypes.Domain,
-                ResourceActionId = resourceActionId
-            };
-
-            if (scopedAssignedRoles?.Count > 0)
-            {
-                check.ScopedAssignedRoles = scopedAssignedRoles.ToList();
-            }
-
-            try
-            {
-                var scope = await internalApiClient.EvaluateAccessScope(check, SystemAuthContext) ?? new ResourceAccessScope();
-                return ResourceAccess.GetDomainRestrictionRules(scope.AuthorizingRoles);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
+            => PrincipalAccess.GetDomainRestrictionRules(internalApiClient, securityPrincipalId, resourceActionId, scopedAssignedRoles);
 
         /// <summary>
         /// Check the current security principal's domain restrictions for a resource action. Restrictions are
@@ -303,41 +247,8 @@ namespace Certify.Server.Hub.Api.Controllers
         /// whenever the caller had no token scope, so a signed in operator whose role was tag scoped saw every
         /// resource while an API token scoped to that same role saw only the matching ones.
         /// </summary>
-        internal async Task<List<TagScope>?> GetCallerTagScopes(ICertifyInternalApiClient internalApiClient)
-        {
-            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
-            {
-                return null;
-            }
-
-            try
-            {
-                var assignedRoles = await internalApiClient.GetSecurityPrincipalAssignedRoles(CurrentAuthContext.UserId, CurrentAuthContext);
-
-                if (assignedRoles?.Any() != true)
-                {
-                    return null;
-                }
-
-                // Getting the assignment id comparison wrong here removes the tag filtering rather than tightening
-                // it, so this shares the matching used by the authorization check itself.
-                var applicableRoles = ResourceAccess.FilterToScopedAssignments(assignedRoles, CurrentAuthContext.ScopedAssignedRoles);
-
-                var tagScopes = applicableRoles
-                    .Where(r => r.ScopedTags?.Count > 0)
-                    .SelectMany(r => r.ScopedTags!)
-                    .ToList();
-
-                // no tag restrictions on any applicable assignment, so the caller is unrestricted
-                return tagScopes.Count > 0 ? tagScopes : null;
-            }
-            catch (Exception)
-            {
-                // Fail closed on an empty scope set rather than null: null means unrestricted, so reporting it here
-                // would widen what an unreadable role assignment can see instead of narrowing it.
-                return [];
-            }
-        }
+        internal Task<List<TagScope>?> GetCallerTagScopes(ICertifyInternalApiClient internalApiClient)
+            => PrincipalAccess.GetTagScopes(internalApiClient, CurrentAuthContext);
 
         internal AccessToken? GetAccessTokenFromRequest()
         {
@@ -374,34 +285,16 @@ namespace Certify.Server.Hub.Api.Controllers
         {
             get
             {
-                var principal = HttpContext?.User;
-                if (principal?.Identity?.IsAuthenticated == true)
+                var authContext = PrincipalAccess.GetAuthContext(HttpContext?.User);
+                if (authContext != null)
                 {
-                    var userIdFromClaims = principal.FindFirst(ClaimTypes.Sid)?.Value;
-                    if (!string.IsNullOrWhiteSpace(userIdFromClaims))
+                    var authHeaderValue = Request.Headers["Authorization"];
+                    if (!string.IsNullOrWhiteSpace(authHeaderValue) && authHeaderValue.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                     {
-                        var authContext = new AuthContext { UserId = userIdFromClaims };
-
-                        var scopedAssignedRoles = principal
-                            .FindAll(ApiKeyAuthenticationDefaults.ScopedAssignedRoleClaimType)
-                            .Select(c => c.Value)
-                            .Where(v => !string.IsNullOrWhiteSpace(v))
-                            .Distinct()
-                            .ToList();
-
-                        if (scopedAssignedRoles.Any())
-                        {
-                            authContext.ScopedAssignedRoles = scopedAssignedRoles;
-                        }
-
-                        var authHeaderValue = Request.Headers["Authorization"];
-                        if (!string.IsNullOrWhiteSpace(authHeaderValue) && authHeaderValue.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                        {
-                            authContext.Token = AuthenticationHeaderValue.Parse(authHeaderValue!).Parameter;
-                        }
-
-                        return authContext;
+                        authContext.Token = AuthenticationHeaderValue.Parse(authHeaderValue!).Parameter;
                     }
+
+                    return authContext;
                 }
 
                 // No authenticated principal, so there is no caller to report. Credentials are validated by the
