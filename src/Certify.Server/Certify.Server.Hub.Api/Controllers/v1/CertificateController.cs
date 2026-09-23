@@ -54,7 +54,16 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> Download(string instanceId, string managedCertId, string format)
         {
-            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
+            // a role assignment scoped to tags reaches only the certificates carrying them, so the check is made
+            // against this certificate's tags, as the subscription listing does when deciding what to offer
+            var tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, managedCertId, SystemAuthContext);
+
+            var accessCheck = await CheckRequestAuthorized(
+                _client,
+                new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload, managedCertId)
+                {
+                    ResourceTags = tags?.ToList() ?? []
+                });
 
             // either route may be restricted to specific domains, which can only be checked once we know the
             // identifiers on the cert. A principal authorized by their own roles is checked against the restrictions
@@ -66,7 +75,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (!accessCheck.IsSuccess)
             {
-                var subscriptionCheck = await CheckManagedInstanceSubscriptionDownloadAuthorized(managedCertId);
+                var subscriptionCheck = await CheckManagedInstanceSubscriptionDownloadAuthorized(managedCertId, tags);
                 if (!subscriptionCheck.IsSuccess)
                 {
                     return Problem(detail: subscriptionCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
@@ -169,7 +178,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// Domain Match rules restricting the instance's own principal, which the caller applies to the identifiers
         /// on the cert once it has fetched them. An empty rule set means the instance is unrestricted.
         /// </summary>
-        private async Task<Certify.Models.Config.ActionResult<List<string>>> CheckManagedInstanceSubscriptionDownloadAuthorized(string managedCertId)
+        private async Task<Certify.Models.Config.ActionResult<List<string>>> CheckManagedInstanceSubscriptionDownloadAuthorized(string managedCertId, ICollection<TagSummary>? tags)
         {
             // the caller's credentials were resolved by the authentication middleware, so this asks whether the
             // principal they authenticated as may join the hub - it does not resolve their token a second time
@@ -197,15 +206,13 @@ namespace Certify.Server.Hub.Api.Controllers
                 return new Certify.Models.Config.ActionResult<List<string>>("Managed instance is not registered with a linked security principal.", false);
             }
 
-            var tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, managedCertId, SystemAuthContext);
-
             var certAccessCheck = new AccessCheck
             {
                 SecurityPrincipalId = matchingInstance.SecurityPrincipalId,
                 ResourceType = ResourceTypes.Certificate,
                 ResourceActionId = StandardResourceActions.CertificateDownload,
                 Identifier = managedCertId,
-                ResourceTags = tags?.ToList()
+                ResourceTags = tags?.ToList() ?? []
             };
 
             var isAuthorized = await _client.CheckSecurityPrincipalHasAccess(certAccessCheck, new AuthContext { UserId = matchingInstance.SecurityPrincipalId });
@@ -248,6 +255,12 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
+            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemList, instanceId, managedCertId);
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
             var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, "pem_fullchain_root", strictExport, CurrentAuthContext);
 
             if (exportResult.IsSuccess && exportResult.Result != null)
@@ -285,6 +298,12 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
+            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemLogView, instanceId, managedCertId);
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
             if (maxLines > 1000)
             {
                 maxLines = 1000;
@@ -312,6 +331,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!accessCheck.IsSuccess)
             {
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemLogView, instanceId, managedCertId);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             var log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, -1, CurrentAuthContext);
@@ -381,6 +406,13 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
 
+            // checked against the item as it is returned
+            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemList, instanceId, managedCertId, managedCert);
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
             return new OkObjectResult(managedCert);
         }
 
@@ -400,6 +432,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!accessCheck.IsSuccess)
             {
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemUpdate, instanceId, managedCertificate);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             var result = await _mgmtAPI.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
@@ -452,6 +490,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!request.Identifiers?.Any() == true)
             {
                 return Problem(detail: "At least one domain or IP identifier is required.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var identifierCheck = await CheckIdentifiersAuthorized(_client, StandardResourceActions.ManagedItemAdd, request.Identifiers.Select(i => i.Value));
+            if (!identifierCheck.IsSuccess)
+            {
+                return Problem(detail: identifierCheck.Message, statusCode: StatusCodes.Status401Unauthorized);
             }
 
             var managedCertificate = new ManagedCertificate
@@ -521,6 +565,12 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
+            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemRequest, instanceId, id);
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
             await _mgmtAPI.PerformManagedCertificateRequest(instanceId, id, CurrentAuthContext);
 
             return new OkResult();
@@ -542,6 +592,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!accessCheck.IsSuccess)
             {
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemTest, instanceId, item);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             var results = await _mgmtAPI.TestManagedCertificateConfiguration(instanceId, item, CurrentAuthContext);
@@ -572,6 +628,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!accessCheck.IsSuccess)
             {
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemUpdate, instanceId, id);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             var results = await _mgmtAPI.ResetManagedItemStatus(instanceId, id, CurrentAuthContext);

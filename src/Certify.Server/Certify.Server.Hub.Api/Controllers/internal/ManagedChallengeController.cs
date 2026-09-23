@@ -48,11 +48,18 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Forbid();
             }
 
-            // Get all managed challenges
-            var challenges = await _client.GetManagedChallenges(CurrentAuthContext);
-
             // Get user's tag scopes from their scoped assigned roles
             var tagScopes = await GetCallerTagScopes(_client);
+
+            if (tagScopes?.Count == 0)
+            {
+                // null means unrestricted; an empty set means the caller's role assignments could not be read, so
+                // there is nothing to show which challenges are within their scope
+                return new OkObjectResult(new List<ManagedChallengeSummary>());
+            }
+
+            // Get all managed challenges
+            var challenges = await _client.GetManagedChallenges(CurrentAuthContext);
 
             // Load all tags for managed challenges
             var allChallengeTags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge, null, CurrentAuthContext);
@@ -75,7 +82,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 // matched by a loop written here, which compared category keys and values case sensitively while
                 // every other tag comparison in the product is case insensitive - so a challenge tagged
                 // "Production" was invisible to a role scoped to "production".
-                if (tagScopes?.Any() == true
+                if (tagScopes != null
                     && !TagScopeFilter.Matches(challengeTags, tagScopes, matchAll: false))
                 {
                     continue;

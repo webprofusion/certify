@@ -56,6 +56,30 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        [Description("An API token whose role is scoped to a tag gets a certificate carrying it")]
+        public async Task Download_TagScopedApiToken_ReturnsCertificateWithinItsTags()
+        {
+            var client = CreateTagScopedClient(certificateTag: "production");
+            var controller = CreateController(client.Object, ApiTokenPrincipal());
+
+            var result = await controller.Download(InstanceId, ManagedCertId, "pfx");
+
+            AssertCertificateReturned(result);
+        }
+
+        [TestMethod]
+        [Description("An API token whose role is scoped to a tag is refused a certificate without it, although it holds the download action")]
+        public async Task Download_TagScopedApiToken_IsRefusedOutsideItsTags()
+        {
+            var client = CreateTagScopedClient(certificateTag: "development");
+            var controller = CreateController(client.Object, ApiTokenPrincipal());
+
+            var result = await controller.Download(InstanceId, ManagedCertId, "pfx");
+
+            AssertUnauthorized(result);
+        }
+
+        [TestMethod]
         [Description("An API token restricted to a domain gets a certificate whose identifiers are all within it")]
         public async Task Download_DomainRestrictedApiToken_ReturnsCertificateWithinScope()
         {
@@ -321,6 +345,44 @@ namespace Certify.Core.Tests.Unit
 
             client.Setup(c => c.GetHubItemTags(TaggedItemTypes.ManagedCertificate, ManagedCertId, It.IsAny<AuthContext>()))
                 .ReturnsAsync(new List<TagSummary>());
+
+            return client;
+        }
+
+        /// <summary>
+        /// A backend where the caller's certificate download role is scoped to the production environment tag, and
+        /// the certificate carries the given environment tag. The download check is answered the way the access
+        /// control store answers it: the tag scope is applied when the check carries the certificate's tags, and an
+        /// action-level check without them succeeds on any role granting the action.
+        /// </summary>
+        private static Mock<ICertifyInternalApiClient> CreateTagScopedClient(string certificateTag)
+        {
+            var client = CreateClient(domainRestriction: null, grantsDownload: true);
+
+            var tagScopedScope = new ResourceAccessScope
+            {
+                HasAccess = true,
+                AuthorizingRoles =
+                [
+                    new AssignedRole
+                    {
+                        Id = "ar-1",
+                        RoleId = StandardRoles.CertificateConsumer.Id,
+                        SecurityPrincipalId = "sp-consumer",
+                        ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
+                    }
+                ]
+            };
+
+            client.Setup(c => c.CheckSecurityPrincipalHasAccess(
+                    It.Is<AccessCheck>(a => a.ResourceActionId == StandardResourceActions.CertificateDownload
+                        && a.SecurityPrincipalId == "sp-consumer"),
+                    It.IsAny<AuthContext>()))
+                .ReturnsAsync((AccessCheck check, AuthContext _) =>
+                    check.ResourceTags == null || ResourceAccess.IsResourceInScope(tagScopedScope, check.ResourceTags));
+
+            client.Setup(c => c.GetHubItemTags(TaggedItemTypes.ManagedCertificate, ManagedCertId, It.IsAny<AuthContext>()))
+                .ReturnsAsync(new List<TagSummary> { new() { CategoryKey = "environment", Value = certificateTag } });
 
             return client;
         }

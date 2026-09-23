@@ -16,6 +16,13 @@ namespace SourceGenerator
 
         public string PublicAPIRoute { get; set; } = string.Empty;
         public List<PermissionSpec> RequiredPermissions { get; set; } = new List<PermissionSpec>();
+
+        /// <summary>
+        /// For an operation on a single managed item, the parameter holding its id (alongside instanceId). The
+        /// generated endpoint then also checks that item is within the caller's scope for the required action, so
+        /// it cannot be reached by an id the item listing would not show them. Requires UseManagementAPI.
+        /// </summary>
+        public string ManagedItemIdParam { get; set; } = string.Empty;
         public bool UseManagementAPI { get; set; } = false;
         public string ManagementHubCommandType { get; set; } = string.Empty;
         public string ServiceAPIRoute { get; set; } = string.Empty;
@@ -156,7 +163,21 @@ namespace SourceGenerator
                             {{
                                 return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
                             }}
-                      
+
+                    ";
+                }
+
+                if (!string.IsNullOrEmpty(config.ManagedItemIdParam))
+                {
+                    fragment += $@"
+
+                            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, ""{config.RequiredPermissions.First().Action}"", instanceId, {config.ManagedItemIdParam});
+
+                            if (outOfScope != null)
+                            {{
+                                return outOfScope;
+                            }}
+
                     ";
                 }
 

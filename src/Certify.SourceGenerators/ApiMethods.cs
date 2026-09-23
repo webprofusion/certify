@@ -985,7 +985,8 @@ namespace Certify.SourceGenerators
                         { "managedCertificateId", "string" },
                         { "taskId", "string" }
                     },
-                    RequiredPermissions = [new(ResourceTypes.DeploymentTask, StandardResourceActions.DeploymentTaskExecute)]
+                    RequiredPermissions = [new(ResourceTypes.DeploymentTask, StandardResourceActions.DeploymentTaskExecute)],
+                    ManagedItemIdParam = "managedCertificateId"
                 },
                 new()
                 {
@@ -1011,7 +1012,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "{instanceId}/settings/{managedCertId}",
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemDelete)]
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemDelete)],
+                    ManagedItemIdParam = "managedCertId"
                 },
                 new()
                 {

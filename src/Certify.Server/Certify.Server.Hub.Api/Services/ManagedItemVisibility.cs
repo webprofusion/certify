@@ -4,32 +4,33 @@ using Certify.Models.Hub;
 namespace Certify.Server.Hub.Api.Services
 {
     /// <summary>
-    /// The managed items a caller may see: those the managed item list action reaches, narrowed by the tag scopes
-    /// and domain restrictions on the caller's role assignments. Resolved once per caller and then applied to each
-    /// item, by the item listing endpoints and by the UI status feed, so that both show a caller the same items.
+    /// The managed items a caller may reach with a managed item action: those the action reaches, narrowed by the
+    /// tag scopes and domain restrictions on the caller's role assignments. Resolved once per caller and then
+    /// applied to each item. For the list action this is what the item listing endpoints and the UI status feed
+    /// show, so both show a caller the same items; the endpoints acting on a single item resolve it for their own
+    /// action, so an item the caller cannot reach cannot be read or changed by its id either.
     /// </summary>
     public sealed class ManagedItemVisibility
     {
         /// <summary>
-        /// A caller who may not list managed items at all
+        /// A caller who may not perform the action at all, or whose scope for it could not be read
         /// </summary>
         public static ManagedItemVisibility None { get; } = new(false, null, []);
 
-        private ManagedItemVisibility(bool canList, List<TagScope>? tagScopes, List<string> domainRules)
+        private ManagedItemVisibility(bool hasAction, List<TagScope>? tagScopes, List<string> domainRules)
         {
-            CanList = canList;
+            HasAction = hasAction;
             TagScopes = tagScopes;
             DomainRules = domainRules;
         }
 
         /// <summary>
-        /// True when the caller holds the managed item list action
+        /// True when the caller holds the action and their scope for it could be read
         /// </summary>
-        public bool CanList { get; }
+        public bool HasAction { get; }
 
         /// <summary>
-        /// Tag scopes an item must match one of, or null when unrestricted. An empty set matches nothing, which is
-        /// how a role assignment that could not be read fails closed.
+        /// Tag scopes an item must match one of, or null when unrestricted
         /// </summary>
         public List<TagScope>? TagScopes { get; }
 
@@ -41,17 +42,17 @@ namespace Certify.Server.Hub.Api.Services
         /// <summary>
         /// True when every managed item is visible, so no per-item evaluation is needed
         /// </summary>
-        public bool IsUnrestricted => CanList && TagScopes == null && DomainRules.Count == 0;
+        public bool IsUnrestricted => HasAction && TagScopes == null && DomainRules.Count == 0;
 
         /// <summary>
         /// True when an item's tags are needed to decide whether it is visible
         /// </summary>
-        public bool RequiresTags => CanList && TagScopes != null;
+        public bool RequiresTags => HasAction && TagScopes != null;
 
         /// <summary>
         /// True when an item's identifiers are needed to decide whether it is visible
         /// </summary>
-        public bool RequiresIdentifiers => CanList && DomainRules.Count > 0;
+        public bool RequiresIdentifiers => HasAction && DomainRules.Count > 0;
 
         /// <summary>
         /// Whether an item with the given tags and identifiers is visible. A caller restricted to tag scopes never
@@ -60,56 +61,77 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         public bool Permits(IEnumerable<ITaggedValue>? tags, IEnumerable<string?>? identifiers)
         {
-            if (!CanList)
+            if (!HasAction)
             {
                 return false;
             }
 
-            if (TagScopes != null && (TagScopes.Count == 0 || !TagScopeFilter.Matches(tags, TagScopes, matchAll: false)))
+            if (TagScopes != null && !TagScopeFilter.Matches(tags, TagScopes, matchAll: false))
             {
                 return false;
             }
 
-            if (DomainRules.Count > 0)
-            {
-                var identifierList = identifiers?.Where(i => !string.IsNullOrWhiteSpace(i)).ToList() ?? [];
-
-                // the item's configuration names all of its identifiers, so every one must be within scope
-                if (identifierList.Count == 0 || !identifierList.All(i => ResourceAccess.IsIdentifierPermittedByDomainRules(DomainRules, i)))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return PermitsIdentifiers(identifiers);
         }
 
         /// <summary>
-        /// Resolve what the caller may see
+        /// Whether every one of the given identifiers is within the caller's domain restrictions. This alone decides
+        /// a managed item configuration the caller is submitting, which has no tags until it has been saved.
         /// </summary>
-        public static async Task<ManagedItemVisibility> Resolve(ICertifyInternalApiClient internalApiClient, AuthContext? authContext)
+        public bool PermitsIdentifiers(IEnumerable<string?>? identifiers)
+        {
+            if (!HasAction)
+            {
+                return false;
+            }
+
+            if (DomainRules.Count == 0)
+            {
+                return true;
+            }
+
+            var identifierList = identifiers?.Where(i => !string.IsNullOrWhiteSpace(i)).ToList() ?? [];
+
+            // the item's configuration names all of its identifiers, so every one must be within scope
+            return identifierList.Count > 0
+                && identifierList.All(i => ResourceAccess.IsIdentifierPermittedByDomainRules(DomainRules, i));
+        }
+
+        /// <summary>
+        /// Resolve what the caller may reach with the given managed item action, by default what they may list
+        /// </summary>
+        public static async Task<ManagedItemVisibility> Resolve(
+            ICertifyInternalApiClient internalApiClient,
+            AuthContext? authContext,
+            string resourceActionId = StandardResourceActions.ManagedItemList)
         {
             if (string.IsNullOrWhiteSpace(authContext?.UserId))
             {
                 return None;
             }
 
-            var canList = await PrincipalAccess.IsAuthorized(
+            var hasAction = await PrincipalAccess.IsAuthorized(
                 internalApiClient,
                 authContext,
-                new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+                new AccessCheck(default!, ResourceTypes.ManagedItem, resourceActionId));
 
-            if (!canList)
+            if (!hasAction)
             {
                 return None;
             }
 
             var tagScopes = await PrincipalAccess.GetTagScopes(internalApiClient, authContext);
 
+            if (tagScopes?.Count == 0)
+            {
+                // the role assignments could not be read, so there is nothing to show which items are in scope
+                return None;
+            }
+
             var domainRules = await PrincipalAccess.GetDomainRestrictionRules(
                 internalApiClient,
                 authContext.UserId,
-                StandardResourceActions.ManagedItemList,
+                resourceActionId,
                 authContext.ScopedAssignedRoles);
 
             if (domainRules == null)

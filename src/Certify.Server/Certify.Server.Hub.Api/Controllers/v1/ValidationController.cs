@@ -2,6 +2,7 @@
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,6 +50,15 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!accessCheck.IsSuccess)
             {
                 return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            // a pending challenge does not say which item it belongs to, so a caller restricted to some items cannot
+            // be shown just theirs, and is shown none
+            var visibility = await ManagedItemVisibility.Resolve(_client, CurrentAuthContext);
+
+            if (!visibility.IsUnrestricted)
+            {
+                return new OkObjectResult(new List<SimpleAuthorizationChallengeItem>());
             }
 
             if (type == null)

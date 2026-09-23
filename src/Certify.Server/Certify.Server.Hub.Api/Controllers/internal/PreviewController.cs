@@ -54,6 +54,12 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
             }
 
+            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemList, item?.InstanceId, item);
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
             var previewSteps = await _mgmtAPI.GetPreviewActions(item.InstanceId, item, CurrentAuthContext);
             return new OkObjectResult(previewSteps);
         }
@@ -69,6 +75,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!accessCheck.IsSuccess)
             {
                 return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemList, item?.InstanceId, item);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             var previewSteps = await _mgmtAPI.GetPreviewActions(item.InstanceId, item, CurrentAuthContext);

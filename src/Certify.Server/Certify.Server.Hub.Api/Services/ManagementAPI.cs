@@ -443,6 +443,16 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// The hub's cached copy of a managed item, as its instance last reported it, or null when it is not cached
+        /// </summary>
+        public ManagedCertificate? GetCachedManagedCertificate(string instanceId, string managedCertId)
+        {
+            return _mgmtStateProvider.GetManagedInstanceItems().TryGetValue(instanceId, out var instanceItems)
+                ? instanceItems.Items?.FirstOrDefault(i => string.Equals(i.Id, managedCertId, StringComparison.OrdinalIgnoreCase))
+                : null;
+        }
+
+        /// <summary>
         /// Exports a managed certificate from the target instance in the specified format.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>

@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Linq;
 using Certify.Client;
+using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
@@ -195,6 +196,126 @@ namespace Certify.Server.Hub.Api.Controllers
             return denied == null
                 ? new Certify.Models.Config.ActionResult("Authorized for all identifiers", true)
                 : new Certify.Models.Config.ActionResult($"Identifier '{denied}' is not permitted by the domain restrictions on this role assignment", false);
+        }
+
+        /// <summary>
+        /// Check that a managed item is within the caller's scope for a managed item action: the tag scopes and
+        /// domain restrictions on their role assignments, applied to the item as the item listing applies them. The
+        /// endpoint checks the action itself first; this narrows it to the one item, which the caller may have named
+        /// by an id the listing never showed them.
+        ///
+        /// An item outside that scope is reported as not found, as the listing does not show it either.
+        /// </summary>
+        /// <param name="internalApiClient"></param>
+        /// <param name="mgmtAPI"></param>
+        /// <param name="resourceActionId">the managed item action the endpoint performs</param>
+        /// <param name="instanceId">instance holding the item</param>
+        /// <param name="managedCertId">the item</param>
+        /// <param name="item">the item where the endpoint has already fetched it, otherwise it is looked up</param>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckManagedItemInScope(
+            ICertifyInternalApiClient internalApiClient,
+            ManagementAPI mgmtAPI,
+            string resourceActionId,
+            string? instanceId,
+            string? managedCertId,
+            ManagedCertificate? item = null)
+        {
+            var scope = await ManagedItemVisibility.Resolve(internalApiClient, CurrentAuthContext, resourceActionId);
+
+            if (!scope.HasAction)
+            {
+                return ManagedItemScopeNotEvaluated(resourceActionId);
+            }
+
+            if (scope.IsUnrestricted)
+            {
+                return null;
+            }
+
+            item ??= await FindManagedItem(mgmtAPI, instanceId, managedCertId);
+
+            return item != null && await IsManagedItemInScope(internalApiClient, scope, item)
+                ? null
+                : Problem(detail: "Managed item not found", statusCode: StatusCodes.Status404NotFound);
+        }
+
+        /// <summary>
+        /// Check a managed item configuration the caller has submitted, to save, test or preview, against their
+        /// scope for a managed item action. Where it is an existing item, that item must be within scope as it
+        /// stands, and is otherwise reported as not found. Every identifier the submitted configuration names must
+        /// be within the domain restrictions for the action, so it can neither reach an item the caller could not
+        /// otherwise nor take one outside their domains. The submitted configuration's tags are not considered, as
+        /// tags are held by the hub and a new item is only tagged once it has been saved.
+        /// </summary>
+        /// <param name="internalApiClient"></param>
+        /// <param name="mgmtAPI"></param>
+        /// <param name="resourceActionId">the managed item action the endpoint performs</param>
+        /// <param name="instanceId">instance the configuration is for</param>
+        /// <param name="submittedItem">the configuration as the caller submitted it</param>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckSubmittedManagedItemInScope(
+            ICertifyInternalApiClient internalApiClient,
+            ManagementAPI mgmtAPI,
+            string resourceActionId,
+            string? instanceId,
+            ManagedCertificate? submittedItem)
+        {
+            var scope = await ManagedItemVisibility.Resolve(internalApiClient, CurrentAuthContext, resourceActionId);
+
+            if (!scope.HasAction)
+            {
+                return ManagedItemScopeNotEvaluated(resourceActionId);
+            }
+
+            if (scope.IsUnrestricted)
+            {
+                return null;
+            }
+
+            var existingItem = await FindManagedItem(mgmtAPI, instanceId, submittedItem?.Id);
+
+            if (existingItem != null && !await IsManagedItemInScope(internalApiClient, scope, existingItem))
+            {
+                return Problem(detail: "Managed item not found", statusCode: StatusCodes.Status404NotFound);
+            }
+
+            if (!scope.PermitsIdentifiers(submittedItem?.GetCertificateIdentifiers().Select(i => i.Value)))
+            {
+                return Problem(
+                    detail: "The managed item's identifiers are not all permitted by the domain restrictions on this role assignment",
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            return null;
+        }
+
+        private ObjectResult ManagedItemScopeNotEvaluated(string resourceActionId)
+            => Problem(detail: $"Could not evaluate the managed item access scope for {resourceActionId}", statusCode: StatusCodes.Status401Unauthorized);
+
+        /// <summary>
+        /// The hub's cached copy of an item is what the item listing shows, so that is what is checked; an item not
+        /// cached yet is asked for from its instance.
+        /// </summary>
+        private async Task<ManagedCertificate?> FindManagedItem(ManagementAPI mgmtAPI, string? instanceId, string? managedCertId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) || string.IsNullOrWhiteSpace(managedCertId))
+            {
+                return null;
+            }
+
+            return mgmtAPI.GetCachedManagedCertificate(instanceId, managedCertId)
+                ?? await mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
+        }
+
+        private async Task<bool> IsManagedItemInScope(ICertifyInternalApiClient internalApiClient, ManagedItemVisibility scope, ManagedCertificate item)
+        {
+            // an item whose tags cannot be found is untagged, which no tag scoped caller reaches
+            var tags = scope.RequiresTags && !string.IsNullOrWhiteSpace(item.Id)
+                ? await internalApiClient.GetHubItemTags(TaggedItemTypes.ManagedCertificate, item.Id, SystemAuthContext)
+                : null;
+
+            return scope.Permits(tags, item.GetCertificateIdentifiers().Select(i => i.Value));
         }
 
         /// <summary>

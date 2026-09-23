@@ -90,6 +90,48 @@ namespace Certify.Core.Tests.Unit
             Assert.IsInstanceOfType<ForbidResult>(result, result.GetType().Name);
         }
 
+        [TestMethod]
+        [Description("A caller whose role is scoped to a tag lists only the challenges carrying it")]
+        public async Task GetManagedChallengeSummaries_TagScopedCaller_ListsOnlyMatchingChallenges()
+        {
+            var controller = CreateController(authorized: true, client =>
+                client.Setup(c => c.GetSecurityPrincipalAssignedRoles(CallerId, It.IsAny<AuthContext>()))
+                    .ReturnsAsync(new List<AssignedRole>
+                    {
+                        new()
+                        {
+                            Id = "ar-consumer",
+                            RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                            SecurityPrincipalId = CallerId,
+                            ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
+                        }
+                    }));
+
+            var result = await controller.GetManagedChallengeSummaries();
+
+            CollectionAssert.AreEquivalent(new[] { OtherChallengeId }, Summaries(result).Select(s => s.Id).ToArray());
+        }
+
+        [TestMethod]
+        [Description("When the caller's role assignments cannot be read no challenges are listed, rather than every one")]
+        public async Task GetManagedChallengeSummaries_RolesCannotBeRead_ListsNothing()
+        {
+            var controller = CreateController(authorized: true, client =>
+                client.Setup(c => c.GetSecurityPrincipalAssignedRoles(CallerId, It.IsAny<AuthContext>()))
+                    .ThrowsAsync(new System.InvalidOperationException("store unavailable")));
+
+            var result = await controller.GetManagedChallengeSummaries();
+
+            Assert.IsEmpty(Summaries(result));
+        }
+
+        private static ICollection<ManagedChallengeSummary> Summaries(IActionResult result)
+        {
+            Assert.IsInstanceOfType<OkObjectResult>(result, result.GetType().Name);
+
+            return (ICollection<ManagedChallengeSummary>)((OkObjectResult)result).Value!;
+        }
+
         private static ICollection<TagSummary> Tags(IActionResult result)
         {
             Assert.IsInstanceOfType<OkObjectResult>(result, result.GetType().Name);
@@ -97,7 +139,7 @@ namespace Certify.Core.Tests.Unit
             return (ICollection<TagSummary>)((OkObjectResult)result).Value!;
         }
 
-        private static InternalManagedChallengeController CreateController(bool authorized)
+        private static InternalManagedChallengeController CreateController(bool authorized, System.Action<Mock<ICertifyInternalApiClient>>? configure = null)
         {
             var client = new Mock<ICertifyInternalApiClient>();
 
@@ -110,6 +152,23 @@ namespace Certify.Core.Tests.Unit
                     .Where(t => t.TaggedItemType == itemType && t.TaggedItemId == itemId)
                     .Select(t => new TagSummary { CategoryKey = t.CategoryKey, Value = t.Value })
                     .ToList());
+
+            client.Setup(c => c.GetAllHubItemTags(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<AuthContext>()))
+                .ReturnsAsync((string _, string _, string itemType, string _, AuthContext _) => StoredTags()
+                    .Where(t => t.TaggedItemType == itemType)
+                    .ToList());
+
+            client.Setup(c => c.GetManagedChallenges(It.IsAny<AuthContext>()))
+                .ReturnsAsync(new List<ManagedChallenge>
+                {
+                    new() { Id = ChallengeId, Title = "Development" },
+                    new() { Id = OtherChallengeId, Title = "Production" }
+                });
+
+            client.Setup(c => c.GetTagCategories(It.IsAny<AuthContext>()))
+                .ReturnsAsync(new List<TagCategory>());
+
+            configure?.Invoke(client);
 
             return new InternalManagedChallengeController(NullLogger<InternalManagedChallengeController>.Instance, client.Object)
             {
