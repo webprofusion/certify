@@ -111,12 +111,12 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         }
 
         /// <summary>
-        /// Get a list of all connected instances
+        /// Get a list of all connected instances. Disconnected instances stay tracked until they reconnect so their cached state can still expire, but are not included.
         /// </summary>
         /// <returns></returns>
         public List<ManagedInstanceInfo> GetConnectedInstances()
         {
-            return _instanceConnections.Values.ToList();
+            return _instanceConnections.Values.Where(i => i.ConnectionStatus != ConnectionStatus.Disconnected).ToList();
         }
 
         /// <summary>
@@ -136,7 +136,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             _instanceConnections.AddOrUpdate(connectionId, instanceInfo, (i, oldValue) =>
             {
-                instanceInfo.ConnectionStatus = ConnectionStatus.Connected;
+                // connection ids are not reused, so a late update from a dropped connection must not mark it connected again
+                instanceInfo.ConnectionStatus = oldValue.ConnectionStatus == ConnectionStatus.Disconnected ? ConnectionStatus.Disconnected : ConnectionStatus.Connected;
                 return instanceInfo;
             });
         }
@@ -209,7 +210,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         public string GetConnectionIdForInstance(string instanceId)
         {
             // TODO: of instances use the same instanceid accidentally they will clobber each other
-            var info = _instanceConnections.FirstOrDefault(k => k.Value.InstanceId == instanceId);
+            var info = _instanceConnections.FirstOrDefault(k => k.Value.InstanceId == instanceId && k.Value.ConnectionStatus != ConnectionStatus.Disconnected);
 
             return info.Key;
         }
@@ -481,7 +482,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             if (info.Value != null)
             {
                 info.Value.ConnectionStatus = status;
-                UpdateInstanceConnectionInfo(info.Key, info.Value);
             }
         }
 
