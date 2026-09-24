@@ -455,9 +455,14 @@ namespace Certify.Models.Hub
         public const string DeploymentFailing = "certificate.deployment";
 
         /// <summary>
-        /// The certificate expires soon and no renewal will happen in time
+        /// The certificate expires soon and no renewal will happen in time, or its renewal is due and has not completed
         /// </summary>
         public const string CertificateExpiring = "certificate.expiring";
+
+        /// <summary>
+        /// The certificate has been revoked and not yet replaced
+        /// </summary>
+        public const string CertificateRevoked = "certificate.revoked";
 
         public const string InstanceDisconnected = "instance.disconnected";
         public const string InstanceUnresponsive = "instance.unresponsive";

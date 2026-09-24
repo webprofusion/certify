@@ -22,14 +22,21 @@ namespace Certify.Server.Hub.Api.Services.Activity
         internal static readonly TimeSpan UnresponsiveAfter = TimeSpan.FromMinutes(3);
 
         /// <summary>
-        /// How far ahead an expiring certificate needs attention if nothing will renew it in time
+        /// How far ahead an expiring certificate needs attention if nothing will renew it in time, or if a single failed
+        /// renewal leaves little time to retry
         /// </summary>
         internal static readonly TimeSpan ExpiryAttentionWindow = TimeSpan.FromDays(14);
 
         /// <summary>
-        /// A certificate expiring this soon needs attention whatever its renewal plan
+        /// A certificate expiring this soon needs attention once its renewal is due, even while an attempt is still planned
         /// </summary>
         internal static readonly TimeSpan ExpiryImminent = TimeSpan.FromDays(3);
+
+        /// <summary>
+        /// The certificate lifetime the expiry windows are sized for. A shorter lived certificate is always within days of
+        /// expiry, so its windows shrink in proportion to its lifetime
+        /// </summary>
+        internal static readonly TimeSpan TypicalLifetime = TimeSpan.FromDays(90);
 
         private static readonly string[] _connectionEventTypes =
         [
@@ -421,6 +428,9 @@ namespace Certify.Server.Hub.Api.Services.Activity
             var expiresIn = expiry.HasValue ? expiry.Value - now : (TimeSpan?)null;
             var expiryText = DescribeExpiry(expiry, now);
 
+            var attentionWindow = ExpiryWindowFor(item, ExpiryAttentionWindow);
+            var imminentWindow = ExpiryWindowFor(item, ExpiryImminent);
+
             if (item.Health == ManagedCertificateHealth.AwaitingUser || item.LastRenewalStatus == RequestState.Paused)
             {
                 return new AttentionItem
@@ -431,6 +441,24 @@ namespace Certify.Server.Hub.Api.Services.Activity
                     Detail = FirstLine(item.RenewalFailureMessage) ?? "The request is paused until you complete a manual step",
                     Since = item.DateLastRenewalAttempt,
                     DateExpiry = expiry
+                };
+            }
+
+            // a revoked certificate is rejected by clients until it is replaced, however long it has left to run
+            if (item.CertificateRevoked)
+            {
+                var failing = item.LastRenewalStatus == RequestState.Error;
+
+                return new AttentionItem
+                {
+                    Kind = AttentionKinds.CertificateRevoked,
+                    Severity = RequestState.Error,
+                    Title = $"{item.Name} has been revoked",
+                    Detail = failing
+                        ? FirstLine(item.RenewalFailureMessage)
+                        : !item.IncludeInAutoRenew ? "Automatic renewal is off, so it will not be replaced" : null,
+                    DateExpiry = expiry,
+                    FailureCount = failing ? item.RenewalFailureCount : null
                 };
             }
 
@@ -452,7 +480,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
                     };
                 }
 
-                var expiringSoon = expiresIn.HasValue && expiresIn.Value < ExpiryAttentionWindow;
+                var expiringSoon = expiresIn.HasValue && expiresIn.Value < attentionWindow;
 
                 if (item.RenewalFailureCount >= 2 || expiringSoon)
                 {
@@ -473,29 +501,39 @@ namespace Certify.Server.Hub.Api.Services.Activity
 
             if (expiresIn.HasValue && !item.IsExternallyManaged)
             {
-                var plannedAttempt = item.RenewalPlan?.DateNextRenewalAttempt ?? item.DateNextScheduledRenewalAttempt;
+                var plan = item.RenewalPlan;
+                var plannedAttempt = plan?.DateNextRenewalAttempt ?? item.DateNextScheduledRenewalAttempt;
 
                 var noRenewalInTime = !item.IncludeInAutoRenew
-                    || item.RenewalPlan?.IsRenewalOnHold == true
+                    || plan?.IsRenewalOnHold == true
                     || plannedAttempt == null
                     || plannedAttempt > expiry;
 
+                // the plan sets when renewal is due from the certificate's lifetime and the configured renewal threshold.
+                // Until then nearing expiry is expected, so a certificate which will be renewed in time only needs
+                // attention once renewal is due and still has not completed close to expiry
+                var renewalDue = plan?.IsRenewalDue == true || plannedAttempt <= now;
+
                 if (expiresIn.Value < TimeSpan.Zero
-                    || expiresIn.Value < ExpiryImminent
-                    || (expiresIn.Value < ExpiryAttentionWindow && noRenewalInTime))
+                    || (noRenewalInTime && expiresIn.Value < attentionWindow)
+                    || (renewalDue && expiresIn.Value < imminentWindow))
                 {
                     var why = !item.IncludeInAutoRenew
                         ? "Automatic renewal is off"
-                        : item.RenewalPlan?.IsRenewalOnHold == true
+                        : plan?.IsRenewalOnHold == true
                             ? "Renewal is on hold after repeated failures"
                             : plannedAttempt > expiry
                                 ? $"Next renewal is planned for {plannedAttempt.Value.UtcDateTime:yyyy-MM-dd}, after it expires"
-                                : null;
+                                : plannedAttempt == null
+                                    ? null
+                                    : plan?.IsDeferredByMaintenanceWindow == true
+                                        ? "Renewal is due and waiting for its maintenance window"
+                                        : "Renewal is due but has not completed";
 
                     return new AttentionItem
                     {
                         Kind = AttentionKinds.CertificateExpiring,
-                        Severity = expiresIn.Value < ExpiryImminent ? RequestState.Error : RequestState.Warning,
+                        Severity = expiresIn.Value < imminentWindow ? RequestState.Error : RequestState.Warning,
                         Title = expiresIn.Value < TimeSpan.Zero
                             ? $"{item.Name} has expired"
                             : noRenewalInTime ? $"{item.Name} {expiryText} and no renewal is planned in time" : $"{item.Name} {expiryText}",
@@ -506,6 +544,18 @@ namespace Certify.Server.Hub.Api.Services.Activity
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// A window before a certificate's expiry, shortened in proportion when its lifetime is shorter than typical
+        /// </summary>
+        internal static TimeSpan ExpiryWindowFor(ManagedCertificate item, TimeSpan window)
+        {
+            var lifetime = item.DateExpiry - item.DateStart;
+
+            return lifetime > TimeSpan.Zero && lifetime < TypicalLifetime
+                ? window * (lifetime.Value / TypicalLifetime)
+                : window;
         }
 
         private async Task<List<AttentionItem>> GetInstanceAttentionAsync(List<ManagedInstanceInfo> knownInstances, string? instanceId, DateTimeOffset now)
@@ -1029,9 +1079,16 @@ namespace Certify.Server.Hub.Api.Services.Activity
                 return "has expired";
             }
 
+            if (remaining.TotalHours < 1)
+            {
+                return "expires within the hour";
+            }
+
             if (remaining.TotalDays < 1)
             {
-                return "expires today";
+                var hours = (int)Math.Floor(remaining.TotalHours);
+
+                return hours == 1 ? "expires in 1 hour" : $"expires in {hours} hours";
             }
 
             var days = (int)Math.Floor(remaining.TotalDays);

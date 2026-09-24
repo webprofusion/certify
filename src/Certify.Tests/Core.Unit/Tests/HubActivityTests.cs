@@ -490,6 +490,21 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        public void Attention_ForARevokedCertificate_WithTimeLeftToRun()
+        {
+            var detected = new ManagedCertificate { Id = "1", Name = "www.example.com", CertificateRevoked = true, LastRenewalStatus = RequestState.Success, DateExpiry = Now.AddDays(60), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { IsRenewalDue = true, DateNextRenewalAttempt = Now } };
+            var attention = HubActivityService.GetItemAttention(detected, Now);
+
+            Assert.AreEqual(AttentionKinds.CertificateRevoked, attention!.Kind);
+            Assert.AreEqual(RequestState.Error, attention.Severity);
+            Assert.AreEqual("www.example.com has been revoked", attention.Title);
+
+            // revoking sets the item in error, which must not read as a failed deployment of the last issued certificate
+            var revokedByUser = new ManagedCertificate { Id = "2", Name = "old.example.com", CertificateRevoked = true, LastRenewalStatus = RequestState.Error, RenewalFailureCount = 1, LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success }, DateExpiry = Now.AddDays(60) };
+            Assert.AreEqual(AttentionKinds.CertificateRevoked, HubActivityService.GetItemAttention(revokedByUser, Now)!.Kind);
+        }
+
+        [TestMethod]
         public void Attention_ForExpiryBeforeAnyPlannedRenewal()
         {
             var planned = new ManagedCertificate { Id = "1", Name = "ok", DateExpiry = Now.AddDays(10), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { DateNextRenewalAttempt = Now.AddDays(1) } };
@@ -501,8 +516,62 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(AttentionKinds.CertificateExpiring, attention!.Kind);
             Assert.AreEqual(RequestState.Warning, attention.Severity);
 
-            var imminent = new ManagedCertificate { Id = "3", Name = "soon", DateExpiry = Now.AddDays(2), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { DateNextRenewalAttempt = Now.AddHours(1) } };
-            Assert.AreEqual(RequestState.Error, HubActivityService.GetItemAttention(imminent, Now)!.Severity, "expiring within days needs attention whatever the plan");
+            var notYetDue = new ManagedCertificate { Id = "3", Name = "soon", DateExpiry = Now.AddDays(2), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { DateNextRenewalAttempt = Now.AddHours(1) } };
+            Assert.IsNull(HubActivityService.GetItemAttention(notYetDue, Now), "renewal is not yet due by the configured threshold");
+
+            var dueNotRenewed = new ManagedCertificate { Id = "4", Name = "soon", DateExpiry = Now.AddDays(2), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { IsRenewalDue = true, DateNextRenewalAttempt = Now.AddHours(-1) } };
+            attention = HubActivityService.GetItemAttention(dueNotRenewed, Now);
+
+            Assert.AreEqual(RequestState.Error, attention!.Severity, "renewal is due and has not completed within days of expiry");
+            Assert.AreEqual("Renewal is due but has not completed", attention.Detail);
+        }
+
+        [TestMethod]
+        public void Attention_ForAShortLivedCertificate_FollowsItsLifetime()
+        {
+            // a one day certificate renewed at 75% of its lifetime
+            ManagedCertificate OneDay(TimeSpan elapsed, RenewalDueInfo plan, bool autoRenew = true) => new ManagedCertificate
+            {
+                Id = "1",
+                Name = "short.example.com",
+                DateStart = Now - elapsed,
+                DateExpiry = Now - elapsed + TimeSpan.FromDays(1),
+                IncludeInAutoRenew = autoRenew,
+                RenewalPlan = plan
+            };
+
+            var notYetDue = OneDay(TimeSpan.FromHours(12), new RenewalDueInfo { DateNextRenewalAttempt = Now.AddHours(6) });
+            Assert.IsNull(HubActivityService.GetItemAttention(notYetDue, Now), "renewal is not yet due");
+
+            var justDue = OneDay(TimeSpan.FromHours(19), new RenewalDueInfo { IsRenewalDue = true, DateNextRenewalAttempt = Now });
+            Assert.IsNull(HubActivityService.GetItemAttention(justDue, Now), "renewal has most of its window left to complete");
+
+            var overdue = OneDay(TimeSpan.FromHours(23.5), new RenewalDueInfo { IsRenewalDue = true, DateNextRenewalAttempt = Now.AddHours(-5) });
+            var attention = HubActivityService.GetItemAttention(overdue, Now);
+
+            Assert.AreEqual(AttentionKinds.CertificateExpiring, attention!.Kind);
+            Assert.AreEqual(RequestState.Error, attention.Severity);
+            Assert.AreEqual("short.example.com expires within the hour", attention.Title);
+
+            var manual = OneDay(TimeSpan.FromHours(12), new RenewalDueInfo { DateNextRenewalAttempt = Now.AddHours(6) }, autoRenew: false);
+            Assert.IsNull(HubActivityService.GetItemAttention(manual, Now), "not yet within its share of the attention window");
+
+            var manualEnding = OneDay(TimeSpan.FromHours(22), new RenewalDueInfo { DateNextRenewalAttempt = Now.AddHours(-4) }, autoRenew: false);
+            attention = HubActivityService.GetItemAttention(manualEnding, Now);
+
+            Assert.AreEqual(RequestState.Warning, attention!.Severity);
+            Assert.AreEqual("short.example.com expires in 2 hours and no renewal is planned in time", attention.Title);
+        }
+
+        [TestMethod]
+        public void Attention_ForASingleFailure_AllowsTimeToRetryInProportionToLifetime()
+        {
+            // a six day certificate with 30 hours left, then with 12 hours left
+            var withTime = new ManagedCertificate { Id = "1", Name = "a", LastRenewalStatus = RequestState.Error, RenewalFailureCount = 1, DateStart = Now.AddHours(-114), DateExpiry = Now.AddHours(30), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { IsRenewalDue = true, DateNextRenewalAttempt = Now } };
+            Assert.IsNull(HubActivityService.GetItemAttention(withTime, Now));
+
+            var running = new ManagedCertificate { Id = "2", Name = "b", LastRenewalStatus = RequestState.Error, RenewalFailureCount = 1, DateStart = Now.AddHours(-132), DateExpiry = Now.AddHours(12), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { IsRenewalDue = true, DateNextRenewalAttempt = Now } };
+            Assert.AreEqual(AttentionKinds.CertificateFailing, HubActivityService.GetItemAttention(running, Now)!.Kind);
         }
 
         [TestMethod]
