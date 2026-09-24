@@ -834,17 +834,34 @@ namespace Certify.Server.Hub.Api.Services.Activity
                 .GroupBy(c => c.InstanceId, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(g => g.Key, g => g.OrderByDescending(c => c.DateLastReported).First(), StringComparer.OrdinalIgnoreCase);
 
+            var hubInstanceId = _stateProvider.GetManagementHubInstanceId();
+
             return knownInstances
-                .Select(instance => BuildConnectionHistory(
-                    instance,
-                    initialEvents.FirstOrDefault(e => string.Equals(e.InstanceId, instance.InstanceId, StringComparison.OrdinalIgnoreCase)),
-                    lastHubEventBefore,
-                    events,
-                    connected.TryGetValue(instance.InstanceId, out var c) ? c : null,
-                    from,
-                    to))
+                .Select(instance => string.Equals(instance.InstanceId, hubInstanceId, StringComparison.OrdinalIgnoreCase)
+                    ? BuildUnrecordedHistory(instance, from, to)
+                    : BuildConnectionHistory(
+                        instance,
+                        initialEvents.FirstOrDefault(e => string.Equals(e.InstanceId, instance.InstanceId, StringComparison.OrdinalIgnoreCase)),
+                        lastHubEventBefore,
+                        events,
+                        connected.TryGetValue(instance.InstanceId, out var c) ? c : null,
+                        from,
+                        to))
                 .OrderBy(h => h.Title)
                 .ToList();
+        }
+
+        /// <summary>
+        /// The hub's own instance runs within the hub rather than connecting to it, so it has no connection history
+        /// </summary>
+        internal static InstanceConnectionHistory BuildUnrecordedHistory(ManagedInstanceInfo instance, DateTimeOffset from, DateTimeOffset to)
+        {
+            return new InstanceConnectionHistory
+            {
+                InstanceId = instance.InstanceId,
+                Title = instance.DisplayTitle ?? instance.InstanceId,
+                Segments = [new InstanceConnectionSegment { Start = from, End = to }]
+            };
         }
 
         internal static InstanceConnectionHistory BuildConnectionHistory(
