@@ -131,10 +131,10 @@ namespace Certify.Management
 
 #if NET9_0_OR_GREATER
         /// <summary>
-        /// Loader limits which honour the key storage provider declared in the pfx. Without this the .NET 9+ pkcs12
-        /// loader imports every private key into the CNG 'Microsoft Software Key Storage Provider', where the older
-        /// X509Certificate2 constructor used the legacy CryptoAPI CSP. Consumers which only speak legacy CryptoAPI
-        /// (java SunMSCAPI, various vendor certificate utilities) cannot see CNG keys at all.
+        /// Loader limits which honour the key storage provider declared in the pfx, used when a provider has been
+        /// requested. Without this the .NET 9+ pkcs12 loader imports every private key into the CNG 'Microsoft Software
+        /// Key Storage Provider'. Consumers which only speak legacy CryptoAPI (java SunMSCAPI, various vendor certificate
+        /// utilities) cannot see CNG keys at all.
         /// </summary>
         private static readonly Pkcs12LoaderLimits PreserveStorageProviderLimits = new Pkcs12LoaderLimits(Pkcs12LoaderLimits.Defaults) { PreserveStorageProvider = true };
 #endif
@@ -465,11 +465,15 @@ namespace Certify.Management
         /// Import a PFX ready for storage in the local certificate store, optionally targeting a specific windows key
         /// storage provider (CSP or CNG KSP).
         /// </summary>
+        /// <remarks>Windows substitutes a provider which cannot hold the key rather than failing the import, an ECDSA key
+        /// requested into a legacy CSP lands in CNG for instance.</remarks>
         private static X509Certificate2 LoadPfxForCertStore(byte[] pfxBytes, string pwd, string keyStorageProviderName, ILog log)
         {
             const X509KeyStorageFlags storageFlags = X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable;
 
-            if (IsWindows && !string.IsNullOrWhiteSpace(keyStorageProviderName))
+            var applyKeyStorageProvider = IsWindows && !string.IsNullOrWhiteSpace(keyStorageProviderName);
+
+            if (applyKeyStorageProvider)
             {
                 try
                 {
@@ -483,7 +487,8 @@ namespace Certify.Management
             }
 
 #if NET9_0_OR_GREATER
-            return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, storageFlags, PreserveStorageProviderLimits);
+            // only honour a declared provider when one was requested, otherwise keys import into the default (CNG) provider
+            return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, storageFlags, applyKeyStorageProvider ? PreserveStorageProviderLimits : null);
 #else
             return new X509Certificate2(pfxBytes, pwd, storageFlags);
 #endif
@@ -524,18 +529,7 @@ namespace Certify.Management
 
             var pfxBytes = File.ReadAllBytes(pfxFile);
 
-            try
-            {
-                (certificate, pwd) = LoadPfxForCertStoreWithPasswordRetry(pfxBytes, pwd, keyStorageProviderName, log);
-            }
-            catch (CryptographicException exp) when (!string.IsNullOrWhiteSpace(keyStorageProviderName))
-            {
-                // the requested provider may not be able to hold this key (a legacy CSP cannot store an ECDSA key, for
-                // instance), fall back to the system default rather than failing the deployment
-                log?.Warning($"Could not import certificate private key using key storage provider [{keyStorageProviderName}], using the system default provider instead. {exp.Message}");
-
-                (certificate, pwd) = LoadPfxForCertStoreWithPasswordRetry(pfxBytes, pwd, null, log);
-            }
+            (certificate, pwd) = LoadPfxForCertStoreWithPasswordRetry(pfxBytes, pwd, keyStorageProviderName, log);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

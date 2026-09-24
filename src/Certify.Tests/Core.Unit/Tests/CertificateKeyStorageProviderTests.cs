@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Certify.ACME.Anvil;
+using Certify.ACME.Anvil.Pkcs;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,21 +31,25 @@ namespace Certify.Tests.Core.Unit.Tests
         private static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         /// <summary>
-        /// Build a pfx containing a fresh self signed cert and its private key, without leaving the generated key on disk
+        /// Build a pfx containing a fresh self signed cert and its private key the same way certificate requests do, which
+        /// does not declare a key storage provider
         /// </summary>
-        private static byte[] CreateTestPfx(string domain)
+        private static byte[] CreateTestPfx(string domain, bool useEcdsa = false)
         {
-            var cert = CertificateManager.GenerateSelfSignedCertificate(domain, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
+            using AsymmetricAlgorithm key = useEcdsa ? ECDsa.Create(ECCurve.NamedCurves.nistP256) : RSA.Create(2048);
 
-            try
-            {
-                return cert.Export(X509ContentType.Pkcs12, "");
-            }
-            finally
-            {
-                DeletePersistedKey(cert);
-                cert.Dispose();
-            }
+            var request = key is ECDsa ecdsa
+                ? new CertificateRequest($"CN={domain}", ecdsa, HashAlgorithmName.SHA256)
+                : new CertificateRequest($"CN={domain}", (RSA)key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            var san = new SubjectAlternativeNameBuilder();
+            san.AddDnsName(domain);
+            request.CertificateExtensions.Add(san.Build());
+
+            using var cert = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
+
+            return new PfxBuilder(cert.RawData, KeyFactory.FromDer(key.ExportPkcs8PrivateKey()))
+                .Build(domain, "", skipChainBuild: true);
         }
 
         private const int PROV_RSA_FULL = 1;
@@ -54,6 +60,15 @@ namespace Certify.Tests.Core.Unit.Tests
         /// </summary>
         private static void DeletePersistedKey(X509Certificate2 cert)
         {
+            using (var ecdsa = cert.GetECDsaPrivateKey())
+            {
+                if (ecdsa is ECDsaCng ecdsaCng)
+                {
+                    ecdsaCng.Key.Delete();
+                    return;
+                }
+            }
+
             string providerName;
             string containerName;
 
@@ -83,20 +98,27 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
-        /// Import the pfx, report which key storage provider the private key ended up in and its export policy, then
-        /// delete the imported key
+        /// Import the pfx as the certificate store import does, declaring and honouring the requested provider if there
+        /// is one. Report which key storage provider the private key ended up in and its export policy, then delete the
+        /// imported key.
         /// </summary>
-        private static (string providerName, CngExportPolicies? exportPolicy) ImportAndInspectKey(byte[] pfxData)
+        private static (string providerName, CngExportPolicies? exportPolicy) ImportAndInspectKey(byte[] pfxData, string requestedProvider = null)
         {
-            using var cert = X509CertificateLoader.LoadPkcs12(pfxData, "", TestStorageFlags, PreserveStorageProvider);
+            if (requestedProvider != null)
+            {
+                pfxData = CertificateManager.GetPfxDataWithKeyProviderName(requestedProvider, pfxData, "");
+            }
+
+            using var cert = X509CertificateLoader.LoadPkcs12(pfxData, "", TestStorageFlags, requestedProvider != null ? PreserveStorageProvider : null);
 
             try
             {
-                using var rsa = cert.GetRSAPrivateKey();
+                using var key = (AsymmetricAlgorithm)cert.GetRSAPrivateKey() ?? cert.GetECDsaPrivateKey();
 
-                return rsa switch
+                return key switch
                 {
                     RSACng cng => (cng.Key.Provider?.Provider, cng.Key.ExportPolicy),
+                    ECDsaCng ecdsaCng => (ecdsaCng.Key.Provider?.Provider, ecdsaCng.Key.ExportPolicy),
                     RSACryptoServiceProvider csp => (csp.CspKeyContainerInfo.ProviderName, null),
                     _ => (null, null)
                 };
@@ -107,7 +129,7 @@ namespace Certify.Tests.Core.Unit.Tests
             }
         }
 
-        [TestMethod, Description("Private keys import into the CNG key storage provider when no provider is requested")]
+        [TestMethod, Description("Private keys import into the CNG key storage provider when no provider is requested, including when the pfx declares one")]
         public void ImportWithoutRequestedProviderUsesCng()
         {
             if (!IsWindows)
@@ -119,12 +141,15 @@ namespace Certify.Tests.Core.Unit.Tests
             var pfxData = CreateTestPfx($"ksp-default-{Guid.NewGuid():N}.test.com");
 
             Assert.AreEqual(WindowsKeyStorageProviders.SoftwareKeyStorageProvider, ImportAndInspectKey(pfxData).providerName);
+
+            var legacyPfxData = CertificateManager.GetPfxDataWithKeyProviderName(WindowsKeyStorageProviders.EnhancedCryptographicProvider, pfxData, "");
+
+            Assert.AreEqual(WindowsKeyStorageProviders.SoftwareKeyStorageProvider, ImportAndInspectKey(legacyPfxData).providerName, "A provider declared by the pfx itself should not be honoured unless one is requested");
         }
 
         [TestMethod, Description("Private keys import into the requested key storage provider")]
         [DataRow(WindowsKeyStorageProviders.EnhancedCryptographicProvider)]
         [DataRow(WindowsKeyStorageProviders.RsaSChannelCryptographicProvider)]
-        [DataRow(WindowsKeyStorageProviders.SoftwareKeyStorageProvider)]
         public void ImportWithRequestedProviderUsesThatProvider(string requestedProvider)
         {
             if (!IsWindows)
@@ -135,9 +160,21 @@ namespace Certify.Tests.Core.Unit.Tests
 
             var pfxData = CreateTestPfx($"ksp-requested-{Guid.NewGuid():N}.test.com");
 
-            var stampedPfxData = CertificateManager.GetPfxDataWithKeyProviderName(requestedProvider, pfxData, "");
+            Assert.AreEqual(requestedProvider, ImportAndInspectKey(pfxData, requestedProvider).providerName);
+        }
 
-            Assert.AreEqual(requestedProvider, ImportAndInspectKey(stampedPfxData).providerName);
+        [TestMethod, Description("ECDSA keys requested into a legacy CSP import into CNG rather than failing")]
+        public void ImportEcdsaWithLegacyProviderUsesCng()
+        {
+            if (!IsWindows)
+            {
+                Debug.WriteLine("Test only valid on Windows, skipping");
+                return;
+            }
+
+            var pfxData = CreateTestPfx($"ksp-ecdsa-{Guid.NewGuid():N}.test.com", useEcdsa: true);
+
+            Assert.AreEqual(WindowsKeyStorageProviders.SoftwareKeyStorageProvider, ImportAndInspectKey(pfxData, WindowsKeyStorageProviders.RsaSChannelCryptographicProvider).providerName);
         }
 
         [TestMethod, Description("Legacy CSP keys allow plain text export, CNG keys do not")]
@@ -154,9 +191,7 @@ namespace Certify.Tests.Core.Unit.Tests
             // CNG keys are exportable but not in plain text, which is what blocks legacy export tooling
             Assert.AreEqual(CngExportPolicies.AllowExport, ImportAndInspectKey(pfxData).exportPolicy);
 
-            var legacyPfxData = CertificateManager.GetPfxDataWithKeyProviderName(WindowsKeyStorageProviders.EnhancedCryptographicProvider, pfxData, "");
-
-            Assert.IsTrue(ImportAndInspectKey(legacyPfxData).exportPolicy?.HasFlag(CngExportPolicies.AllowPlaintextExport) == true, "Legacy CSP keys should remain plain text exportable");
+            Assert.IsTrue(ImportAndInspectKey(pfxData, WindowsKeyStorageProviders.EnhancedCryptographicProvider).exportPolicy?.HasFlag(CngExportPolicies.AllowPlaintextExport) == true, "Legacy CSP keys should remain plain text exportable");
         }
 
         [TestMethod, Description("Applying a key provider name preserves the certificate content and key pairing")]

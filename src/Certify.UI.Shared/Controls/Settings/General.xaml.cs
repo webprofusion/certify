@@ -43,8 +43,7 @@ namespace Certify.UI.Controls.Settings
             public KeyValuePair<string, string>[] WindowsKeyStorageProviderList = new KeyValuePair<string, string>[] {
                 new KeyValuePair<string,string>("", "System Default (CNG)"),
                 new KeyValuePair<string,string>(WindowsKeyStorageProviders.EnhancedCryptographicProvider, "Legacy CSP - Microsoft Enhanced Cryptographic Provider v1.0"),
-                new KeyValuePair<string,string>(WindowsKeyStorageProviders.RsaSChannelCryptographicProvider, "Legacy CSP - Microsoft RSA SChannel Cryptographic Provider"),
-                new KeyValuePair<string,string>(WindowsKeyStorageProviders.SoftwareKeyStorageProvider, "CNG - Microsoft Software Key Storage Provider")
+                new KeyValuePair<string,string>(WindowsKeyStorageProviders.RsaSChannelCryptographicProvider, "Legacy CSP - Microsoft RSA SChannel Cryptographic Provider")
             };
         }
 

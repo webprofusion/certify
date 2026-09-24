@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -1251,7 +1251,6 @@ namespace Certify.Management
                 {
                     var prefs = SettingsManager.ToPreferences();
 
-                    prefs.WindowsKeyStorageProvider = update.WindowsKeyStorageProvider;
                     SettingsManager.ApplyHubSettingsUpdate(prefs, update);
                     SettingsManager.FromPreferences(prefs);
 
