@@ -36,6 +36,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Dreamhost](https://poshac.me/docs/latest/Plugins/Dreamhost),
             [Dynu](https://poshac.me/docs/latest/Plugins/Dynu),
             [EasyDNS](https://poshac.me/docs/latest/Plugins/EasyDNS),
+            [EuroDNSReseller](https://poshac.me/docs/latest/Plugins/EuroDNSReseller),
             [Gandi](https://poshac.me/docs/latest/Plugins/Gandi),
             [GoDaddy](https://poshac.me/docs/latest/Plugins/GoDaddy),
             [GoDaddyV3](https://poshac.me/docs/latest/Plugins/GoDaddyV3),
@@ -589,6 +590,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=EasyDNS",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.EuroDNSReseller",
+                Title = "EuroDNS Reseller DNS API (using Posh-ACME)",
+                Description = "Validates via EuroDNS reseller API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/EuroDNSReseller/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "EuroDNSAppId", Name = "App ID (X-APP-ID)", IsRequired = true, IsCredential = true },
+                    new() { Key = "EuroDNSApiKey", Name = "API Key (X-API-KEY)", IsRequired = true, IsCredential = true, IsPassword = true },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=EuroDNSReseller;Credential=EuroDNSReseller_Creds,EuroDNSAppId,EuroDNSApiKey;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = false,
 
@@ -1448,7 +1468,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.WEDOS",
                 Title = "WEDOS DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshach.me/docs/latest/Plugins/WEDOS/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/WEDOS/",
                 PropagationDelaySeconds = 600,
                 ProviderParameters =
                 [
@@ -1684,6 +1704,9 @@ namespace Certify.Core.Management.Challenges.DNS
             }
 
             scriptContent += $"{action} -RecordName '{recordName}' -TxtValue '{recordValue}' @PluginArgs \r\n";
+
+            // commit pending changes, as Posh-ACME does after add/remove. Some plugins only stage changes in Add/Remove (e.g. EuroDNSReseller, WEDOS)
+            scriptContent += " Save-DnsTxt @PluginArgs \r\n";
 
             return scriptContent;
         }
