@@ -23,6 +23,28 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class ManagedInstanceRequestAuthTests
     {
+        /// <summary>
+        /// The stored secret hash is the instance's signing key. It is persisted by the configuration store, which
+        /// serializes with Newtonsoft.Json, and must never appear in what System.Text.Json writes: API responses,
+        /// request bodies, instance heartbeats and hub commands.
+        /// </summary>
+        [TestMethod]
+        public void RequestAuthSecretHash_IsPersistedButNeverSerializedBySystemTextJson()
+        {
+            var instance = new ManagedInstanceInfo { Id = "instance-1", InstanceId = "instance-1", RequestAuthSecretHash = "c2lnbmluZy1rZXk=" };
+
+            var persisted = JsonConvert.DeserializeObject<ManagedInstanceInfo>(JsonConvert.SerializeObject(instance));
+            Assert.AreEqual(instance.RequestAuthSecretHash, persisted!.RequestAuthSecretHash, "the configuration store must keep the key");
+
+            var api = System.Text.Json.JsonSerializer.Serialize(instance, Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);
+            Assert.DoesNotContain("c2lnbmluZy1rZXk=", api);
+
+            var submitted = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceInfo>(
+                "{\"id\":\"instance-1\",\"instanceId\":\"instance-1\",\"requestAuthSecretHash\":\"YXR0YWNrZXIta2V5\",\"RequestAuthSecretHash\":\"YXR0YWNrZXIta2V5\"}",
+                Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);
+            Assert.AreEqual(string.Empty, submitted!.RequestAuthSecretHash, "a request body must not be able to set the key");
+        }
+
         [TestMethod]
         public void ComputeSignatureFromSecret_MatchesStoredSecretHashSignature()
         {

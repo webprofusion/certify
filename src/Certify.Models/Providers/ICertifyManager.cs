@@ -134,6 +134,7 @@ namespace Certify.Management
 
         Task<Certify.Models.Config.ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item);
         Task<Certify.Models.Config.ActionResult> UpdateHubManagedInstance(string id, ManagedInstanceInfo item, bool isHeartBeatInfo);
+        Task<Certify.Models.Config.ActionResult> SetHubManagedInstanceRequestAuthSecretHash(string id, string? requestAuthSecretHash);
         Task<ManagedInstanceInfo> GetHubManagedInstance(string id);
         Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances();
         Task<Certify.Models.Config.ActionResult> RemoveHubManagedInstance(string id);

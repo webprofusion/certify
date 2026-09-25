@@ -105,10 +105,8 @@ namespace Certify.Management
 
                 existing.IsDashboardEnabled = item.IsDashboardEnabled;
 
-                if (!string.IsNullOrWhiteSpace(item.RequestAuthSecretHash))
-                {
-                    existing.RequestAuthSecretHash = item.RequestAuthSecretHash;
-                }
+                // the request auth secret hash is not taken from an update: it is the instance's signing key, and is
+                // only changed by SetHubManagedInstanceRequestAuthSecretHash
 
                 existing.IsPendingConnection = item.IsPendingConnection;
 
@@ -135,6 +133,26 @@ namespace Certify.Management
             {
                 return new ActionResult("Item Not found. Cannot update.", false);
             }
+        }
+
+        /// <summary>
+        /// Set or clear the hash of a managed instance's request auth secret, which is the key its requests are signed
+        /// with. Clearing it means the instance is issued a new secret when it next checks in.
+        /// </summary>
+        public async Task<ActionResult> SetHubManagedInstanceRequestAuthSecretHash(string id, string? requestAuthSecretHash)
+        {
+            var existing = string.IsNullOrWhiteSpace(id) ? null : await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), id);
+
+            if (existing == null)
+            {
+                return new ActionResult("Item Not found. Cannot update.", false);
+            }
+
+            existing.RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty;
+
+            await _configStore.Update(nameof(ManagedInstanceInfo), existing);
+
+            return new ActionResult("Updated", true);
         }
 
         public async Task<ManagedInstanceInfo> GetHubManagedInstance(string id)

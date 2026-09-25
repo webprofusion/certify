@@ -280,6 +280,7 @@ namespace Certify.Server.Hub.Api.Controllers
             // the intended outcome - it must be upgraded, or the operator must explicitly opt in to the legacy path.
             var isKnownInstance = false;
             var requestAuthSecretReissued = false;
+            var requestAuthSecretReissueRefused = false;
             string? requestAuthSecret = null;
             string? requestAuthSecretHash = null;
 
@@ -323,14 +324,46 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
                 else
                 {
-                    // this also self-heals instances which were previously registered without a secret, as they will
-                    // be issued one the next time they check in
-                    if (string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash) || reissueRequestAuthSecret == true)
+                    // An instance with no secret is issued one: this self-heals instances previously registered without
+                    // a secret, and those an administrator has had rejoin, which clears the hub's copy first.
+                    //
+                    // Replacing an existing secret is different. The joining credentials are shared by every instance
+                    // and the hub assigned id is not secret, so a reissue on those alone would hand any holder of the
+                    // joining credentials a signing key for any instance. It is only granted to a request signed with
+                    // the instance's current secret.
+                    var hasSecret = !string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash);
+                    var mayIssue = !hasSecret;
+
+                    if (hasSecret && reissueRequestAuthSecret == true)
+                    {
+                        var instanceAuth = await ValidateManagedInstanceRequestAuthAsync();
+
+                        mayIssue = instanceAuth.IsSuccess
+                            && string.Equals(instanceAuth.ManagedInstance?.InstanceId, hubAssignedInstanceId, StringComparison.OrdinalIgnoreCase);
+
+                        if (!mayIssue)
+                        {
+                            requestAuthSecretReissueRefused = true;
+
+                            _logger.LogWarning(
+                                "Refused request auth secret reissue for managed instance {instanceId}: the request was not signed with the instance's current secret ({reason}).",
+                                hubAssignedInstanceId,
+                                instanceAuth.Message);
+                        }
+                    }
+
+                    if (mayIssue && (!hasSecret || reissueRequestAuthSecret == true))
                     {
                         requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
                         requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
-                        instanceInfo.RequestAuthSecretHash = requestAuthSecretHash;
-                        await _client.UpdateHubManagedInstance(instanceInfo, SystemAuthContext);
+
+                        var stored = await _mgmtAPI.SetManagedInstanceRequestAuthSecretHash(hubAssignedInstanceId, requestAuthSecretHash);
+
+                        if (!stored.IsSuccess)
+                        {
+                            return Problem(detail: stored.Message ?? "Could not store the request auth secret for this instance", statusCode: (int)HttpStatusCode.InternalServerError);
+                        }
+
                         requestAuthSecretReissued = true;
                     }
 
@@ -374,7 +407,9 @@ namespace Certify.Server.Hub.Api.Controllers
             joiningInfo.IsKnownInstance = isKnownInstance;
             joiningInfo.Message = requestAuthSecretReissued
                 ? "Joining OK. Existing instance registration reused and request auth secret reissued."
-                : isKnownInstance ? "Joining OK. Existing instance registration reused." : "Joining OK. New instance registration created.";
+                : requestAuthSecretReissueRefused
+                    ? "Joining OK. Existing instance registration reused. The request auth secret was not reissued, as the request was not signed with the instance's current secret: an administrator can rejoin the instance from the hub to issue a new one."
+                    : isKnownInstance ? "Joining OK. Existing instance registration reused." : "Joining OK. New instance registration created.";
 
             var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
             var jwtService = new Hub.Api.Services.JwtService(_config);

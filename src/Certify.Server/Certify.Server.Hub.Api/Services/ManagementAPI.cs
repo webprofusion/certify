@@ -110,6 +110,14 @@ namespace Certify.Server.Hub.Api.Services
                 };
             }
 
+            // The rejoin command has the instance drop its request auth secret and ask for a new one. A reissue is only
+            // answered for an unsigned request once the hub no longer holds a key for the instance, so it is cleared first.
+            var cleared = await SetManagedInstanceRequestAuthSecretHash(instanceId, null);
+            if (!cleared.IsSuccess)
+            {
+                return new ActionResult($"Could not reset the request auth secret for the instance: {cleared.Message}", false);
+            }
+
             try
             {
                 await SendCommandWithNoResult(instanceId, CreateRejoinCommand(joiningCredential.Result));
@@ -163,6 +171,15 @@ namespace Certify.Server.Hub.Api.Services
 
                 try
                 {
+                    // cleared first so the instance is issued a new request auth secret, as for a single rejoin
+                    var cleared = await SetManagedInstanceRequestAuthSecretHash(instance.InstanceId, null);
+                    if (!cleared.IsSuccess)
+                    {
+                        failed++;
+                        _log.LogWarning("Could not reset the request auth secret for instance {instanceId}: {message}", instance.InstanceId, cleared.Message);
+                        continue;
+                    }
+
                     await SendCommandWithNoResult(instance.InstanceId, CreateRejoinCommand(joiningCredential.Result));
                     dispatched++;
                 }
@@ -202,6 +219,21 @@ namespace Certify.Server.Hub.Api.Services
                 IsWarning = skipped > 0 || failed > 0,
                 Message = detail
             };
+        }
+
+        /// <summary>
+        /// Set or clear the key a managed instance signs its requests with (the hash of its request auth secret). Clearing
+        /// it means the instance is issued a new secret when it next checks in.
+        /// </summary>
+        public async Task<ActionResult> SetManagedInstanceRequestAuthSecretHash(string instanceId, string? requestAuthSecretHash)
+        {
+            if (_certifyManager == null)
+            {
+                return new ActionResult("The hub backend is not available to update the managed instance.", false);
+            }
+
+            return await _certifyManager.SetHubManagedInstanceRequestAuthSecretHash(instanceId, requestAuthSecretHash)
+                ?? new ActionResult("The managed instance request auth secret could not be updated.", false);
         }
 
         public async Task<ActionResult> RefreshExternalManagedCertificates(string instanceId, AuthContext? currentAuthContext)

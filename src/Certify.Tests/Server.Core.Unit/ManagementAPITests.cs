@@ -65,10 +65,12 @@ namespace Certify.Tests.Server.Core.Unit
             var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
             hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
 
+            var manager = CreateManagerMock();
+
             var managementApi = new ManagementAPI(
                 stateProvider.Object,
                 hubContext.Object,
-                CreateManagerMock().Object,
+                manager.Object,
                 Mock.Of<ILogger<ManagementAPI>>());
 
             var result = await managementApi.RejoinAllManagedInstances(null);
@@ -79,6 +81,11 @@ namespace Certify.Tests.Server.Core.Unit
             hubClient.Verify(x => x.SendCommandRequest(It.Is<InstanceCommandRequest>(cmd =>
                 cmd.CommandType == ManagementHubCommands.RejoinManagementHub
                 && HasExpectedRejoinPayload(cmd, "join-client", "join-secret"))), Times.Once);
+
+            // the instance is told to ask for a new request auth secret, which the hub only issues unsigned once its
+            // copy of the old one is cleared
+            manager.Verify(x => x.SetHubManagedInstanceRequestAuthSecretHash("remote-1", null), Times.Once);
+            manager.Verify(x => x.SetHubManagedInstanceRequestAuthSecretHash("hub-instance", It.IsAny<string?>()), Times.Never);
         }
 
         [TestMethod]
@@ -167,6 +174,8 @@ namespace Certify.Tests.Server.Core.Unit
 
             var manager = new Mock<ICertifyManager>();
             manager.Setup(x => x.GetCurrentAccessControl()).ReturnsAsync(accessControl.Object);
+            manager.Setup(x => x.SetHubManagedInstanceRequestAuthSecretHash(It.IsAny<string>(), It.IsAny<string?>()))
+                .ReturnsAsync(new ActionResult("Updated", true));
             return manager;
         }
     }

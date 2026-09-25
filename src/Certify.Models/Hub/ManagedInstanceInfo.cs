@@ -58,8 +58,14 @@ namespace Certify.Models.Hub
 
         /// <summary>
         /// Base64-encoded SHA-256 hash of the per-instance request authentication secret.
-        /// The hash value is used as the derived HMAC key for privileged instance-authenticated hub requests.
+        /// The hash value is used as the derived HMAC key for privileged instance-authenticated hub requests, so it is
+        /// as sensitive as the secret itself: anyone holding it can sign requests as the instance.
+        ///
+        /// It is persisted with the instance by the configuration store (Newtonsoft.Json) and read in-process by the
+        /// hub, and is never serialized by System.Text.Json: not in API responses or request bodies, instance
+        /// heartbeats or hub commands. It is changed only through <c>SetHubManagedInstanceRequestAuthSecretHash</c>.
         /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
         public string RequestAuthSecretHash { get; set; } = string.Empty;
 
         public LicenseCheckResult License { get; set; } = new LicenseCheckResult();
