@@ -87,6 +87,70 @@ namespace Certify.Models.Hub
         }
 
         /// <summary>
+        /// Prefix of the TXT record a dns-01 challenge response is published at, RFC 8555 section 8.4
+        /// </summary>
+        public const string DnsChallengeRecordPrefix = "_acme-challenge.";
+
+        /// <summary>
+        /// The TXT record name a dns-01 response for the identifier is published at, in ASCII (punycode) form and
+        /// lower case. A wildcard identifier is validated at its base domain. Null when the identifier is not a DNS name.
+        /// </summary>
+        public static string? GetDnsChallengeRecordName(string? identifier)
+        {
+            var domain = NormaliseDnsName(identifier);
+
+            if (domain == null)
+            {
+                return null;
+            }
+
+            if (domain.StartsWith("*.", StringComparison.Ordinal))
+            {
+                domain = domain.Substring(2);
+            }
+
+            return Uri.CheckHostName(domain) == UriHostNameType.Dns ? DnsChallengeRecordPrefix + domain : null;
+        }
+
+        /// <summary>
+        /// True when a requested TXT record name is the one the identifier's dns-01 response is published at.
+        ///
+        /// Authorization decides which identifiers a caller may answer challenges for, so the record written must be
+        /// derived from that identifier. Accepting a caller supplied name would let a caller authorized for one name
+        /// write TXT records anywhere the challenge's DNS credentials reach.
+        /// </summary>
+        public static bool IsResponseKeyForIdentifier(string? identifier, string? responseKey)
+        {
+            var expected = GetDnsChallengeRecordName(identifier);
+
+            return expected != null && string.Equals(expected, NormaliseDnsName(responseKey), StringComparison.Ordinal);
+        }
+
+        private static string? NormaliseDnsName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return null;
+            }
+
+            var value = name!.Trim().TrimEnd('.');
+
+            if (value.Length == 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                return new System.Globalization.IdnMapping().GetAscii(value).ToLowerInvariant();
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Find the most specific matching managed challenge for an identifier within an already-accessible set.
         /// Domain match rule evaluation is shared with <see cref="DomainMatchRules"/>.
         /// </summary>

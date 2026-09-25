@@ -46,6 +46,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> PerformManagedChallenge(ManagedChallengeRequest request)
         {
+            var invalidRecordName = CheckChallengeRecordName(request);
+            if (invalidRecordName != null)
+            {
+                return invalidRecordName;
+            }
+
             var authorization = await AuthorizeManagedChallengeRequestAsync(request);
             if (authorization.Denial != null)
             {
@@ -86,6 +92,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> BeginManagedChallenge(ManagedChallengeRequest request)
         {
+            var invalidRecordName = CheckChallengeRecordName(request);
+            if (invalidRecordName != null)
+            {
+                return invalidRecordName;
+            }
+
             var authorization = await AuthorizeManagedChallengeRequestAsync(request);
             if (authorization.Denial != null)
             {
@@ -219,6 +231,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CleanupManagedChallenge(ManagedChallengeRequest request)
         {
+            var invalidRecordName = CheckChallengeRecordName(request);
+            if (invalidRecordName != null)
+            {
+                return invalidRecordName;
+            }
+
             var authorization = await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeCleanup, request);
             if (authorization.Denial != null)
             {
@@ -227,6 +245,27 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var result = await _client.CleanupManagedChallenge(authorization.Authorize(request), null);
             return new OkObjectResult(result);
+        }
+
+        /// <summary>
+        /// Refuse a request whose TXT record name is not the one its identifier's dns-01 response is published at.
+        /// Authorization is decided on the identifier, so the record written has to be derived from it; the core
+        /// refuses such a request too, and this answers it with a clear error before anything is authorized.
+        /// </summary>
+        private ObjectResult? CheckChallengeRecordName(ManagedChallengeRequest? request)
+        {
+            if (request == null || ManagedChallengeAccess.IsResponseKeyForIdentifier(request.Identifier, request.ResponseKey))
+            {
+                return null;
+            }
+
+            var expected = ManagedChallengeAccess.GetDnsChallengeRecordName(request.Identifier);
+
+            return Problem(
+                detail: expected == null
+                    ? "The challenge identifier is not a valid DNS name."
+                    : $"The challenge response record name must be {expected} for identifier {request.Identifier}.",
+                statusCode: StatusCodes.Status400BadRequest);
         }
 
         /// <summary>

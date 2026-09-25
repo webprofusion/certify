@@ -488,11 +488,40 @@ namespace Certify.Management
             return (true, null, await GetAccessibleManagedChallenges(accessScope, identifier));
         }
 
+        /// <summary>
+        /// Refuse a request whose TXT record name is not the one its identifier's dns-01 response is published at.
+        /// Authorization is decided on the identifier, so the record written must be derived from it; a caller
+        /// supplied name would otherwise place a record anywhere the challenge's DNS credentials can write.
+        /// </summary>
+        private static ActionResult? CheckChallengeRecordName(ManagedChallengeRequest request)
+        {
+            if (ManagedChallengeAccess.IsResponseKeyForIdentifier(request?.Identifier, request?.ResponseKey))
+            {
+                return null;
+            }
+
+            var expected = ManagedChallengeAccess.GetDnsChallengeRecordName(request?.Identifier);
+
+            return new ActionResult
+            {
+                IsSuccess = false,
+                Message = expected == null
+                    ? "The challenge identifier is not a valid DNS name."
+                    : $"The challenge response record name must be {expected} for identifier {request?.Identifier}."
+            };
+        }
+
         private async Task<ActionResult> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
             var log = _serviceLog;
             var request = authorized.Request;
             var caller = authorized.Caller;
+
+            var invalidRecordName = CheckChallengeRecordName(request);
+            if (invalidRecordName != null)
+            {
+                return invalidRecordName;
+            }
 
             var eligible = await ResolveEligibleChallenges(
                 caller,
@@ -645,6 +674,12 @@ namespace Certify.Management
         {
             var log = _serviceLog;
             var request = authorized.Request;
+
+            var invalidRecordName = CheckChallengeRecordName(request);
+            if (invalidRecordName != null)
+            {
+                return invalidRecordName;
+            }
 
             var eligible = await ResolveEligibleChallenges(
                 authorized.Caller,

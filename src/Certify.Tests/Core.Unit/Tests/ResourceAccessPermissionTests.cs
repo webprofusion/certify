@@ -108,5 +108,22 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsTrue(ResourceAccess.IsInstancePermitted(Scope(Role("a")), [], []));
         }
+
+        [TestMethod]
+        [Description("A dns-01 response record name is accepted only for the identifier's own _acme-challenge record")]
+        public void ChallengeRecordNameMustBeDerivedFromTheIdentifier()
+        {
+            Assert.IsTrue(ManagedChallengeAccess.IsResponseKeyForIdentifier("app.example.com", "_acme-challenge.app.example.com"));
+            Assert.IsTrue(ManagedChallengeAccess.IsResponseKeyForIdentifier("App.Example.com", "_ACME-challenge.app.example.com."));
+            Assert.IsTrue(ManagedChallengeAccess.IsResponseKeyForIdentifier("*.example.com", "_acme-challenge.example.com"));
+            Assert.IsTrue(ManagedChallengeAccess.IsResponseKeyForIdentifier("bücher.example.com", "_acme-challenge.xn--bcher-kva.example.com"));
+
+            Assert.IsFalse(ManagedChallengeAccess.IsResponseKeyForIdentifier("app.example.com", "_acme-challenge.www.example.com"));
+            Assert.IsFalse(ManagedChallengeAccess.IsResponseKeyForIdentifier("app.example.com", "example.com"));
+            Assert.IsFalse(ManagedChallengeAccess.IsResponseKeyForIdentifier("app.example.com", "_acme-challenge.app.example.com.evil.net"));
+            Assert.IsFalse(ManagedChallengeAccess.IsResponseKeyForIdentifier("app.example.com", ""));
+            Assert.IsFalse(ManagedChallengeAccess.IsResponseKeyForIdentifier("not a host", "_acme-challenge.not a host"));
+            Assert.IsNull(ManagedChallengeAccess.GetDnsChallengeRecordName(null));
+        }
     }
 }

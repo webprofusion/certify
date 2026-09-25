@@ -953,6 +953,45 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
+        /// Authorization is decided on the identifier, so the TXT record written must be the one derived from it. A
+        /// caller authorized for one name could otherwise write a record for any other name the challenge's DNS
+        /// credentials reach, and obtain certificates for it.
+        /// </summary>
+        [TestMethod]
+        [Description("A challenge response for a record other than the identifier's own is refused, for request and cleanup")]
+        public async Task PerformManagedChallenge_RecordNameForAnotherHost_IsRefused()
+        {
+            await CreateManagedChallenge("challenge-any", "*.example.com");
+            await SeedPrincipalWithRole("sp-consumer", StandardResourceActions.ManagedChallengeRequest);
+
+            AuthorizedManagedChallengeRequest Request(string responseKey) => new()
+            {
+                Request = new ManagedChallengeRequest
+                {
+                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                    Identifier = "app.example.com",
+                    ResponseKey = responseKey,
+                    ResponseValue = "token"
+                },
+                Caller = new ManagedChallengeCaller
+                {
+                    SecurityPrincipalId = "sp-consumer",
+                    Origin = ManagedChallengeRequestOrigins.ManagedChallengeApi
+                }
+            };
+
+            var perform = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge.www.example.com"));
+            var cleanup = await _manager.CleanupManagedChallengeRequest(Request("_acme-challenge.www.example.com"));
+            var apex = await _manager.PerformManagedChallengeRequest(Request("example.com"));
+
+            Assert.IsFalse(perform.IsSuccess);
+            StringAssert.Contains(perform.Message, "_acme-challenge.app.example.com");
+            Assert.IsFalse(cleanup.IsSuccess);
+            StringAssert.Contains(cleanup.Message, "_acme-challenge.app.example.com");
+            Assert.IsFalse(apex.IsSuccess);
+        }
+
+        /// <summary>
         /// Each identifier must be answered by a challenge reached through a role assignment which also permits that
         /// identifier. Otherwise a principal holding two scoped assignments could use one assignment's challenge (and
         /// its DNS credentials) for a domain only the other assignment permits.
