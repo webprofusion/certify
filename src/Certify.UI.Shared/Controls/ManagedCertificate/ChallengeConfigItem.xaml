@@ -69,11 +69,11 @@
                 <Label Width="160" Content="{Binding Name}" />
                 <ComboBox
                     Width="250"
+                    Binding.SourceUpdated="OnParameterModified"
                     DisplayMemberPath="Value"
                     ItemsSource="{Binding Options}"
-                    SelectedValue="{Binding Value}"
-                    SelectedValuePath="Key"
-                    SelectionChanged="OnParameterModified" />
+                    SelectedValue="{Binding Value, NotifyOnSourceUpdated=True}"
+                    SelectedValuePath="Key" />
             </StackPanel>
 
         </DataTemplate>
@@ -98,10 +98,7 @@
                 DockPanel.Dock="Left"
                 Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
-                <CheckBox
-                    Checked="OnParameterModified"
-                    IsChecked="{Binding Value, Mode=TwoWay}"
-                    Unchecked="OnParameterModified" />
+                <CheckBox Binding.SourceUpdated="OnParameterModified" IsChecked="{Binding Value, Mode=TwoWay, NotifyOnSourceUpdated=True}" />
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>

@@ -91,12 +91,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        bool _suppressChallengeProviderListChanges = false;
         private async void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var challengeProviderType = (sender as ComboBox)?.SelectedValue?.ToString();
 
-            if (challengeProviderType != null && !_suppressChallengeProviderListChanges)
+            // ignore the list being set to the current provider (initial binding, or synced by SetChallengeProvider)
+            if (challengeProviderType != null && challengeProviderType != EditModel.SelectedItem.ChallengeProvider)
             {
                 await SetChallengeProvider(challengeProviderType);
             }
@@ -127,17 +127,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                     );
             }
 
-            // update our dropdown if not currently showing this selection. 
+            // update our dropdown if not currently showing this selection.
             if (ChallengeAPIProviderList.SelectedValue?.ToString() != challengeProviderType)
             {
-                _suppressChallengeProviderListChanges = true;
-
                 Dispatcher.Invoke(() =>
                 {
                     ChallengeAPIProviderList.SelectedValue = challengeProviderType;
                 });
-
-                _suppressChallengeProviderListChanges = false;
             }
         }
 
@@ -246,6 +242,11 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // ignore the initial selection from binding when the config is displayed, only react to a change of type
+            if (e.RemovedItems.Count == 0)
+            {
+                return;
+            }
 
             if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
             {
@@ -264,19 +265,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                     }));
                 }
             }
-            else if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
-            {
-                EditModel.SelectedItem.ChallengeProvider = null;
-                EditModel.SelectedItem.ChallengeCredentialKey = null;
-                EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
-                EditModel.DnsZones.Clear();
-                EditModel.ShowZoneLookup = false;
-                DnsZoneList.SelectedValue = null;
-                EditModel.EnsureDefaultDnsPersistAccountSelection();
-                EditModel.RaiseDnsPersistStateChanged();
-            }
             else
             {
+                // provider, credential and parameter reset for the new type is handled by the view model
                 EditModel.DnsZones.Clear();
                 EditModel.ShowZoneLookup = false;
                 DnsZoneList.SelectedValue = null;

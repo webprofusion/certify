@@ -251,11 +251,12 @@ namespace Certify.UI.ViewModel
 
         internal async Task RefreshAllOptions(ComboBox storedCredentialsList, bool preserveExistingParameterValues = true)
         {
+            // re-syncing parameters with the provider definition and refreshing credential options is not an edit in itself
+            var currentIsChanged = ParentManagedCertificate.IsChanged;
 
             RefreshParameters(preserveExistingParameterValues);
-
-            var currentIsChanged = ParentManagedCertificate.IsChanged;
             await RefreshCredentialOptions(storedCredentialsList);
+
             ParentManagedCertificate.ResetIsChanged(currentIsChanged);
 
             // if we need to migrate WebsiteRootPath, apply it here
