@@ -1388,7 +1388,7 @@ namespace Certify.Management
                         X509Certificate2 certInfo = null;
                         if (!string.IsNullOrWhiteSpace(primaryCertFilePath) && primaryCertFilePath.EndsWith(".pfx", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd, throwOnError: true);
+                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd, throwOnError: true, ephemeralKeySet: true);
                         }
                         else if (certRequestResult.SupportingData is X509Certificate2)
                         {
