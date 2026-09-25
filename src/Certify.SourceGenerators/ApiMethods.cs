@@ -416,7 +416,7 @@ namespace Certify.SourceGenerators
                         { "update", "Certify.Models.Hub.ManagedChallenge" }
                     },
                     RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeUpdate)],
-                    ScopeCheck = "CheckManagedChallengeInScope(_client, \"{action}\", update?.Id, allowNew: true)"
+                    ScopeCheck = "CheckSubmittedManagedChallenge(_client, \"{action}\", update)"
                 },
                 new()
                 {
@@ -1047,7 +1047,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "api/v1/{instanceId}/migration/import",
                     ReturnType = "ICollection<ActionStep>",
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "importRequest",  GetFormattedTypeName(typeof(Certify.Models.Config.Migration.ImportRequest)) } },
-                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceImport)]
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceImport)],
+                    ScopeCheck = "CheckInstanceImport(_client, _mgmtAPI, \"{resourceType}\", \"{action}\", instanceId, importRequest)"
                 },
                 new()
                 {

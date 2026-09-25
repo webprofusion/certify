@@ -296,6 +296,60 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        [Description("A caller who is not an administrator cannot add a task which runs a program, even with no tag or domain restrictions")]
+        public async Task UpdateManagedCertificateDetails_NonAdminAddingProgramTask_IsForbidden()
+        {
+            var harness = new Harness();
+
+            var result = await harness.Certificates().UpdateManagedCertificateDetails(InstanceId, WithProgramTask(Item(WithinId, "www.example.com")));
+
+            Assert.AreEqual(StatusCodes.Status403Forbidden, ((ObjectResult)result).StatusCode);
+            AssertNotSent(harness, ManagementHubCommands.UpdateManagedItem);
+        }
+
+        [TestMethod]
+        [Description("An administrator can add a task which runs a program")]
+        public async Task UpdateManagedCertificateDetails_AdminAddingProgramTask_IsSaved()
+        {
+            var harness = new Harness();
+            harness.Client.Setup(c => c.GetSecurityPrincipalAssignedRoles(CallerId, It.IsAny<AuthContext>()))
+                .ReturnsAsync(new List<AssignedRole> { new() { Id = "ar-admin", RoleId = StandardRoles.Administrator.Id, SecurityPrincipalId = CallerId } });
+
+            Assert.IsInstanceOfType<OkObjectResult>(await harness.Certificates().UpdateManagedCertificateDetails(InstanceId, WithProgramTask(Item(WithinId, "www.example.com"))));
+            CollectionAssert.Contains(harness.SentCommands, ManagementHubCommands.UpdateManagedItem);
+        }
+
+        [TestMethod]
+        [Description("A caller who is not an administrator cannot test a configuration using the custom script DNS provider")]
+        public async Task PerformConfigurationTest_NonAdminUsingScriptDnsProvider_IsForbidden()
+        {
+            var harness = new Harness();
+
+            var submitted = Item(WithinId, "www.example.com");
+            submitted.RequestConfig.Challenges = [new CertRequestChallengeConfig { ChallengeType = "dns-01", ChallengeProvider = ProgramExecutionSettings.ScriptDnsProviderId }];
+
+            var result = await harness.Certificates().PerformConfigurationTest(InstanceId, submitted);
+
+            Assert.AreEqual(StatusCodes.Status403Forbidden, ((ObjectResult)result).StatusCode);
+            AssertNotSent(harness, ManagementHubCommands.TestManagedItemConfiguration);
+        }
+
+        private static ManagedCertificate WithProgramTask(ManagedCertificate item)
+        {
+            item.PostRequestTasks =
+            [
+                new Certify.Config.DeploymentTaskConfig
+                {
+                    Id = "task-1",
+                    TaskTypeId = ProgramExecutionSettings.ProgramTaskTypeId,
+                    Parameters = [new Certify.Models.Config.ProviderParameterSetting("path", "run.cmd")]
+                }
+            ];
+
+            return item;
+        }
+
+        [TestMethod]
         [Description("A preview naming an existing item outside the caller's scope is not produced")]
         public async Task GetPreview_ExistingItemOutsideScope_IsNotFound()
         {

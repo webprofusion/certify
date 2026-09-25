@@ -391,7 +391,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
-            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemUpdate, instanceId, managedCertificate);
+            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemUpdate, instanceId, managedCertificate)
+                ?? await CheckSubmittedManagedItemProgramExecution(_client, _mgmtAPI, instanceId, managedCertificate);
             if (outOfScope != null)
             {
                 return outOfScope;
@@ -558,7 +559,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
-            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemTest, instanceId, item);
+            var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemTest, instanceId, item)
+                ?? await CheckSubmittedManagedItemProgramExecution(_client, _mgmtAPI, instanceId, item);
             if (outOfScope != null)
             {
                 return outOfScope;

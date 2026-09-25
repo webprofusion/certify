@@ -493,6 +493,109 @@ namespace Certify.Server.Hub.Api.Controllers
 
         #endregion
 
+        #region Program execution
+
+        /// <summary>
+        /// Adding or changing settings which run a program or script on an instance (see
+        /// <see cref="ProgramExecutionSettings"/>) is limited to administrators, whatever else the caller may do with the
+        /// resource, as those settings choose code the instance runs as its service account.
+        /// </summary>
+        /// <param name="internalApiClient"></param>
+        /// <param name="addsOrChanges">whether the submission adds or changes any such setting</param>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckProgramExecutionSettingsAllowed(ICertifyInternalApiClient internalApiClient, bool addsOrChanges)
+        {
+            if (!addsOrChanges || await PrincipalAccess.IsAdministrator(internalApiClient, CurrentAuthContext))
+            {
+                return null;
+            }
+
+            return Problem(
+                detail: "Only an administrator can add or change deployment tasks, scripts or DNS providers which run a program or script.",
+                statusCode: StatusCodes.Status403Forbidden);
+        }
+
+        /// <summary>
+        /// Check the program execution settings of a managed item the caller has submitted to save or test, against the
+        /// item as its instance holds it. Settings the item already has, submitted unchanged, are allowed.
+        /// </summary>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckSubmittedManagedItemProgramExecution(
+            ICertifyInternalApiClient internalApiClient,
+            ManagementAPI mgmtAPI,
+            string? instanceId,
+            ManagedCertificate? submittedItem)
+        {
+            // the instance is only asked for its copy when the submitted item carries such settings at all
+            if (!ProgramExecutionSettings.AddsOrChanges(existing: null, submittedItem))
+            {
+                return null;
+            }
+
+            var existingItem = string.IsNullOrWhiteSpace(instanceId) || string.IsNullOrWhiteSpace(submittedItem?.Id)
+                ? null
+                : await mgmtAPI.GetManagedCertificate(instanceId, submittedItem.Id, CurrentAuthContext);
+
+            return await CheckProgramExecutionSettingsAllowed(internalApiClient, ProgramExecutionSettings.AddsOrChanges(existingItem, submittedItem));
+        }
+
+        /// <summary>
+        /// Check a managed challenge the caller has submitted to save: that it is within their scope, and that it adds or
+        /// changes no program execution settings unless they are an administrator. Managed challenges run on the hub.
+        /// </summary>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckSubmittedManagedChallenge(
+            ICertifyInternalApiClient internalApiClient,
+            string resourceActionId,
+            ManagedChallenge? update)
+        {
+            var outOfScope = await CheckManagedChallengeInScope(internalApiClient, resourceActionId, update?.Id, allowNew: true);
+
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
+            if (!ProgramExecutionSettings.AddsOrChanges(existing: null, update?.ChallengeConfig))
+            {
+                return null;
+            }
+
+            var existing = string.IsNullOrWhiteSpace(update?.Id)
+                ? null
+                : (await internalApiClient.GetManagedChallenges(SystemAuthContext))?.FirstOrDefault(c => c.Id == update.Id);
+
+            return await CheckProgramExecutionSettingsAllowed(internalApiClient, ProgramExecutionSettings.AddsOrChanges(existing?.ChallengeConfig, update?.ChallengeConfig));
+        }
+
+        /// <summary>
+        /// Check an instance import: the instance must be within the caller's scope, and a package which would store
+        /// program execution settings (in its items, or as bundled scripts) may only be imported by an administrator.
+        /// A preview stores nothing.
+        /// </summary>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckInstanceImport(
+            ICertifyInternalApiClient internalApiClient,
+            ManagementAPI mgmtAPI,
+            string resourceType,
+            string resourceActionId,
+            string? instanceId,
+            Certify.Models.Config.Migration.ImportRequest? importRequest)
+        {
+            var outOfScope = await CheckInstanceInScope(internalApiClient, mgmtAPI, resourceType, resourceActionId, instanceId);
+
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
+            return await CheckProgramExecutionSettingsAllowed(
+                internalApiClient,
+                importRequest?.IsPreviewMode != true && ProgramExecutionSettings.IsCarriedBy(importRequest?.Package));
+        }
+
+        #endregion
+
         #region Security principals
 
         /// <summary>
