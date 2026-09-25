@@ -84,7 +84,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             // the hub requires authorization, so the joining instances token has already been validated (signature, issuer and lifetime)
             // by the authentication middleware during the negotiate request and the claims are available on the connection context
-            var hubAssignedId = Context.User?.FindFirst("hub-assigned-id")?.Value;
+            var hubAssignedId = GetAdmittedInstanceId();
 
             if (string.IsNullOrEmpty(hubAssignedId))
             {
@@ -607,17 +607,49 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 || string.Equals(retrievalMode, ExternalCertificateRetrievalModes.Auto, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// The managed instance a connection was admitted as: the one its joining token was issued for, or the hub's own
+        /// instance for the direct local connection, which has no SignalR context.
+        /// </summary>
+        private string? GetAdmittedInstanceId()
+            => Context?.ConnectionId != null
+                ? Context.User?.FindFirst(HubTokenPurposes.HubAssignedIdClaimType)?.Value
+                : _localInstanceId;
+
         private async Task ProcessInstanceInfoResult(InstanceCommandResult result)
         {
             var instanceInfo = result.Value == null ? null : System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceInfo>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
 
             if (instanceInfo != null)
             {
+                // Which instance a connection is for was settled when its joining token was issued, so the instance
+                // cannot name itself here. Accepting a reported id would let one connection take over another
+                // instance's commands, and the item state the hub holds for it.
+                var admittedInstanceId = GetAdmittedInstanceId();
+
+                if (string.IsNullOrWhiteSpace(admittedInstanceId)
+                    || !string.Equals(instanceInfo.InstanceId, admittedInstanceId, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger?.LogWarning(
+                        "InstanceManagementHub: refused instance info reporting instance {reportedInstanceId} on a connection admitted as {admittedInstanceId}.",
+                        instanceInfo.InstanceId,
+                        admittedInstanceId);
+
+                    Context?.Abort();
+                    return;
+                }
+
+                instanceInfo.Id = admittedInstanceId;
+                instanceInfo.InstanceId = admittedInstanceId;
                 instanceInfo.DateLastReported = DateTimeOffset.Now;
                 instanceInfo.IsPendingConnection = false;
 
+                // The security principal an instance acts as is decided by the hub alone: taking it from the report
+                // would let an instance link itself to any principal, and so be authorized as it.
+                instanceInfo.SecurityPrincipalId = string.Empty;
+
                 // update our stored instance info for this instance while preserving persistent metadata fields
-                var storedInstance = await _backendClient?.GetHubManagedInstance(instanceInfo.InstanceId, null);
+                var storedInstance = await _backendClient?.GetHubManagedInstance(admittedInstanceId, null);
 
                 if (storedInstance != null)
                 {

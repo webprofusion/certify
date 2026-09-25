@@ -324,35 +324,55 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
                 else
                 {
-                    // An instance with no secret is issued one: this self-heals instances previously registered without
-                    // a secret, and those an administrator has had rejoin, which clears the hub's copy first.
-                    //
-                    // Replacing an existing secret is different. The joining credentials are shared by every instance
-                    // and the hub assigned id is not secret, so a reissue on those alone would hand any holder of the
-                    // joining credentials a signing key for any instance. It is only granted to a request signed with
-                    // the instance's current secret.
+                    // The joining credentials are shared by every instance and the hub assigned id is not secret, so they
+                    // do not show that the caller is this instance. Once the instance holds a request auth secret, a
+                    // joincheck has to be signed with it: both to be issued a joining token, which the management hub
+                    // connection acts as this instance with, and to have the secret replaced.
                     var hasSecret = !string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash);
-                    var mayIssue = !hasSecret;
+                    var isSignedByInstance = false;
 
-                    if (hasSecret && reissueRequestAuthSecret == true)
+                    if (hasSecret)
                     {
                         var instanceAuth = await ValidateManagedInstanceRequestAuthAsync();
 
-                        mayIssue = instanceAuth.IsSuccess
+                        isSignedByInstance = instanceAuth.IsSuccess
                             && string.Equals(instanceAuth.ManagedInstance?.InstanceId, hubAssignedInstanceId, StringComparison.OrdinalIgnoreCase);
 
-                        if (!mayIssue)
+                        if (!isSignedByInstance)
                         {
-                            requestAuthSecretReissueRefused = true;
+                            if (!IsLegacyUnsignedJoinCheckAllowed())
+                            {
+                                _logger.LogWarning(
+                                    "Refused joincheck for managed instance {instanceId}: the request was not signed with the instance's request auth secret ({reason}).",
+                                    hubAssignedInstanceId,
+                                    instanceAuth.Message);
+
+                                return Problem(
+                                    detail: "This instance has a request auth secret, so its joincheck must be signed with it. Upgrade the instance, or if it has lost its secret, rejoin it from the hub to issue a new one.",
+                                    statusCode: (int)HttpStatusCode.Unauthorized,
+                                    type: "https://api.certifytheweb.com/problemtype/hub-joincheck-signature-required");
+                            }
 
                             _logger.LogWarning(
-                                "Refused request auth secret reissue for managed instance {instanceId}: the request was not signed with the instance's current secret ({reason}).",
+                                "Allowing unsigned joincheck for managed instance {instanceId} because {configKey} is enabled. While it is, the joining credentials and an instance id are enough to connect as that instance.",
                                 hubAssignedInstanceId,
-                                instanceAuth.Message);
+                                ManagedInstanceRequestAuthValidator.AllowLegacyUnsignedJoinCheckConfigKey);
                         }
                     }
 
-                    if (mayIssue && (!hasSecret || reissueRequestAuthSecret == true))
+                    // An instance with no secret is issued one: this self-heals instances previously registered without a
+                    // secret, and those an administrator has had rejoin, which clears the hub's copy first. An existing
+                    // secret is replaced only for a request signed with it.
+                    if (hasSecret && reissueRequestAuthSecret == true && !isSignedByInstance)
+                    {
+                        requestAuthSecretReissueRefused = true;
+
+                        _logger.LogWarning(
+                            "Refused request auth secret reissue for managed instance {instanceId}: the request was not signed with the instance's current secret.",
+                            hubAssignedInstanceId);
+                    }
+
+                    if (!hasSecret || (reissueRequestAuthSecret == true && isSignedByInstance))
                     {
                         requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
                         requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
@@ -416,7 +436,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var additionalClaims = new List<Claim>
                 {
-                    new Claim("hub-assigned-id", hubAssignedInstanceId),
+                    new Claim(HubTokenPurposes.HubAssignedIdClaimType, hubAssignedInstanceId),
                     new Claim(ClaimTypes.Name, instanceTitle??""),
 
                     // marks this as a joining token, which the management hub connection requires and every other
@@ -435,5 +455,9 @@ namespace Certify.Server.Hub.Api.Controllers
             return new OkObjectResult(joiningInfo);
 
         }
+
+        private bool IsLegacyUnsignedJoinCheckAllowed()
+            => HttpContext.RequestServices.GetRequiredService<IConfiguration>()
+                .GetValue<bool>(ManagedInstanceRequestAuthValidator.AllowLegacyUnsignedJoinCheckConfigKey);
     }
 }

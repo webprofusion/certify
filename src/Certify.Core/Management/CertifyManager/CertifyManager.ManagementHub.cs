@@ -309,7 +309,11 @@ namespace Certify.Management
                     Secret = clientSecret.Secret,
                     HubAssignedInstanceId = _serverConfig.HubAssignedInstanceId,
                     InstanceVersion = Util.GetAppVersion().ToString(),
-                    TraceInstanceName = GetManagedInstanceInfo().Title
+                    TraceInstanceName = GetManagedInstanceInfo().Title,
+
+                    // The joining credentials are shared by every instance, so the hub only issues a joining token for an
+                    // instance which holds a secret to a joincheck signed with that secret.
+                    RequestAuthSecret = registerInstance ? null : await GetManagementHubRequestAuthSecret()
                 };
 
                 var hubInfo = await UseHubApiClient(
@@ -334,7 +338,7 @@ namespace Certify.Management
 
                 if (apiEx.StatusCode == (int)System.Net.HttpStatusCode.Unauthorized)
                 {
-                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub (Unauthorized). {apiEx.Response} - Check credentials {endpoint} {clientSecret.ClientId} {clientSecret.Secret} {_serverConfig.HubAssignedInstanceId}.", isSuccess: false);
+                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub (Unauthorized). {apiEx.Response} - Check credentials {endpoint} {clientSecret.ClientId} {_serverConfig.HubAssignedInstanceId}.", isSuccess: false);
                 }
 
                 return new ActionResult<HubJoiningInfo>("Could not connect to Management Hub. Check URL.", isSuccess: false);

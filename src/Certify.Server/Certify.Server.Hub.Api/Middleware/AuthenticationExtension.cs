@@ -28,6 +28,12 @@ namespace Certify.Server.Hub.Api.Middleware
         public const string ManagementHubJoinPolicy = "certify.managementhub-join";
 
         /// <summary>
+        /// Claim on a joining token naming the managed instance it was issued for. A management hub connection acts only
+        /// as that instance.
+        /// </summary>
+        public const string HubAssignedIdClaimType = "hub-assigned-id";
+
+        /// <summary>
         /// True when a principal was authenticated from a joining token.
         /// </summary>
         public static bool IsManagementHubJoinToken(System.Security.Claims.ClaimsPrincipal? principal)

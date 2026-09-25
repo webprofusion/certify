@@ -36,6 +36,10 @@ namespace Certify.Management
             item.Id = preferredId ?? Guid.NewGuid().ToString();
             item.InstanceId = item.Id;
 
+            // a new instance is linked to its own security principal by the hub, below or when it first connects,
+            // never to one named by whoever registered it
+            item.SecurityPrincipalId = string.Empty;
+
             if (item.DateRegistered == default)
             {
                 item.DateRegistered = DateTimeOffset.UtcNow;
@@ -431,6 +435,19 @@ namespace Certify.Management
             if (!string.IsNullOrWhiteSpace(instance.SecurityPrincipalId))
             {
                 existing = await _configStore.Get<SecurityPrincipal>(nameof(SecurityPrincipal), instance.SecurityPrincipalId);
+
+                // The linked principal is only reused when it is this instance's own. A link to any other principal -
+                // a user, or another instance - is never adopted, as the instance would then be authorized as that
+                // principal, and adopting it would also convert it. The instance is relinked to its own principal instead.
+                if (existing != null && !IsManagedInstanceOwnPrincipal(existing, instance.InstanceId))
+                {
+                    _serviceLog?.Warning(
+                        "Managed instance {instanceId} was linked to security principal {principalId}, which is not that instance's own principal. Relinking it to its own principal.",
+                        instance.InstanceId,
+                        existing.Id);
+
+                    existing = null;
+                }
             }
 
             if (existing == null)
@@ -467,6 +484,28 @@ namespace Certify.Management
                 await _configStore.Update(nameof(SecurityPrincipal), existing);
                 return existing.Id;
             }
+        }
+
+        /// <summary>
+        /// Whether a principal is the one belonging to a managed instance: a managed instance principal for that instance,
+        /// one created before the instance id was recorded on it, or one from the earlier scheme which gave an instance's
+        /// principal the instance id as its own id.
+        /// </summary>
+        internal static bool IsManagedInstanceOwnPrincipal(SecurityPrincipal principal, string instanceId)
+        {
+            if (principal.IsBuiltIn)
+            {
+                return false;
+            }
+
+            if (string.Equals(principal.Id, instanceId, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return principal.PrincipalType == SecurityPrincipalType.ManagedInstance
+                && (string.IsNullOrWhiteSpace(principal.ExternalIdentifier)
+                    || string.Equals(principal.ExternalIdentifier, instanceId, StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task RemoveManagedInstanceAccessArtifacts(ManagedInstanceInfo? instance, string deletedIdentifier)

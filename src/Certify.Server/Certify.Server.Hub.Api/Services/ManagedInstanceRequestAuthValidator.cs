@@ -23,6 +23,14 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         public const string AllowLegacyUnsignedRequestsConfigKey = "ManagedInstanceRequestAuth:AllowLegacyUnsignedRequests";
 
+        /// <summary>
+        /// Configuration key which lets an instance holding a request auth secret be issued a joining token by an unsigned
+        /// joincheck, as agents released before joincheck was signed send one. Off unless explicitly set, because when it
+        /// is on the shared joining credentials and an instance id are enough to connect as that instance. Intended only
+        /// for the period while agents are upgraded.
+        /// </summary>
+        public const string AllowLegacyUnsignedJoinCheckConfigKey = "ManagedInstanceRequestAuth:AllowLegacyUnsignedJoinCheck";
+
         private readonly ICertifyInternalApiClient _client;
         private readonly ILogger<ManagedInstanceRequestAuthValidator> _logger;
         private readonly bool _allowLegacyUnsignedRequests;
