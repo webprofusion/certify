@@ -166,7 +166,7 @@ namespace Certify.Core.Tests.Unit
                 .WithPrincipal("sp-viewer", ViewerRole("ar-viewer"));
 
             harness.Client
-                .Setup(c => c.GetSecurityPrincipalAssignedRoles("sp-viewer", It.IsAny<AuthContext>()))
+                .Setup(c => c.EvaluateAccessScope(It.Is<AccessCheck>(a => a.SecurityPrincipalId == "sp-viewer"), It.IsAny<AuthContext>()))
                 .ThrowsAsync(new System.Exception("data store unavailable"));
 
             harness.Connect("conn-viewer", "sp-viewer");

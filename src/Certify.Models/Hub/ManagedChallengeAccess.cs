@@ -35,12 +35,15 @@ namespace Certify.Models.Hub
     public static class ManagedChallengeAccess
     {
         /// <summary>
-        /// Filter managed challenges to those accessible under the resolved access scope.
+        /// Filter managed challenges to those accessible under the resolved access scope. When an identifier is given,
+        /// only challenges reachable through a role assignment which also permits that identifier are kept, so a
+        /// challenge from one assignment's tag scope is never used for an identifier only another assignment permits.
         /// </summary>
         public static ICollection<ManagedChallenge> FilterChallenges(
             IEnumerable<ManagedChallenge> challenges,
             IDictionary<string, List<ItemTag>> tagsByChallengeId,
-            ResourceAccessScope scope)
+            ResourceAccessScope scope,
+            string? identifier = null)
         {
             if (challenges == null)
             {
@@ -52,32 +55,22 @@ namespace Certify.Models.Hub
                 return Array.Empty<ManagedChallenge>();
             }
 
-            if (scope.IsUnrestricted)
-            {
-                return challenges.ToList();
-            }
-
             tagsByChallengeId ??= new Dictionary<string, List<ItemTag>>();
-            var filtered = new List<ManagedChallenge>();
 
-            foreach (var challenge in challenges)
-            {
-                if (IsChallengeAccessible(challenge, tagsByChallengeId, scope))
-                {
-                    filtered.Add(challenge);
-                }
-            }
-
-            return filtered;
+            return challenges
+                .Where(c => IsChallengeAccessible(c, tagsByChallengeId, scope, identifier))
+                .ToList();
         }
 
         /// <summary>
-        /// True when the challenge is accessible under the resolved access scope.
+        /// True when the challenge is accessible under the resolved access scope, and when an identifier is given,
+        /// through a role assignment which also permits that identifier.
         /// </summary>
         public static bool IsChallengeAccessible(
             ManagedChallenge challenge,
             IDictionary<string, List<ItemTag>> tagsByChallengeId,
-            ResourceAccessScope scope)
+            ResourceAccessScope scope,
+            string? identifier = null)
         {
             if (challenge == null)
             {
@@ -87,7 +80,10 @@ namespace Certify.Models.Hub
             tagsByChallengeId ??= new Dictionary<string, List<ItemTag>>();
             tagsByChallengeId.TryGetValue(challenge.Id, out var itemTags);
 
-            return ResourceAccess.IsResourceInScope(scope, ResourceAccess.ToTagSummaries(itemTags));
+            return ResourceAccess.IsResourcePermitted(
+                scope,
+                itemTags ?? [],
+                string.IsNullOrWhiteSpace(identifier) ? null : [identifier]);
         }
 
         /// <summary>

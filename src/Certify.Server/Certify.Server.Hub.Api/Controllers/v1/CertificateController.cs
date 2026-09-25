@@ -54,34 +54,22 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> Download(string instanceId, string managedCertId, string format)
         {
-            // a role assignment scoped to tags reaches only the certificates carrying them, so the check is made
-            // against this certificate's tags, as the subscription listing does when deciding what to offer
-            var tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, managedCertId, SystemAuthContext);
+            // The caller downloads either as themselves, or as a managed instance collecting a certificate it subscribes
+            // to. Which one is decided on the action alone, as the certificate is only fetched for a caller who could
+            // download some certificate.
+            var holdsDownload = (await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload))).IsSuccess;
 
-            var accessCheck = await CheckRequestAuthorized(
-                _client,
-                new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload, managedCertId)
-                {
-                    ResourceTags = tags?.ToList() ?? []
-                });
+            string? instancePrincipalId = null;
 
-            // either route may be restricted to specific domains, which can only be checked once we know the
-            // identifiers on the cert. A principal authorized by their own roles is checked against the restrictions
-            // on those roles; a managed instance fetching a subscription cert is checked against the restrictions on
-            // the instance's own principal, which is the scope the subscription listing offers it items from.
-            var requiresDomainRestrictionCheck = accessCheck.IsSuccess;
-
-            List<string> instanceDomainRules = [];
-
-            if (!accessCheck.IsSuccess)
+            if (!holdsDownload)
             {
-                var subscriptionCheck = await CheckManagedInstanceSubscriptionDownloadAuthorized(managedCertId, tags);
-                if (!subscriptionCheck.IsSuccess)
+                var subscriber = await CheckManagedInstanceSubscriptionCaller();
+                if (!subscriber.IsSuccess)
                 {
-                    return Problem(detail: subscriptionCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+                    return Problem(detail: subscriber.Message, statusCode: (int)HttpStatusCode.Unauthorized);
                 }
 
-                instanceDomainRules = subscriptionCheck.Result ?? [];
+                instancePrincipalId = subscriber.Result;
             }
 
             // default to PFX output
@@ -98,30 +86,24 @@ namespace Certify.Server.Hub.Api.Controllers
                 return new NotFoundResult();
             }
 
-            if (requiresDomainRestrictionCheck)
-            {
-                var identifierCheck = await CheckIdentifiersAuthorized(
-                    _client,
-                    StandardResourceActions.CertificateDownload,
-                    managedCert.GetCertificateIdentifiers().Select(i => i.Value));
+            // A role assignment scoped to tags reaches only the certificates carrying them, and one restricted to
+            // domains only those whose identifiers are all within them. Both are answered for this certificate by a
+            // single check, so one assignment must permit both - as the subscription listing does when deciding what
+            // to offer. A managed instance is checked against its own principal, which is the scope it subscribes with.
+            var tags = await HubItemTags.GetItemTags(_client, TaggedItemTypes.ManagedCertificate, instanceId, managedCertId);
+            var downloadCheck = CertificateDownloadCheck(instancePrincipalId, managedCert, tags, scopedAssignedRoles: null);
 
-                if (!identifierCheck.IsSuccess)
-                {
-                    return Problem(detail: identifierCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
-                }
-            }
-            else if (instanceDomainRules.Count > 0)
-            {
-                // the whole cert is downloaded, so every identifier on it must be within the instance's domain scope
-                var denied = managedCert.GetCertificateIdentifiers()
-                    .FirstOrDefault(i => !ResourceAccess.IsIdentifierPermittedByDomainRules(instanceDomainRules, i.Value));
+            var permitted = instancePrincipalId == null
+                ? await IsAuthorized(_client, downloadCheck)
+                : await _client.CheckSecurityPrincipalHasAccess(downloadCheck, new AuthContext { UserId = instancePrincipalId });
 
-                if (denied != null)
-                {
-                    return Problem(
-                        detail: $"Identifier '{denied.Value}' is not permitted by the domain restrictions on this managed instance's role assignment",
-                        statusCode: (int)HttpStatusCode.Unauthorized);
-                }
+            if (!permitted)
+            {
+                return Problem(
+                    detail: instancePrincipalId == null
+                        ? "Not permitted to download this certificate: it is outside the tag scope or domain restrictions on your role assignments."
+                        : "Managed instance is not permitted to download this subscribed certificate.",
+                    statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
             if (managedCert.DateRenewed == null)
@@ -174,68 +156,39 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Authorize a managed instance collecting a certificate it subscribes to. On success the result carries the
-        /// Domain Match rules restricting the instance's own principal, which the caller applies to the identifiers
-        /// on the cert once it has fetched them. An empty rule set means the instance is unrestricted.
+        /// Authenticate a managed instance collecting a certificate it subscribes to: a caller holding the hub joining
+        /// credentials, whose request is signed by a registered instance. On success the result is the instance's own
+        /// security principal, which is what the certificate is then checked against.
         /// </summary>
-        private async Task<Certify.Models.Config.ActionResult<List<string>>> CheckManagedInstanceSubscriptionDownloadAuthorized(string managedCertId, ICollection<TagSummary>? tags)
+        private async Task<Certify.Models.Config.ActionResult<string>> CheckManagedInstanceSubscriptionCaller()
         {
             // the caller's credentials were resolved by the authentication middleware, so this asks whether the
             // principal they authenticated as may join the hub - it does not resolve their token a second time
             if (!await IsAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin)))
             {
-                return new Certify.Models.Config.ActionResult<List<string>>("Caller is not authorized to join the hub as a managed instance.", false);
+                return new Certify.Models.Config.ActionResult<string>("Caller is not authorized to join the hub as a managed instance.", false);
             }
 
             var requestingInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString();
             if (string.IsNullOrWhiteSpace(requestingInstanceId))
             {
-                return new Certify.Models.Config.ActionResult<List<string>>("X-Certify-HubAssignedId header is required.", false);
+                return new Certify.Models.Config.ActionResult<string>("X-Certify-HubAssignedId header is required.", false);
             }
 
             var instanceAuth = await ValidateManagedInstanceRequestAuthAsync();
             if (!instanceAuth.IsSuccess)
             {
-                return new Certify.Models.Config.ActionResult<List<string>>(instanceAuth.Message, false);
+                return new Certify.Models.Config.ActionResult<string>(instanceAuth.Message, false);
             }
 
             var matchingInstance = instanceAuth.ManagedInstance;
 
             if (matchingInstance == null || string.IsNullOrWhiteSpace(matchingInstance.SecurityPrincipalId))
             {
-                return new Certify.Models.Config.ActionResult<List<string>>("Managed instance is not registered with a linked security principal.", false);
+                return new Certify.Models.Config.ActionResult<string>("Managed instance is not registered with a linked security principal.", false);
             }
 
-            var certAccessCheck = new AccessCheck
-            {
-                SecurityPrincipalId = matchingInstance.SecurityPrincipalId,
-                ResourceType = ResourceTypes.Certificate,
-                ResourceActionId = StandardResourceActions.CertificateDownload,
-                Identifier = managedCertId,
-                ResourceTags = tags?.ToList() ?? []
-            };
-
-            var isAuthorized = await _client.CheckSecurityPrincipalHasAccess(certAccessCheck, new AuthContext { UserId = matchingInstance.SecurityPrincipalId });
-
-            if (!isAuthorized)
-            {
-                return new Certify.Models.Config.ActionResult<List<string>>("Managed instance is not permitted to download this subscribed certificate.", false);
-            }
-
-            // the instance's role assignments may also restrict it to specific domains, as the subscription listing
-            // applies when deciding which items to offer it
-            var domainRules = await GetDomainRestrictionRulesForPrincipal(
-                _client,
-                matchingInstance.SecurityPrincipalId,
-                StandardResourceActions.CertificateDownload);
-
-            if (domainRules == null)
-            {
-                // fail closed, a transient evaluation error must not promote a restricted instance to unrestricted
-                return new Certify.Models.Config.ActionResult<List<string>>("Could not evaluate access scope for domain restrictions", false);
-            }
-
-            return new Certify.Models.Config.ActionResult<List<string>>("Authorized as managed instance subscription consumer", true, domainRules);
+            return new Certify.Models.Config.ActionResult<string>("Authenticated as managed instance subscription consumer", true, matchingInstance.SecurityPrincipalId);
         }
 
         [HttpGet]
@@ -362,8 +315,10 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
-            var summary = await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext);
-            return new OkObjectResult(summary);
+            // counted over the items the caller may see, as the item listing shows them
+            var visibility = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
+
+            return new OkObjectResult(await ManagedItemListing.GetSummary(_client, _mgmtAPI, visibility, instanceId: null, CurrentAuthContext));
         }
 
         /// <summary>
@@ -382,8 +337,10 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
-            var summary = await _mgmtAPI.GetManagedCertificateSummary(instanceId, CurrentAuthContext);
-            return new OkObjectResult(summary);
+            // counted over the items the caller may see, as the item listing shows them
+            var visibility = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
+
+            return new OkObjectResult(await ManagedItemListing.GetSummary(_client, _mgmtAPI, visibility, instanceId, CurrentAuthContext));
         }
 
         /// <summary>
@@ -485,6 +442,13 @@ namespace Certify.Server.Hub.Api.Controllers
             if (targetInstance == null)
             {
                 return Problem(detail: $"Managed instance '{request.InstanceId}' was not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+
+            // a caller whose role is tag scoped or domain restricted adds items only to the instances within that scope
+            var outOfScope = await CheckInstanceInScope(_client, _mgmtAPI, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemAdd, request.InstanceId);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             if (!request.Identifiers?.Any() == true)

@@ -95,6 +95,20 @@ namespace Certify.Core.Tests.Unit
             Assert.IsEmpty(fixture.Checks, "nothing should be evaluated once the identity cannot be resolved");
         }
 
+        [TestMethod]
+        [Description("A caller who may not administer security principals cannot preview another principal's access")]
+        public async Task CallerWhoCannotListPrincipals_IsRefused()
+        {
+            var fixture = new Fixture();
+            var controller = fixture.CreateController(callerMayListPrincipals: false);
+
+            var result = await controller.GetSubscribableManagedChallengesBySecurityPrincipal(PrincipalId);
+
+            Assert.IsInstanceOfType<ObjectResult>(result, fixture.Describe(result));
+            Assert.AreEqual(StatusCodes.Status403Forbidden, ((ObjectResult)result).StatusCode);
+            Assert.IsEmpty(fixture.Checks, "the previewed principal's access should not be evaluated");
+        }
+
         #region Fixture
 
         private sealed class Fixture
@@ -113,13 +127,19 @@ namespace Certify.Core.Tests.Unit
                     : result.GetType().Name;
             }
 
-            public InternalManagedChallengeController CreateController()
+            public InternalManagedChallengeController CreateController(bool callerMayListPrincipals = true)
             {
                 var client = new Mock<ICertifyInternalApiClient>();
 
                 client.Setup(c => c.CheckSecurityPrincipalHasAccess(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
                     .ReturnsAsync((AccessCheck check, AuthContext _) =>
                     {
+                        // previewing another principal is limited to callers who may administer principals
+                        if (check.ResourceActionId == StandardResourceActions.SecurityPrincipalList)
+                        {
+                            return callerMayListPrincipals;
+                        }
+
                         // the admin caller's own authorization check for the endpoint is not about the previewed principal
                         if (check.SecurityPrincipalId == PrincipalId)
                         {

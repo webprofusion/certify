@@ -159,12 +159,7 @@ namespace Certify.Server.Hub.Api.SignalR
 
             foreach (var audience in GetAudiences())
             {
-                var mayListInstances = await GetCachedAccess(
-                    $"ui-status-instances:{audience.Key}",
-                    () => PrincipalAccess.IsAuthorized(_client, audience.AuthContext, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)),
-                    fallback: false);
-
-                if (mayListInstances)
+                if (await MayListInstance(audience.Key, audience.AuthContext, activityEvent.InstanceId))
                 {
                     connectionIds.AddRange(audience.ConnectionIds);
                 }
@@ -218,12 +213,12 @@ namespace Certify.Server.Hub.Api.SignalR
             {
                 var visibility = await GetCachedAccess(
                     $"ui-status-visibility:{audience.Key}",
-                    () => ManagedItemVisibility.Resolve(_client, audience.AuthContext),
-                    fallback: ManagedItemVisibility.None);
+                    () => ResourceScope.Resolve(_client, audience.AuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList),
+                    fallback: ResourceScope.None);
 
                 if (visibility.RequiresTags)
                 {
-                    tags ??= await GetItemTags(managedItemId);
+                    tags ??= await GetItemTags(instanceId, managedItemId);
                 }
 
                 if (visibility.RequiresIdentifiers)
@@ -246,7 +241,7 @@ namespace Certify.Server.Hub.Api.SignalR
             }
         }
 
-        private async Task<ICollection<TagSummary>> GetItemTags(string? managedItemId)
+        private async Task<ICollection<TagSummary>> GetItemTags(string? instanceId, string? managedItemId)
         {
             if (string.IsNullOrWhiteSpace(managedItemId))
             {
@@ -255,7 +250,7 @@ namespace Certify.Server.Hub.Api.SignalR
 
             try
             {
-                return await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, managedItemId, PrincipalAccess.SystemAuthContext) ?? [];
+                return await HubItemTags.GetItemTags(_client, TaggedItemTypes.ManagedCertificate, instanceId, managedItemId);
             }
             catch (Exception ex)
             {
@@ -263,6 +258,33 @@ namespace Certify.Server.Hub.Api.SignalR
                 _logger.LogWarning(ex, "Could not read tags for managed item {managedItemId} to filter status updates.", managedItemId);
                 return [];
             }
+        }
+
+        /// <summary>
+        /// Whether an audience may see an instance's activity: they may list instances, and the instance is within the
+        /// scope of that listing. Hub level activity, with no instance, goes only to an audience who may see every instance.
+        /// </summary>
+        private async Task<bool> MayListInstance(string audienceKey, AuthContext authContext, string? instanceId)
+        {
+            var scope = await GetCachedAccess(
+                $"ui-status-instances:{audienceKey}",
+                () => ResourceScope.Resolve(_client, authContext, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList),
+                fallback: ResourceScope.None);
+
+            if (scope.IsUnrestricted || !scope.HasAction)
+            {
+                return scope.HasAction;
+            }
+
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                return false;
+            }
+
+            return await GetCachedAccess(
+                $"ui-status-instance:{audienceKey}:{instanceId}",
+                async () => (await scope.GetInstancesInScope(_client, _stateProvider.GetManagedInstanceItems().Values, [instanceId])).Count > 0,
+                fallback: false);
         }
 
         private ManagedCertificate? GetCachedManagedItem(string? instanceId, string? managedItemId)

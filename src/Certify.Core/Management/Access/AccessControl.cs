@@ -279,22 +279,14 @@ namespace Certify.Core.Management.Access
 
             var scope = await EvaluateAccessScopeInternal(check);
 
-            if (!scope.HasAccess)
-            {
-                return false;
-            }
-
             // Action-level checks without concrete resource tags succeed when any authorizing role grants the action,
-            // including tag-scoped roles. Concrete resource filtering uses EvaluateAccessScope / IsResourceInScope.
-            if (check.ResourceTags != null)
-            {
-                if (!IsResourceInScope(scope, check.ResourceTags))
-                {
-                    return false;
-                }
-            }
+            // including tag-scoped roles. A check naming a resource's tags, domain or identifiers is answered per
+            // authorizing role, so the tags and the domains are both satisfied by the same role assignment.
+            IEnumerable<string?>? identifiers = check.ResourceType == ResourceTypes.Domain
+                ? new[] { check.Identifier }
+                : check.ResourceIdentifiers;
 
-            return MatchesIncludedResources(scope.AuthorizingRoles, check);
+            return ResourceAccess.IsResourcePermitted(scope, check.ResourceTags, identifiers, check.ResourceType, check.Identifier);
         }
 
         /// <summary>
@@ -385,39 +377,6 @@ namespace Certify.Core.Management.Access
             result.IsUnrestricted = authorizingRoles.Any(a => a.ScopedTags == null || a.ScopedTags.Count == 0);
 
             return result;
-        }
-
-        /// <summary>
-        /// True when the check's identifier is within the resources explicitly included on the authorizing
-        /// roles. Roles carrying no resources of the checked type impose no restriction.
-        /// Domain resources are Domain Match rules, evaluated by the shared DomainMatchRules implementation
-        /// via <see cref="ResourceAccess"/>; other resource types match on exact identifier.
-        /// </summary>
-        private static bool MatchesIncludedResources(IEnumerable<AssignedRole> authorizingRoles, AccessCheck check)
-        {
-            if (check.ResourceType == ResourceTypes.Domain)
-            {
-                return ResourceAccess.IsIdentifierPermittedByDomainRestrictions(authorizingRoles, check.Identifier);
-            }
-
-            var rolesWithIncludedResources = authorizingRoles
-                .Where(a => a.IncludedResources?.Any(r => r.ResourceType == check.ResourceType) == true)
-                .ToList();
-
-            if (rolesWithIncludedResources.Count == 0)
-            {
-                return true;
-            }
-
-            if (string.IsNullOrWhiteSpace(check.Identifier))
-            {
-                return false;
-            }
-
-            return rolesWithIncludedResources
-                .SelectMany(a => a.IncludedResources ?? [])
-                .Where(r => r.ResourceType == check.ResourceType)
-                .Any(r => r.Identifier == check.Identifier);
         }
 
         /// <summary>

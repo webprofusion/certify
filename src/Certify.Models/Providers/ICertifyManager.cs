@@ -107,7 +107,7 @@ namespace Certify.Management
         Task<ICollection<ManagedChallenge>> GetManagedChallenges();
         Task<ManagedChallengeAccessScope> GetManagedChallengeAccessScope(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
         Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
-        Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope);
+        Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope, string? identifier = null);
         /// <summary>
         /// Whether a security principal may use managed challenges for a set of identifiers. This is the single
         /// authorization decision behind managed challenges and managed ACME orders, for every caller.

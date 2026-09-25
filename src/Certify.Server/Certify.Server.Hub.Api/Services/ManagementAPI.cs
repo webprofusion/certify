@@ -543,7 +543,7 @@ namespace Certify.Server.Hub.Api.Services
                 }
 
                 _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
-                await RemoveHubItemTagsForItem(TaggedItemTypes.ManagedCertificate, managedCertId, authContext);
+                await RemoveHubItemTagsForItem(TaggedItemTypes.ManagedCertificate, managedCertId, instanceId);
             }
 
             return result;
@@ -844,28 +844,36 @@ namespace Certify.Server.Hub.Api.Services
 
             if (result?.IsSuccess == true)
             {
-                await RemoveHubItemTagsForItem(TaggedItemTypes.StoredCredential, storageKey, authContext);
+                await RemoveHubItemTagsForItem(TaggedItemTypes.StoredCredential, storageKey, instanceId);
             }
 
             return result;
         }
 
-        private async Task RemoveHubItemTagsForItem(string itemType, string itemId, AuthContext? authContext)
+        /// <summary>
+        /// An item has been removed from an instance, so remove the hub tags which applied to it there. A tag recorded for
+        /// another instance belongs to an item on that instance under the same id, and a tag recorded without an instance
+        /// is kept while another instance still holds a managed item with that id.
+        /// </summary>
+        private async Task RemoveHubItemTagsForItem(string itemType, string itemId, string instanceId)
         {
             if (string.IsNullOrWhiteSpace(itemType) || string.IsNullOrWhiteSpace(itemId) || _certifyManager == null)
             {
                 return;
             }
 
-            // an item has been removed from an instance, tell the hub to remove associated item tags
-            // this implementation assumes direction hub con
-
-            // get all tags for this item, then remove them
-
             var tags = await _certifyManager.GetAllHubItemTags(itemTypeId: itemType);
+
+            var heldElsewhere = itemType == TaggedItemTypes.ManagedCertificate
+                && GetManagedInstanceItems().Values.Any(i =>
+                    !string.Equals(i.InstanceId, instanceId, StringComparison.OrdinalIgnoreCase)
+                    && i.Items?.Any(item => string.Equals(item.Id, itemId, StringComparison.OrdinalIgnoreCase)) == true);
 
             var tagsToRemove = tags?
                 .Where(t => string.Equals(t.TaggedItemId, itemId, StringComparison.OrdinalIgnoreCase))
+                .Where(t => string.IsNullOrWhiteSpace(t.InstanceId)
+                    ? !heldElsewhere
+                    : string.Equals(t.InstanceId, instanceId, StringComparison.OrdinalIgnoreCase))
                 .Select(t => t.Id)
                 .ToList();
 

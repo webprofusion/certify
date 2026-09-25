@@ -1,5 +1,6 @@
 ﻿using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Hub.Api.Controllers
@@ -84,6 +85,13 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: StatusCodes.Status401Unauthorized);
             }
 
+            // this reports what another principal reaches, whatever the caller's own scope
+            var notPermitted = await CheckPrincipalEvaluationAllowed(_client, id);
+            if (notPermitted != null)
+            {
+                return notPermitted;
+            }
+
             List<string> scopedAssignedRoles = [];
 
             if (!string.IsNullOrWhiteSpace(assignedAccessTokenId))
@@ -136,22 +144,10 @@ namespace Certify.Server.Hub.Api.Controllers
             var results = new List<ManagedCertificateSummary>();
             var allInstanceItems = _mgmtStateProvider.GetManagedInstanceItems();
 
-            // Domain restrictions on the principal's roles are Domain Match rules and apply to every identifier on
-            // a cert, matching what the download endpoint enforces on both of its routes - a principal downloading
-            // by its own roles, and a managed instance collecting a subscription. Resolved once here, not per item.
-            var domainRules = await GetDomainRestrictionRulesForPrincipal(
-                _client,
-                securityPrincipalId,
-                StandardResourceActions.CertificateDownload,
-                scopedAssignedRoles);
+            // the same check the download endpoint makes on both of its routes, so an item is only offered where the
+            // download would be allowed: the cert's tags and every identifier on it within a single role assignment
+            var tagsByItemId = await HubItemTags.GetAllItemTags(_client, TaggedItemTypes.ManagedCertificate);
 
-            if (domainRules == null)
-            {
-                // scope could not be evaluated, fail closed rather than preview items the download would refuse
-                return [];
-            }
-
-            var certTagCache = new Dictionary<string, ICollection<TagSummary>>();
             foreach (var sourceItems in allInstanceItems.Values.ToList())
             {
                 if (!string.IsNullOrWhiteSpace(excludeInstanceId) && sourceItems.InstanceId == excludeInstanceId)
@@ -168,35 +164,13 @@ namespace Certify.Server.Hub.Api.Controllers
                         continue;
                     }
 
-                    ICollection<TagSummary> tags = [];
-
-                    if (certTagCache.TryGetValue(cert.Id, out var itemTags))
-                    {
-                        tags = itemTags;
-                    }
-
-                    tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, cert.Id, SystemAuthContext);
-
-                    certTagCache[cert.Id] = tags;
-
-                    var certAccessCheck = new AccessCheck
-                    {
-                        SecurityPrincipalId = securityPrincipalId,
-                        ResourceType = ResourceTypes.Certificate,
-                        ResourceActionId = StandardResourceActions.CertificateDownload,
-                        Identifier = cert.Id,
-                        ResourceTags = tags?.ToList(),
-                        ScopedAssignedRoles = scopedAssignedRoles?.ToList() ?? []
-                    };
+                    var certAccessCheck = CertificateDownloadCheck(
+                        securityPrincipalId,
+                        cert,
+                        HubItemTags.ForItem(tagsByItemId, sourceItems.InstanceId, cert.Id),
+                        scopedAssignedRoles);
 
                     if (!await _client.CheckSecurityPrincipalHasAccess(certAccessCheck, new Client.AuthContext { UserId = securityPrincipalId }))
-                    {
-                        continue;
-                    }
-
-                    // the whole cert is downloaded, so every identifier on it must be within the domain scope
-                    if (domainRules.Count > 0
-                        && !cert.GetCertificateIdentifiers().All(i => ResourceAccess.IsIdentifierPermittedByDomainRules(domainRules, i.Value)))
                     {
                         continue;
                     }

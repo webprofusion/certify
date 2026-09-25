@@ -108,9 +108,10 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Get managed challenges accessible under a previously resolved access scope.
+        /// Get managed challenges accessible under a previously resolved access scope. When an identifier is given,
+        /// only the challenges reachable through a role assignment which also permits that identifier are returned.
         /// </summary>
-        public async Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope)
+        public async Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope, string? identifier = null)
         {
             var challenges = await GetManagedChallenges();
 
@@ -119,17 +120,21 @@ namespace Certify.Management
                 return [];
             }
 
-            if (scope.IsUnrestricted)
+            if (ResourceAccess.IsScopeUnrestricted(scope))
             {
                 return challenges;
             }
 
+            return ManagedChallengeAccess.FilterChallenges(challenges, await GetManagedChallengeTagsById(), scope, identifier);
+        }
+
+        private async Task<Dictionary<string, List<ItemTag>>> GetManagedChallengeTagsById()
+        {
             var challengeTags = await GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge);
-            var tagsByChallengeId = challengeTags
+
+            return challengeTags
                 .GroupBy(t => t.TaggedItemId)
                 .ToDictionary(g => g.Key, g => g.ToList());
-
-            return ManagedChallengeAccess.FilterChallenges(challenges, tagsByChallengeId, scope);
         }
 
         /// <summary>
@@ -209,7 +214,11 @@ namespace Certify.Management
                 return new ActionResult("At least one identifier is required", false);
             }
 
-            var accessible = await GetAccessibleManagedChallenges(scope);
+            var challenges = await GetManagedChallenges();
+            var tagsByChallengeId = ResourceAccess.IsScopeUnrestricted(scope)
+                ? new Dictionary<string, List<ItemTag>>()
+                : await GetManagedChallengeTagsById();
+            var accessible = ManagedChallengeAccess.FilterChallenges(challenges, tagsByChallengeId, scope);
 
             if (accessible.Count == 0)
             {
@@ -224,7 +233,13 @@ namespace Certify.Management
                     false);
             }
 
-            if (!ManagedChallengeAccess.CanSatisfyIdentifiers(identifiers, accessible, out var unsatisfied))
+            // each identifier must be answerable by a challenge reached through a role assignment which also permits
+            // that identifier, so one assignment's challenges are not used for another assignment's domains
+            var unsatisfied = identifiers
+                .Where(i => !ManagedChallengeAccess.CanSatisfyIdentifiers([i], ManagedChallengeAccess.FilterChallenges(challenges, tagsByChallengeId, scope, i), out _))
+                .ToList();
+
+            if (unsatisfied.Count > 0)
             {
                 var rules = DescribeDomainMatchRules(accessible);
 
@@ -470,7 +485,7 @@ namespace Certify.Management
 
             var accessScope = await GetManagedChallengeAccessScope(caller.SecurityPrincipalId, caller.ScopedAssignedRoles, actionId);
 
-            return (true, null, await GetAccessibleManagedChallenges(accessScope));
+            return (true, null, await GetAccessibleManagedChallenges(accessScope, identifier));
         }
 
         private async Task<ActionResult> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)

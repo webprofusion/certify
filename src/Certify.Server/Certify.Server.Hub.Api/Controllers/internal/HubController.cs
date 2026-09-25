@@ -63,7 +63,9 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
             }
 
-            var list = await GetFilteredManagedItems(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged);
+            // the tag scopes and domain restrictions on the user's assigned roles limit which items they can see
+            var visibility = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
+            var list = await ManagedItemListing.GetItems(_client, _mgmtAPI, visibility, instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged);
 
             var resolvedPageSize = pageSize ?? 100;
             var resolvedPageIndex = page > 0 ? (int)page : 0;
@@ -104,218 +106,17 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             var scopes = TagScopeFilter.ParseAll(tagScopes);
-            var visibility = await ManagedItemVisibility.Resolve(_client, CurrentAuthContext);
+            var visibility = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
 
             // when nothing needs per-item evaluation we can use the pre-aggregated summaries reported by each instance
-            if (scopes.Count == 0 && string.IsNullOrWhiteSpace(keyword) && visibility.IsUnrestricted)
+            if (scopes.Count == 0 && string.IsNullOrWhiteSpace(keyword))
             {
-                var aggregate = string.IsNullOrEmpty(instanceId)
-                    ? await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext)
-                    : await _mgmtAPI.GetManagedCertificateSummary(instanceId, CurrentAuthContext);
-
-                return new OkObjectResult(aggregate ?? new StatusSummary { InstanceId = instanceId ?? string.Empty });
+                return new OkObjectResult(await ManagedItemListing.GetSummary(_client, _mgmtAPI, visibility, instanceId, CurrentAuthContext));
             }
 
-            var list = await GetFilteredManagedItems(instanceId, keyword, null, tagScopes, requireAllTags, includeUntagged, visibility);
+            var list = await ManagedItemListing.GetItems(_client, _mgmtAPI, visibility, instanceId, keyword, null, tagScopes, requireAllTags, includeUntagged);
 
-            return new OkObjectResult(SummariseManagedItems(list, instanceId));
-        }
-
-        /// <summary>
-        /// Build the set of managed certificate summaries matching the given criteria, limited to the items the
-        /// current user may see.
-        /// </summary>
-        private async Task<List<ManagedCertificateSummary>> GetFilteredManagedItems(string? instanceId, string? keyword, string? health, IEnumerable<string>? tagScopes, bool requireAllTags, bool includeUntagged, ManagedItemVisibility? visibility = null)
-        {
-            var scopes = TagScopeFilter.ParseAll(tagScopes);
-
-            // the tag scopes and domain restrictions on the user's assigned roles limit which items they can see
-            visibility ??= await ManagedItemVisibility.Resolve(_client, CurrentAuthContext);
-
-            var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
-            var instances = _mgmtStateProvider.GetConnectedInstances();
-
-            // TODO: would fetching cached hub status summaries be faster
-            var knownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
-
-            var tagsByItemId = await GetItemTagsByItemId(TaggedItemTypes.ManagedCertificate);
-
-            ManagedCertificateHealth? healthFilter = null;
-
-            if (!string.IsNullOrEmpty(health) && Enum.TryParse(health, true, out ManagedCertificateHealth healthValue))
-            {
-                healthFilter = healthValue;
-            }
-
-            var list = new List<ManagedCertificateSummary>();
-
-            foreach (var remote in managedItems.Values)
-            {
-                if (!string.IsNullOrEmpty(instanceId) && instanceId != remote.InstanceId)
-                {
-                    continue;
-                }
-
-                var instance = knownInstances.FirstOrDefault(k => k.InstanceId == remote.InstanceId)
-                               ?? instances.FirstOrDefault(c => c.InstanceId == remote.InstanceId);
-
-                foreach (var i in remote.Items)
-                {
-                    if (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword, StringComparison.InvariantCultureIgnoreCase) != true)
-                    {
-                        continue;
-                    }
-
-                    if (healthFilter != null && i.Health != healthFilter)
-                    {
-                        continue;
-                    }
-
-                    var tags = tagsByItemId.TryGetValue(i.Id ?? "", out var itemTags) ? itemTags : new List<TagSummary>();
-
-                    if (!TagScopeFilter.Matches(tags, scopes, requireAllTags, includeUntagged))
-                    {
-                        continue;
-                    }
-
-                    var identifiers = i.GetCertificateIdentifiers();
-
-                    if (!visibility.Permits(tags, identifiers.Select(id => id.Value)))
-                    {
-                        continue;
-                    }
-
-                    list.Add(new ManagedCertificateSummary
-                    {
-                        InstanceId = remote.InstanceId,
-                        InstanceTitle = instance?.DisplayTitle,
-                        Id = i.Id ?? "",
-                        Title = i.Name ?? "",
-                        OS = instance?.OS,
-                        ClientDetails = i.SourceId != null ? i.SourceName : instance?.ClientName,
-                        PrimaryIdentifier = identifiers.FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? identifiers.FirstOrDefault(),
-                        Identifiers = identifiers,
-                        DateRenewed = i.DateRenewed,
-                        DateExpiry = i.DateExpiry,
-                        Comments = i.Comments ?? "",
-                        Status = i.Health.ToString(),
-                        DateRetrieved = i.DateRetrieved,
-                        HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
-                        IsExternallyManaged = i.IsExternallyManaged,
-                        IsSubscription = i.IsSubscription,
-                        Tags = tags
-                    });
-                }
-            }
-
-            return list;
-        }
-
-        /// <summary>
-        /// Load the display tags for all items of the given type, keyed by item id.
-        /// </summary>
-        /// <remarks>
-        /// TODO: we need to optimize this by only loading tags for items we know are in the result set, which
-        /// requires a backend API to fetch tags for a given set of item ids.
-        /// </remarks>
-        private async Task<Dictionary<string, List<TagSummary>>> GetItemTagsByItemId(string itemTypeId)
-        {
-            var tagsByItemId = new Dictionary<string, List<TagSummary>>();
-
-            try
-            {
-                // load tag categories to get display names and colors
-                var categoriesByKey = new Dictionary<string, TagCategory>();
-                var categories = await _client.GetTagCategories(CurrentAuthContext);
-
-                if (categories != null)
-                {
-                    foreach (var cat in categories)
-                    {
-                        categoriesByKey[cat.CategoryKey] = cat;
-                    }
-                }
-
-                var allItemTags = await _client.GetAllHubItemTags(null, null, itemTypeId, null, CurrentAuthContext);
-
-                if (allItemTags != null)
-                {
-                    foreach (var tag in allItemTags)
-                    {
-                        if (!tagsByItemId.TryGetValue(tag.TaggedItemId, out var itemTags))
-                        {
-                            itemTags = new List<TagSummary>();
-                            tagsByItemId[tag.TaggedItemId] = itemTags;
-                        }
-
-                        categoriesByKey.TryGetValue(tag.CategoryKey, out var category);
-
-                        itemTags.Add(new TagSummary
-                        {
-                            CategoryKey = tag.CategoryKey,
-                            CategoryDisplayName = category?.DisplayName ?? tag.CategoryKey,
-                            Value = tag.Value,
-                            ColorHint = category?.ColorHint
-                        });
-                    }
-                }
-            }
-            catch
-            {
-                // if tag loading fails, continue without tags
-            }
-
-            return tagsByItemId;
-        }
-
-        /// <summary>
-        /// Summarise a set of managed certificate summaries into overall status counts.
-        /// </summary>
-        /// <remarks>
-        /// The counts must match those an instance reports for itself, because this endpoint falls back to the
-        /// pre-aggregated instance summaries when no filtering applies. In particular ExternallyManaged counts only
-        /// items discovered via an external certificate manager provider, not certificate subscriptions.
-        /// </remarks>
-        private static StatusSummary SummariseManagedItems(IEnumerable<ManagedCertificateSummary> items, string? instanceId)
-        {
-            var summary = new StatusSummary { InstanceId = instanceId ?? string.Empty };
-
-            foreach (var item in items)
-            {
-                summary.Total++;
-                summary.TotalDomains += item.Identifiers?.Count() ?? 0;
-
-                if (!item.HasCertificate)
-                {
-                    summary.NoCertificate++;
-                }
-
-                if (item.IsExternallyManaged)
-                {
-                    summary.ExternallyManaged++;
-                }
-
-                if (Enum.TryParse(item.Status, true, out ManagedCertificateHealth health))
-                {
-                    switch (health)
-                    {
-                        case ManagedCertificateHealth.OK:
-                            summary.Healthy++;
-                            break;
-                        case ManagedCertificateHealth.Warning:
-                            summary.Warning++;
-                            break;
-                        case ManagedCertificateHealth.Error:
-                            summary.Error++;
-                            break;
-                        case ManagedCertificateHealth.AwaitingUser:
-                            summary.AwaitingUser++;
-                            break;
-                    }
-                }
-            }
-
-            return summary;
+            return new OkObjectResult(ManagedItemListing.Summarise(list, instanceId));
         }
 
         /// <summary>
@@ -380,7 +181,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             // instance tags are held in the item tag store rather than on the stored instance record, and are returned
             // with each instance so that clients can show and filter by them
-            var instanceTags = await GetItemTagsByItemId(TaggedItemTypes.ManagedInstance);
+            var instanceTags = await ManagedItemListing.GetItemTagsByItemId(_client, TaggedItemTypes.ManagedInstance);
 
             foreach (var instance in allKnownInstances)
             {
@@ -389,7 +190,11 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var scopes = TagScopeFilter.ParseAll(tagScopes);
 
-            var results = (IEnumerable<ManagedInstanceInfo>)allKnownInstances;
+            // a caller whose role is tag scoped or domain restricted sees the instances within that scope
+            var instanceScope = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList);
+            var instancesInScope = await GetInstancesInScope(_client, _mgmtAPI, instanceScope, allKnownInstances.Select(i => i.InstanceId));
+
+            var results = allKnownInstances.Where(i => instancesInScope.Contains(i.InstanceId));
 
             if (scopes.Count > 0)
             {
@@ -414,6 +219,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!accessCheck.IsSuccess)
             {
                 return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            var outOfScope = await CheckInstanceInScope(_client, _mgmtAPI, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList, id);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             var instance = await _client.GetHubManagedInstance(id, CurrentAuthContext);
@@ -445,6 +256,12 @@ namespace Certify.Server.Hub.Api.Controllers
             if (item == null || string.IsNullOrWhiteSpace(id))
             {
                 return BadRequest();
+            }
+
+            var outOfScope = await CheckInstanceInScope(_client, _mgmtAPI, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate, id);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             item.Id = id;

@@ -36,6 +36,11 @@ namespace Certify.Core.Tests.Unit
         private const string CallerId = "sp-scoped";
         private const string InstanceId = "instance-1";
 
+        /// <summary>
+        /// A second instance, holding only an item outside the tag scope the tests use
+        /// </summary>
+        private const string OtherInstanceId = "instance-2";
+
         private const string WithinId = "item-within";
         private const string OutsideId = "item-outside";
 
@@ -139,7 +144,7 @@ namespace Certify.Core.Tests.Unit
         public async Task GetManagedCertificateDetails_ScopeCannotBeRead_IsRefused()
         {
             var harness = new Harness(tagScopes: [Production]);
-            harness.Client.Setup(c => c.GetSecurityPrincipalAssignedRoles(CallerId, It.IsAny<AuthContext>()))
+            harness.Client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
                 .ThrowsAsync(new InvalidOperationException("store unavailable"));
 
             var result = await harness.Certificates().GetManagedCertificateDetails(InstanceId, WithinId);
@@ -227,6 +232,33 @@ namespace Certify.Core.Tests.Unit
             AssertNotSent(harness, ManagementHubCommands.UpdateManagedItem);
         }
 
+        /// <summary>
+        /// A principal holding an update role scoped to one tag and a viewing role scoped to another can view items
+        /// carrying either tag, but only update those carrying the update role's tag. The viewing role's scope must
+        /// not widen what the update action reaches.
+        /// </summary>
+        [TestMethod]
+        [Description("Tag scopes on a role which does not grant the action do not widen what the action reaches")]
+        public async Task UpdateManagedCertificateDetails_TagsFromARoleNotGrantingUpdate_DoNotWidenIt()
+        {
+            var harness = new Harness(tagScopes: [Production]);
+
+            var updater = new AssignedRole { Id = "ar-scoped", RoleId = StandardRoles.CertificateManager.Id, SecurityPrincipalId = CallerId, ScopedTags = [Production] };
+            var viewer = new AssignedRole { Id = "ar-viewer", RoleId = StandardRoles.HubViewer.Id, SecurityPrincipalId = CallerId, ScopedTags = [new TagScope { CategoryKey = "environment", Value = "development" }] };
+
+            harness.Client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
+                .ReturnsAsync((AccessCheck check, AuthContext _) => new ResourceAccessScope
+                {
+                    HasAccess = true,
+                    AuthorizingRoles = check.ResourceActionId == StandardResourceActions.ManagedItemList ? [updater, viewer] : [updater]
+                });
+
+            Assert.IsInstanceOfType<OkObjectResult>(await harness.Certificates().GetManagedCertificateDetails(InstanceId, OutsideId));
+
+            AssertNotFound(await harness.Certificates().UpdateManagedCertificateDetails(InstanceId, Item(OutsideId, "www.example.org")));
+            AssertNotSent(harness, ManagementHubCommands.UpdateManagedItem);
+        }
+
         [TestMethod]
         [Description("An item within the caller's scope cannot be saved with identifiers outside their domains")]
         public async Task UpdateManagedCertificateDetails_IdentifiersOutsideDomainScope_IsRefused()
@@ -290,6 +322,92 @@ namespace Certify.Core.Tests.Unit
             AssertNotSent(harness, ManagementHubCommands.UpdateManagedItem);
         }
 
+        [TestMethod]
+        [Description("A new item is not saved to an instance holding nothing within the caller's scope")]
+        public async Task UpdateManagedCertificateDetails_NewItemOnInstanceOutsideScope_IsNotFound()
+        {
+            var harness = new Harness(tagScopes: [Production]);
+
+            var submitted = Item("item-new", "new.example.com");
+            submitted.InstanceId = OtherInstanceId;
+
+            AssertNotFound(await harness.Certificates().UpdateManagedCertificateDetails(OtherInstanceId, submitted));
+            AssertNotSent(harness, ManagementHubCommands.UpdateManagedItem);
+        }
+
+        /// <summary>
+        /// Tags are held against an item id, so a new item reusing the id of an item on another instance would be read
+        /// as carrying that item's tags - letting a scoped caller place an item within their scope on any instance.
+        /// </summary>
+        [TestMethod]
+        [Description("A new item may not reuse the id of an item on another instance, whoever the caller is")]
+        public async Task UpdateManagedCertificateDetails_NewItemReusingAnotherInstancesItemId_IsConflict()
+        {
+            var harness = new Harness();
+
+            var submitted = Item(WithinId, "www.example.com");
+            submitted.InstanceId = OtherInstanceId;
+
+            var result = await harness.Certificates().UpdateManagedCertificateDetails(OtherInstanceId, submitted);
+
+            Assert.AreEqual(StatusCodes.Status409Conflict, ((ObjectResult)result).StatusCode);
+            AssertNotSent(harness, ManagementHubCommands.UpdateManagedItem);
+        }
+
+        [TestMethod]
+        [Description("A new item cannot be added to an instance holding nothing within the caller's scope")]
+        public async Task AddManagedCertificate_InstanceOutsideScope_IsNotFound()
+        {
+            var harness = new Harness(tagScopes: [Production]);
+
+            var result = await harness.Certificates().AddManagedCertificate(new ManagedCertificateAddRequest
+            {
+                InstanceId = OtherInstanceId,
+                Identifiers = [new IdentifierItem("new.example.com")]
+            });
+
+            AssertNotFound(result);
+            AssertNotSent(harness, ManagementHubCommands.UpdateManagedItem);
+        }
+
+        #endregion
+
+        #region Acting on an instance
+
+        [TestMethod]
+        [Description("An instance level endpoint serves an instance holding an item within the caller's tag scope")]
+        public async Task GetCertificateAuthorities_InstanceHoldingAnItemInScope_IsServed()
+        {
+            var harness = new Harness(tagScopes: [Production]);
+
+            await harness.CertificateAuthorities().GetCertificateAuthorities(InstanceId);
+
+            CollectionAssert.Contains(harness.SentCommands, ManagementHubCommands.GetCertificateAuthorities);
+        }
+
+        [TestMethod]
+        [Description("An instance level endpoint does not serve an instance holding nothing within the caller's tag scope")]
+        public async Task GetCertificateAuthorities_InstanceOutsideScope_IsNotFound()
+        {
+            var harness = new Harness(tagScopes: [Production]);
+
+            AssertNotFound(await harness.CertificateAuthorities().GetCertificateAuthorities(OtherInstanceId));
+            AssertNotSent(harness, ManagementHubCommands.GetCertificateAuthorities);
+        }
+
+        [TestMethod]
+        [Description("An instance carrying the caller's tag is within their scope although it holds no item of theirs")]
+        public async Task GetCertificateAuthorities_InstanceCarryingTheCallersTag_IsServed()
+        {
+            var harness = new Harness(tagScopes: [Production]);
+            harness.InstanceTags.Add(new ItemTag(OtherInstanceId, TaggedItemTypes.ManagedInstance, "environment", "production", OtherInstanceId));
+
+            // only the hub's own instance is served in-process, so this asserts the request was not refused
+            var result = await harness.CertificateAuthorities().GetCertificateAuthorities(OtherInstanceId);
+
+            Assert.IsFalse(result is ObjectResult { StatusCode: StatusCodes.Status404NotFound }, "an instance carrying the caller's tag is within their scope");
+        }
+
         #endregion
 
         #region Pending challenges
@@ -342,9 +460,19 @@ namespace Certify.Core.Tests.Unit
 
         private static readonly Dictionary<string, List<TagSummary>> ItemTags = new()
         {
-            [WithinId] = [new TagSummary { CategoryKey = "environment", Value = "production" }],
-            [OutsideId] = [new TagSummary { CategoryKey = "environment", Value = "development" }]
+            [WithinId] = [new TagSummary { CategoryKey = "environment", Value = "production", InstanceId = InstanceId }],
+            [OutsideId] = [new TagSummary { CategoryKey = "environment", Value = "development", InstanceId = InstanceId }],
+            [OtherInstanceItemId] = [new TagSummary { CategoryKey = "environment", Value = "development", InstanceId = OtherInstanceId }]
         };
+
+        private const string OtherInstanceItemId = "item-on-other-instance";
+
+        /// <summary>
+        /// The item tags as the tag store lists them, each recorded against its instance
+        /// </summary>
+        private static List<ItemTag> AllItemTags() => ItemTags
+            .SelectMany(i => i.Value.Select(t => new ItemTag(i.Key, TaggedItemTypes.ManagedCertificate, t.CategoryKey, t.Value, t.InstanceId)))
+            .ToList();
 
         private static ManagedCertificate Item(string id, params string[] domains)
         {
@@ -374,6 +502,11 @@ namespace Certify.Core.Tests.Unit
 
             public List<string> SentCommands { get; } = [];
 
+            /// <summary>
+            /// Tags held against the instances themselves, none unless a test adds some
+            /// </summary>
+            public List<ItemTag> InstanceTags { get; } = [];
+
             private readonly ManagementAPI _mgmtApi;
 
             public Harness(List<string>? domainRules = null, List<TagScope>? tagScopes = null, bool cacheItems = true)
@@ -399,8 +532,12 @@ namespace Certify.Core.Tests.Unit
                 Client.Setup(c => c.GetHubItemTags(TaggedItemTypes.ManagedCertificate, It.IsAny<string>(), It.IsAny<AuthContext>()))
                     .ReturnsAsync((string _, string itemId, AuthContext _) => ItemTags.TryGetValue(itemId, out var tags) ? tags : []);
 
-                Client.Setup(c => c.GetHubManagedInstance(InstanceId, It.IsAny<AuthContext>()))
-                    .ReturnsAsync(new ManagedInstanceInfo { InstanceId = InstanceId, Title = "Instance" });
+                Client.Setup(c => c.GetAllHubItemTags(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<AuthContext>()))
+                    .ReturnsAsync((string _, string _, string itemType, string _, AuthContext _) =>
+                        itemType == TaggedItemTypes.ManagedInstance ? InstanceTags.ToList() : AllItemTags());
+
+                Client.Setup(c => c.GetHubManagedInstance(It.IsAny<string>(), It.IsAny<AuthContext>()))
+                    .ReturnsAsync((string id, AuthContext _) => new ManagedInstanceInfo { Id = id, InstanceId = id, Title = id });
 
                 Client.Setup(c => c.GetCurrentChallenges(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<AuthContext>()))
                     .ReturnsAsync(new List<SimpleAuthorizationChallengeItem> { new() { ChallengeType = "http-01", Key = "token", Value = "response" } });
@@ -411,6 +548,10 @@ namespace Certify.Core.Tests.Unit
                 {
                     cache[InstanceId] = new ManagedInstanceItems { InstanceId = InstanceId, Items = InstanceItems() };
                 }
+
+                var otherInstanceItem = Item(OtherInstanceItemId, "www.example.org");
+                otherInstanceItem.InstanceId = OtherInstanceId;
+                cache[OtherInstanceId] = new ManagedInstanceItems { InstanceId = OtherInstanceId, Items = [otherInstanceItem] };
 
                 var stateProvider = new Mock<IInstanceManagementStateProvider>();
                 stateProvider.Setup(s => s.GetManagementHubInstanceId()).Returns(InstanceId);
@@ -450,7 +591,7 @@ namespace Certify.Core.Tests.Unit
                 {
                     case ManagementHubCommands.GetManagedItem:
                         SentCommands.Remove(cmd.CommandType);
-                        var item = InstanceItems().FirstOrDefault(i => i.Id == Arg("managedCertId"));
+                        var item = Arg("instanceId") == InstanceId ? InstanceItems().FirstOrDefault(i => i.Id == Arg("managedCertId")) : null;
                         return item == null ? null : Serialize(item);
 
                     case ManagementHubCommands.GetManagedItemLog:
@@ -485,6 +626,9 @@ namespace Certify.Core.Tests.Unit
 
             public DeploymentTaskController DeploymentTasks()
                 => WithCaller(new DeploymentTaskController(NullLogger<DeploymentTaskController>.Instance, Client.Object, _mgmtApi));
+
+            public CertificateAuthorityController CertificateAuthorities()
+                => WithCaller(new CertificateAuthorityController(NullLogger<CertificateAuthorityController>.Instance, Client.Object, _mgmtApi));
 
             public ValidationController Validation()
                 => WithCaller(new ValidationController(NullLogger<ValidationController>.Instance, Client.Object));

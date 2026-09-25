@@ -76,7 +76,8 @@ namespace Certify.SourceGenerators
                     ServiceAPIRoute = "access/securityprincipal/allowedaction",
                     ReturnType = "bool",
                     Params = new Dictionary<string, string> { { "check", nameof(Certify.Models.Hub.AccessCheck) } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)],
+                    ScopeCheck = "CheckPrincipalEvaluationAllowed(_client, check?.SecurityPrincipalId)"
                 },
                 new()
                 {
@@ -88,7 +89,8 @@ namespace Certify.SourceGenerators
                     ServiceAPIRoute = "access/securityprincipal/accessscope",
                     ReturnType = nameof(ResourceAccessScope),
                     Params = new Dictionary<string, string> { { "check", nameof(Certify.Models.Hub.AccessCheck) } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)],
+                    ScopeCheck = "CheckPrincipalEvaluationAllowed(_client, check?.SecurityPrincipalId)"
                 },
                 new()
                 {
@@ -295,7 +297,8 @@ namespace Certify.SourceGenerators
                     ServiceAPIRoute = "managedinstance/delete/{id}",
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string> { { "id", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceDelete)]
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceDelete)],
+                    InstanceIdParam = "id"
                 },
                 new()
                 {
@@ -396,7 +399,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "list",
                     ServiceAPIRoute = "managedchallenge",
                     ReturnType = "ICollection<ManagedChallenge>",
-                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeList)]
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeList)],
+                    ResultFilter = "FilterManagedChallengesInScope(_client, \"{action}\", result)"
                 },
                 new()
                 {
@@ -411,7 +415,8 @@ namespace Certify.SourceGenerators
                     {
                         { "update", "Certify.Models.Hub.ManagedChallenge" }
                     },
-                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeUpdate)]
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeUpdate)],
+                    ScopeCheck = "CheckManagedChallengeInScope(_client, \"{action}\", update?.Id, allowNew: true)"
                 },
                 new()
                 {
@@ -426,7 +431,8 @@ namespace Certify.SourceGenerators
                     {
                         { "id", "string" }
                     },
-                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeDelete)]
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeDelete)],
+                    ScopeCheck = "CheckManagedChallengeInScope(_client, \"{action}\", id, allowNew: false)"
                 },
                 new()
                 {
@@ -801,7 +807,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "{instanceId}",
                     ReturnType = "ICollection<Certify.Models.Config.StoredCredential>",
                     Params = new Dictionary<string, string> { { "instanceId", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialList)]
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialList)],
+                    ResultFilter = "FilterStoredCredentialsInScope(_client, \"{action}\", instanceId, result)"
                 },
                 new()
                 {
@@ -813,7 +820,8 @@ namespace Certify.SourceGenerators
                     ReturnType = actionResultTypeName,
                     UseManagementAPI = true,
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "item", GetFormattedTypeName(typeof(Certify.Models.Config.StoredCredential)) } },
-                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialUpdate)]
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialUpdate)],
+                    ScopeCheck = "CheckStoredCredentialInScope(_client, _mgmtAPI, \"{action}\", instanceId, item?.StorageKey, allowNew: true)"
                 },
                 new()
                 {
@@ -825,7 +833,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "{instanceId}/{storageKey}",
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialDelete)]
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialDelete)],
+                    ScopeCheck = "CheckStoredCredentialInScope(_client, _mgmtAPI, \"{action}\", instanceId, storageKey, allowNew: false)"
                 },
                 new()
                 {
@@ -837,7 +846,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "/api/v1/storedcredential/{instanceId}/{storageKey}/unlock",
                     ReturnType = GetFormattedTypeName(typeof(Models.Config.StoredCredentialUnlockResult)),
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialReadSecret)]
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialReadSecret)],
+                    ScopeCheck = "CheckStoredCredentialInScope(_client, _mgmtAPI, \"{action}\", instanceId, storageKey, allowNew: false)"
                 },
                 new()
                 {
@@ -1374,7 +1384,8 @@ namespace Certify.SourceGenerators
                     ServiceAPIRoute = "tags/items",
                     ReturnType = "ICollection<Certify.Models.Hub.ItemTag>",
                     Params = new Dictionary<string, string> { { "categoryKey", "string" }, { "value", "string" }, { "itemType", "string" }, { "instanceId", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)],
+                    ResultFilter = "FilterItemTagsInScope(_client, result)"
                 },
                 new()
                 {
@@ -1386,7 +1397,8 @@ namespace Certify.SourceGenerators
                     ServiceAPIRoute = "tags/items/{itemType}/{itemId}",
                     ReturnType = "ICollection<Certify.Models.Hub.TagSummary>",
                     Params = new Dictionary<string, string> { { "itemType", "string" }, { "itemId", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)],
+                    ResultFilter = "FilterItemTagSummariesInScope(_client, result)"
                 },
                 new()
                 {
@@ -1440,7 +1452,8 @@ namespace Certify.SourceGenerators
                     {
                         { "request", "Certify.Models.Hub.ScopePreviewRequest" }
                     },
-                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)],
+                    ResultFilter = "LimitScopePreviewToCaller(_client, result)"
                 },
 
                 // hub activity history and overview, answered by the hub from what it has recorded and cached. Each

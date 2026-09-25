@@ -104,7 +104,7 @@ namespace Certify.Core.Tests.Unit
 
             var result = await controller.Download(InstanceId, ManagedCertId, "pfx");
 
-            AssertUnauthorized(result, "not permitted by the domain restrictions");
+            AssertUnauthorized(result, "outside the tag scope or domain restrictions");
         }
 
         [TestMethod]
@@ -206,7 +206,7 @@ namespace Certify.Core.Tests.Unit
 
             var result = await controller.Download(InstanceId, ManagedCertId, "pfx");
 
-            AssertUnauthorized(result, "not permitted by the domain restrictions");
+            AssertUnauthorized(result, "not permitted to download this subscribed certificate");
         }
 
         #endregion
@@ -298,11 +298,30 @@ namespace Certify.Core.Tests.Unit
         {
             var client = new Mock<ICertifyInternalApiClient>();
 
+            var authorizingRole = new AssignedRole
+            {
+                Id = "ar-1",
+                RoleId = StandardRoles.CertificateConsumer.Id,
+                SecurityPrincipalId = "sp-consumer",
+                IncludedResources = domainRestriction == null
+                    ? []
+                    : [new Resource { Id = "res-1", ResourceType = ResourceTypes.Domain, Identifier = domainRestriction }]
+            };
+
+            var downloadScope = new ResourceAccessScope { HasAccess = true, AuthorizingRoles = [authorizingRole] };
+
+            // answered as the access control store answers it: a check naming the certificate's tags and identifiers is
+            // evaluated against the authorizing role, one without them only asks whether the action is held
+            bool Permits(AccessCheck check, bool holdsAction)
+                => holdsAction
+                    && (check.ResourceTags == null && check.ResourceIdentifiers == null
+                        || ResourceAccess.IsResourcePermitted(downloadScope, check.ResourceTags, check.ResourceIdentifiers));
+
             client.Setup(c => c.CheckSecurityPrincipalHasAccess(
                     It.Is<AccessCheck>(a => a.ResourceActionId == StandardResourceActions.CertificateDownload
                         && a.SecurityPrincipalId != "instance-sp"),
                     It.IsAny<AuthContext>()))
-                .ReturnsAsync(grantsDownload);
+                .ReturnsAsync((AccessCheck check, AuthContext _) => Permits(check, grantsDownload));
 
             client.Setup(c => c.CheckSecurityPrincipalHasAccess(
                     It.Is<AccessCheck>(a => a.ResourceActionId == StandardResourceActions.ManagementHubInstanceJoin),
@@ -314,17 +333,7 @@ namespace Certify.Core.Tests.Unit
                     It.Is<AccessCheck>(a => a.SecurityPrincipalId == "instance-sp"
                         && a.ResourceActionId == StandardResourceActions.CertificateDownload),
                     It.IsAny<AuthContext>()))
-                .ReturnsAsync(instancePrincipalMayDownload);
-
-            var authorizingRole = new AssignedRole
-            {
-                Id = "ar-1",
-                RoleId = StandardRoles.CertificateConsumer.Id,
-                SecurityPrincipalId = "sp-consumer",
-                IncludedResources = domainRestriction == null
-                    ? []
-                    : [new Resource { Id = "res-1", ResourceType = ResourceTypes.Domain, Identifier = domainRestriction }]
-            };
+                .ReturnsAsync((AccessCheck check, AuthContext _) => Permits(check, instancePrincipalMayDownload));
 
             client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
                 .ReturnsAsync(new ResourceAccessScope

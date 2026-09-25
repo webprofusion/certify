@@ -139,7 +139,12 @@ namespace Certify.Server.Hub.Api.Controllers
                     }).ToList())
                 ?? new Dictionary<string, List<Tag>>();
 
+            // a caller whose role is tag scoped or domain restricted sees the instances within that scope
+            var instanceScope = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList);
+            var instancesInScope = await GetInstancesInScope(_client, _mgmtAPI, instanceScope, instances.Select(i => i.InstanceId));
+
             var summaries = instances
+                .Where(instance => instancesInScope.Contains(instance.InstanceId))
                 .Select(instance =>
                 {
                     var connected = connectedInstances.FirstOrDefault(c => c.InstanceId == instance.InstanceId);

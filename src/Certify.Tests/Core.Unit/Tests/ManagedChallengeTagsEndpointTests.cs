@@ -94,18 +94,7 @@ namespace Certify.Core.Tests.Unit
         [Description("A caller whose role is scoped to a tag lists only the challenges carrying it")]
         public async Task GetManagedChallengeSummaries_TagScopedCaller_ListsOnlyMatchingChallenges()
         {
-            var controller = CreateController(authorized: true, client =>
-                client.Setup(c => c.GetSecurityPrincipalAssignedRoles(CallerId, It.IsAny<AuthContext>()))
-                    .ReturnsAsync(new List<AssignedRole>
-                    {
-                        new()
-                        {
-                            Id = "ar-consumer",
-                            RoleId = StandardRoles.ManagedChallengeConsumer.Id,
-                            SecurityPrincipalId = CallerId,
-                            ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
-                        }
-                    }));
+            var controller = CreateController(authorized: true, client => ScopeTo(client, ProductionScopedRole()));
 
             var result = await controller.GetManagedChallengeSummaries();
 
@@ -113,16 +102,81 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        [Description("A role requiring all of its tags lists only the challenges carrying every one of them")]
+        public async Task GetManagedChallengeSummaries_RoleRequiringAllTags_ListsOnlyChallengesCarryingAllOfThem()
+        {
+            var role = ProductionScopedRole();
+            role.ScopedTags = [new TagScope { CategoryKey = "environment", Value = "development" }, new TagScope { CategoryKey = "criticality", Value = "low" }];
+            role.RequireAllScopedTags = true;
+
+            var controller = CreateController(authorized: true, client => ScopeTo(client, role));
+
+            var result = await controller.GetManagedChallengeSummaries();
+
+            Assert.IsEmpty(Summaries(result), "the development challenge carries only one of the two required tags");
+        }
+
+        [TestMethod]
         [Description("When the caller's role assignments cannot be read no challenges are listed, rather than every one")]
         public async Task GetManagedChallengeSummaries_RolesCannotBeRead_ListsNothing()
         {
             var controller = CreateController(authorized: true, client =>
-                client.Setup(c => c.GetSecurityPrincipalAssignedRoles(CallerId, It.IsAny<AuthContext>()))
+                client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
                     .ThrowsAsync(new System.InvalidOperationException("store unavailable")));
 
             var result = await controller.GetManagedChallengeSummaries();
 
             Assert.IsEmpty(Summaries(result));
+        }
+
+        [TestMethod]
+        [Description("A tag scoped caller cannot read the tags of a challenge outside their scope")]
+        public async Task GetManagedChallengeTags_OutsideCallersScope_IsNotFound()
+        {
+            var controller = CreateController(authorized: true, client => ScopeTo(client, ProductionScopedRole()));
+
+            AssertNotFound(await controller.GetManagedChallengeTags(ChallengeId));
+            Assert.IsInstanceOfType<OkObjectResult>(await controller.GetManagedChallengeTags(OtherChallengeId));
+        }
+
+        [TestMethod]
+        [Description("A tag scoped caller cannot tag a challenge outside their scope into it")]
+        public async Task AddManagedChallengeTags_OutsideCallersScope_IsNotFound()
+        {
+            var added = false;
+
+            var controller = CreateController(authorized: true, client =>
+            {
+                ScopeTo(client, ProductionScopedRole());
+                client.Setup(c => c.AddHubItemTags(It.IsAny<ICollection<ItemTag>>(), It.IsAny<AuthContext>()))
+                    .Callback(() => added = true)
+                    .ReturnsAsync(new Certify.Models.Config.ActionResult("OK", true));
+            });
+
+            var result = await controller.AddManagedChallengeTags(ChallengeId, [new TagScope { CategoryKey = "environment", Value = "production" }]);
+
+            AssertNotFound(result);
+            Assert.IsFalse(added, "the tags reached the store");
+        }
+
+        private static AssignedRole ProductionScopedRole() => new()
+        {
+            Id = "ar-consumer",
+            RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+            SecurityPrincipalId = CallerId,
+            ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
+        };
+
+        private static void ScopeTo(Mock<ICertifyInternalApiClient> client, AssignedRole role)
+        {
+            client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ResourceAccessScope { HasAccess = true, AuthorizingRoles = [role] });
+        }
+
+        private static void AssertNotFound(IActionResult result)
+        {
+            Assert.IsInstanceOfType<ObjectResult>(result, result.GetType().Name);
+            Assert.AreEqual(StatusCodes.Status404NotFound, ((ObjectResult)result).StatusCode);
         }
 
         private static ICollection<ManagedChallengeSummary> Summaries(IActionResult result)
@@ -145,6 +199,14 @@ namespace Certify.Core.Tests.Unit
 
             client.Setup(c => c.CheckSecurityPrincipalHasAccess(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
                 .ReturnsAsync(authorized);
+
+            // unless a test scopes the caller, their role grants the action without restriction
+            client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ResourceAccessScope
+                {
+                    HasAccess = authorized,
+                    AuthorizingRoles = authorized ? [new AssignedRole { Id = "ar-admin", RoleId = StandardRoles.ManagedChallengeAdmin.Id, SecurityPrincipalId = CallerId }] : []
+                });
 
             // the store filters on both, so the endpoint has to address the lookup the right way round to find anything
             client.Setup(c => c.GetHubItemTags(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<AuthContext>()))

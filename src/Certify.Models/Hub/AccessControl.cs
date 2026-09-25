@@ -113,6 +113,13 @@ namespace Certify.Models.Hub
         public List<TagSummary>? ResourceTags { get; set; }
 
         /// <summary>
+        /// Identifiers (domains) carried by the resource being accessed, every one of which must be within the domain
+        /// restrictions of the same role assignment which grants access to the resource's tags. Null when the check is
+        /// not about a resource with identifiers.
+        /// </summary>
+        public List<string>? ResourceIdentifiers { get; set; }
+
+        /// <summary>
         /// When evaluating access scope for resource selection, allow tag-scoped roles to also
         /// use untagged resources. Used by hub preference for legacy managed-challenge behaviour.
         /// </summary>
@@ -364,34 +371,220 @@ namespace Certify.Models.Hub
         /// <summary>
         /// True when a concrete resource (via tags) is within the resolved access scope.
         /// </summary>
-        public static bool IsResourceInScope(ResourceAccessScope? scope, IEnumerable<TagSummary>? resourceTags)
+        public static bool IsResourceInScope(ResourceAccessScope? scope, IEnumerable<ITaggedValue>? resourceTags)
+            => IsResourcePermitted(scope, resourceTags ?? [], identifiers: null);
+
+        /// <summary>
+        /// True when an authorizing role in the scope grants access to a concrete resource.
+        ///
+        /// Each role is evaluated as a unit: its tag scope (with its own RequireAllScopedTags), its domain restrictions
+        /// and its included resources together, so that one assignment's tags can never be paired with another
+        /// assignment's domains. Domain restrictions and included resources remain a cap across the principal: a role
+        /// which carries none of its own is held to those of the other authorizing roles, so an unrestricted assignment
+        /// does not lift a restriction placed on another.
+        /// </summary>
+        /// <param name="scope">the resolved access scope for the action</param>
+        /// <param name="resourceTags">the resource's tags, or null when tags are not evaluated (an action level check)</param>
+        /// <param name="identifiers">the resource's identifiers, all of which must be permitted, or null when the resource has none to check</param>
+        /// <param name="resourceType">the resource type, used to match non-domain IncludedResources</param>
+        /// <param name="resourceId">the resource id, used to match non-domain IncludedResources</param>
+        public static bool IsResourcePermitted(
+            ResourceAccessScope? scope,
+            IEnumerable<ITaggedValue>? resourceTags,
+            IEnumerable<string?>? identifiers,
+            string? resourceType = null,
+            string? resourceId = null)
         {
             if (scope == null || !scope.HasAccess)
             {
                 return false;
             }
 
-            if (scope.IsUnrestricted)
+            var roles = scope.AuthorizingRoles?.Where(r => r != null).ToList() ?? [];
+
+            if (roles.Count == 0)
             {
-                return true;
+                // a scope resolved without its authorizing roles carries only its unrestricted flag
+                return scope.IsUnrestricted;
             }
 
-            var tags = resourceTags?.ToList() ?? [];
+            var evaluation = new ScopeEvaluation(roles, resourceType, scope.AllowUnscopedResources);
+            var tags = resourceTags?.Where(t => t != null).ToList();
+            var identifierList = NormaliseIdentifiers(identifiers);
 
-            if (tags.Count == 0)
+            return roles.Any(role => evaluation.Permits(role, tags, identifierList, resourceId));
+        }
+
+        /// <summary>
+        /// True when the scope permits every resource of the given type without per-resource evaluation: some
+        /// authorizing role carries no tag scope, and no domain restriction or included resource of that type caps the
+        /// principal.
+        /// </summary>
+        public static bool IsScopeUnrestricted(ResourceAccessScope? scope, string? resourceType = null)
+        {
+            if (scope == null || !scope.HasAccess)
             {
-                return scope.AllowUnscopedResources;
+                return false;
             }
 
-            foreach (var role in scope.AuthorizingRoles.Where(r => r.ScopedTags?.Count > 0))
+            var roles = scope.AuthorizingRoles?.Where(r => r != null).ToList() ?? [];
+
+            if (roles.Count == 0)
             {
-                if (IsResourceTagScopeMatch(tags, role.ScopedTags, role.RequireAllScopedTags))
+                return scope.IsUnrestricted;
+            }
+
+            var evaluation = new ScopeEvaluation(roles, resourceType, scope.AllowUnscopedResources);
+
+            return evaluation.PooledDomainRules.Count == 0
+                && evaluation.PooledIncludedResources.Count == 0
+                && roles.Any(r => !(r.ScopedTags?.Count > 0));
+        }
+
+        /// <summary>
+        /// True when an authorizing role in the scope reaches a managed instance: a role with no restrictions at all,
+        /// a tag scoped role whose tags the instance carries, or a role which permits a managed item held on the
+        /// instance. Instances have no identifiers, so a role restricted only to domains reaches the instances holding
+        /// items within those domains.
+        /// </summary>
+        /// <param name="scope">the resolved access scope for the action</param>
+        /// <param name="instanceTags">the instance's own tags</param>
+        /// <param name="instanceItems">the tags and identifiers of each managed item held on the instance</param>
+        public static bool IsInstancePermitted(
+            ResourceAccessScope? scope,
+            IEnumerable<ITaggedValue>? instanceTags,
+            IEnumerable<(IEnumerable<ITaggedValue>? Tags, IEnumerable<string?>? Identifiers)>? instanceItems)
+        {
+            if (scope == null || !scope.HasAccess)
+            {
+                return false;
+            }
+
+            var roles = scope.AuthorizingRoles?.Where(r => r != null).ToList() ?? [];
+
+            if (roles.Count == 0)
+            {
+                return scope.IsUnrestricted;
+            }
+
+            var evaluation = new ScopeEvaluation(roles, resourceType: null, scope.AllowUnscopedResources);
+            var tags = instanceTags?.Where(t => t != null).ToList() ?? [];
+            var items = instanceItems?
+                .Select(i => (Tags: i.Tags?.Where(t => t != null).ToList() ?? [], Identifiers: NormaliseIdentifiers(i.Identifiers ?? [])!))
+                .ToList() ?? [];
+
+            foreach (var role in roles)
+            {
+                var hasTagScope = role.ScopedTags?.Count > 0;
+
+                if (!hasTagScope && evaluation.GetDomainRules(role).Count == 0)
+                {
+                    return true;
+                }
+
+                if (hasTagScope && tags.Count > 0 && TagScopeFilter.Matches(tags, role.ScopedTags, role.RequireAllScopedTags))
+                {
+                    return true;
+                }
+
+                if (items.Any(i => evaluation.Permits(role, i.Tags, i.Identifiers, resourceId: null)))
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        private static List<string>? NormaliseIdentifiers(IEnumerable<string?>? identifiers)
+            => identifiers?.Where(i => !string.IsNullOrWhiteSpace(i)).Select(i => i!).ToList();
+
+        /// <summary>
+        /// The per-role evaluation shared by the scope checks, with the principal wide caps pooled once.
+        /// </summary>
+        private sealed class ScopeEvaluation
+        {
+            private readonly string? _resourceType;
+            private readonly bool _allowUnscopedResources;
+
+            public ScopeEvaluation(List<AssignedRole> roles, string? resourceType, bool allowUnscopedResources)
+            {
+                _resourceType = resourceType;
+                _allowUnscopedResources = allowUnscopedResources;
+
+                PooledDomainRules = GetDomainRestrictionRules(roles);
+                PooledIncludedResources = roles.SelectMany(GetIncludedResources).Distinct().ToList();
+            }
+
+            public List<string> PooledDomainRules { get; }
+
+            public List<string> PooledIncludedResources { get; }
+
+            public List<string> GetDomainRules(AssignedRole role)
+            {
+                var own = GetDomainRestrictionRules([role]);
+                return own.Count > 0 ? own : PooledDomainRules;
+            }
+
+            public bool Permits(AssignedRole role, List<ITaggedValue>? tags, List<string>? identifiers, string? resourceId)
+                => IsTagScopePermitted(role, tags) && AreIdentifiersPermitted(role, identifiers) && IsIncludedResourcePermitted(role, resourceId);
+
+            private bool IsTagScopePermitted(AssignedRole role, List<ITaggedValue>? tags)
+            {
+                if (!(role.ScopedTags?.Count > 0) || tags == null)
+                {
+                    return true;
+                }
+
+                if (tags.Count == 0)
+                {
+                    return _allowUnscopedResources;
+                }
+
+                return TagScopeFilter.Matches(tags, role.ScopedTags, role.RequireAllScopedTags);
+            }
+
+            private bool AreIdentifiersPermitted(AssignedRole role, List<string>? identifiers)
+            {
+                if (identifiers == null)
+                {
+                    return true;
+                }
+
+                var rules = GetDomainRules(role);
+
+                if (rules.Count == 0)
+                {
+                    return true;
+                }
+
+                return identifiers.Count > 0 && identifiers.All(i => IsIdentifierPermittedByDomainRules(rules, i));
+            }
+
+            private bool IsIncludedResourcePermitted(AssignedRole role, string? resourceId)
+            {
+                var own = GetIncludedResources(role).ToList();
+                var included = own.Count > 0 ? own : PooledIncludedResources;
+
+                if (included.Count == 0)
+                {
+                    return true;
+                }
+
+                return !string.IsNullOrWhiteSpace(resourceId) && included.Contains(resourceId!);
+            }
+
+            private IEnumerable<string> GetIncludedResources(AssignedRole role)
+            {
+                if (string.IsNullOrWhiteSpace(_resourceType) || _resourceType == ResourceTypes.Domain)
+                {
+                    return [];
+                }
+
+                return (role.IncludedResources ?? [])
+                    .Where(r => r?.ResourceType == _resourceType && !string.IsNullOrWhiteSpace(r.Identifier))
+                    .Select(r => r.Identifier);
+            }
         }
 
         /// <summary>

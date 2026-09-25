@@ -73,8 +73,13 @@ namespace Certify.Server.Hub.Api.Services.Activity
         /// </summary>
         internal sealed class ViewScope
         {
-            public ManagedItemVisibility Visibility { get; init; } = ManagedItemVisibility.None;
+            public ResourceScope Visibility { get; init; } = ResourceScope.None;
             public bool CanListInstances { get; init; }
+
+            /// <summary>
+            /// The instances within the caller's scope for listing instances, or null when they may see every instance
+            /// </summary>
+            public HashSet<string>? InstanceIdsInScope { get; init; }
             public bool IsTagFiltered { get; init; }
 
             /// <summary>
@@ -103,22 +108,32 @@ namespace Certify.Server.Hub.Api.Services.Activity
                     return IsItemRestricted ? VisibleItems.ContainsKey(record.ManagedItemId) : Visibility.HasAction;
                 }
 
-                // instance activity follows the instance's own tags, while hub activity has none, so a tag filter leaves it out
-                return CanListInstances && (!IsTagFiltered || (record.InstanceId != null && MatchingInstanceIds.Contains(record.InstanceId)));
+                // instance activity follows the instance's own tags, while hub activity has none, so a tag filter leaves it out.
+                // A caller whose role is scoped sees the activity of the instances within that scope, and no hub activity.
+                return CanListInstances
+                    && IsInstanceInScope(record.InstanceId)
+                    && (!IsTagFiltered || (record.InstanceId != null && MatchingInstanceIds.Contains(record.InstanceId)));
             }
 
             /// <summary>
             /// The filter to apply to stored records, or null when every record is visible
             /// </summary>
-            public Func<ActivityRecordScope, bool>? RecordFilter => !IsItemRestricted && CanListInstances ? null : Permits;
+            public Func<ActivityRecordScope, bool>? RecordFilter => !IsItemRestricted && CanListInstances && InstanceIdsInScope == null ? null : Permits;
+
+            /// <summary>
+            /// Whether the caller may see an instance, or hub level activity when no instance is given
+            /// </summary>
+            public bool IsInstanceInScope(string? instanceId)
+                => InstanceIdsInScope == null || (instanceId != null && InstanceIdsInScope.Contains(instanceId));
         }
 
         internal async Task<ViewScope> ResolveScopeAsync(AuthContext? authContext, List<string>? tagScopes, bool requireAllTags, string? instanceId = null)
         {
-            var visibility = await ManagedItemVisibility.Resolve(_client, authContext);
+            var visibility = await ResourceScope.Resolve(_client, authContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
 
-            var canListInstances = await PrincipalAccess.IsAuthorized(_client, authContext,
-                new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
+            var instanceScope = await ResourceScope.Resolve(_client, authContext, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList);
+            var canListInstances = instanceScope.HasAction;
+            var instanceIdsInScope = await GetInstanceIdsInScopeAsync(instanceScope);
 
             var scopes = TagScopeFilter.ParseAll(tagScopes);
             var visibleItems = new Dictionary<string, (string, ManagedCertificate)>(StringComparer.OrdinalIgnoreCase);
@@ -142,7 +157,9 @@ namespace Certify.Server.Hub.Api.Services.Activity
                             continue;
                         }
 
-                        var tags = tagsByItem.TryGetValue(item.Id, out var itemTags) ? itemTags : [];
+                        var tags = tagsByItem.TryGetValue(item.Id, out var itemTags)
+                            ? itemTags.Where(t => HubItemTags.AppliesToInstance(t.InstanceId, instanceItems.InstanceId)).ToList()
+                            : [];
 
                         if (scopes.Count > 0 && !TagScopeFilter.Matches(tags, scopes, requireAllTags))
                         {
@@ -179,6 +196,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
             {
                 Visibility = visibility,
                 CanListInstances = canListInstances,
+                InstanceIdsInScope = instanceIdsInScope,
                 IsTagFiltered = scopes.Count > 0,
                 VisibleItems = visibleItems,
                 MatchingInstanceIds = matchingInstanceIds
@@ -408,7 +426,10 @@ namespace Certify.Server.Hub.Api.Services.Activity
             // instances, where a tag filter keeps those whose own tags match it
             if (scope.CanListInstances)
             {
-                var instances = scope.IsTagFiltered ? knownInstances.Where(i => scope.MatchingInstanceIds.Contains(i.InstanceId)).ToList() : knownInstances;
+                var instances = knownInstances
+                    .Where(i => scope.IsInstanceInScope(i.InstanceId))
+                    .Where(i => !scope.IsTagFiltered || scope.MatchingInstanceIds.Contains(i.InstanceId))
+                    .ToList();
 
                 items.AddRange(await GetInstanceAttentionAsync(instances, filter.InstanceId, now));
             }
@@ -803,13 +824,14 @@ namespace Certify.Server.Hub.Api.Services.Activity
         {
             query ??= new InstanceConnectionQuery();
 
-            var canListInstances = await PrincipalAccess.IsAuthorized(_client, authContext,
-                new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
+            var instanceScope = await ResourceScope.Resolve(_client, authContext, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList);
 
-            if (!canListInstances)
+            if (!instanceScope.HasAction)
             {
                 return [];
             }
+
+            var instanceIdsInScope = await GetInstanceIdsInScopeAsync(instanceScope);
 
             var now = DateTimeOffset.UtcNow;
             var to = query.To.HasValue && query.To.Value < now ? query.To.Value : now;
@@ -823,6 +845,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
             var knownInstances = (await GetKnownInstancesAsync())
                 .Where(i => !i.IsPendingConnection && !string.IsNullOrWhiteSpace(i.InstanceId))
                 .Where(i => string.IsNullOrWhiteSpace(query.InstanceId) || string.Equals(i.InstanceId, query.InstanceId, StringComparison.OrdinalIgnoreCase))
+                .Where(i => instanceIdsInScope == null || instanceIdsInScope.Contains(i.InstanceId))
                 .ToList();
 
             var events = await _store.GetEventsAsync(from, to, _connectionEventTypes.Concat(_hubLifecycleEventTypes), instanceId: null);
@@ -964,7 +987,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
         {
             filter ??= new HubViewFilter();
 
-            var visibility = await ManagedItemVisibility.Resolve(_client, authContext);
+            var visibility = await ResourceScope.Resolve(_client, authContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
 
             // whole-instance counts only compare with the current counts for a caller who sees every item
             if (!visibility.IsUnrestricted || filter.TagScopes?.Count > 0)
@@ -1048,6 +1071,21 @@ namespace Certify.Server.Hub.Api.Services.Activity
             }
 
             return removed;
+        }
+
+        /// <summary>
+        /// The known instances within a resolved scope for listing instances, or null when every instance is
+        /// </summary>
+        private async Task<HashSet<string>?> GetInstanceIdsInScopeAsync(ResourceScope instanceScope)
+        {
+            if (instanceScope.IsUnrestricted)
+            {
+                return null;
+            }
+
+            var known = await GetKnownInstancesAsync();
+
+            return await instanceScope.GetInstancesInScope(_client, _stateProvider.GetManagedInstanceItems().Values, known.Select(i => i.InstanceId));
         }
 
         private async Task<List<ManagedInstanceInfo>> GetKnownInstancesAsync()

@@ -952,6 +952,42 @@ namespace Certify.Tests.Core.Unit.Tests
             });
         }
 
+        /// <summary>
+        /// Each identifier must be answered by a challenge reached through a role assignment which also permits that
+        /// identifier. Otherwise a principal holding two scoped assignments could use one assignment's challenge (and
+        /// its DNS credentials) for a domain only the other assignment permits.
+        /// </summary>
+        [TestMethod]
+        [Description("A challenge from one assignment's tag scope is not used for a domain only another assignment permits")]
+        public async Task AuthorizeIdentifiers_ChallengeFromAnotherAssignmentsScope_IsNotUsed()
+        {
+            await CreateManagedChallenge("challenge-finance", "*.finance.example.com;*.eng.example.com");
+            await TagChallenge("challenge-finance", DepartmentCategory, FinanceDept);
+            await CreateManagedChallenge("challenge-engineering", "*.other.com");
+            await TagChallenge("challenge-engineering", DepartmentCategory, EngineeringDept);
+
+            await SeedPrincipalWithRole(
+                "sp-two-teams",
+                StandardResourceActions.ManagedChallengeRequest,
+                scopedTags: [new TagScope { CategoryKey = DepartmentCategory, Value = FinanceDept }],
+                domainRestriction: "*.finance.example.com");
+
+            await _store.Add<AssignedRole>(nameof(AssignedRole), new AssignedRole
+            {
+                Id = "ar-sp-two-teams-engineering",
+                RoleId = "test_managedchallenge_role",
+                SecurityPrincipalId = "sp-two-teams",
+                ScopedTags = [new TagScope { CategoryKey = DepartmentCategory, Value = EngineeringDept }],
+                IncludedResources = [new Resource { Id = "res-engineering", ResourceType = ResourceTypes.Domain, Identifier = "*.eng.example.com" }]
+            });
+
+            var finance = await Authorize("sp-two-teams", "app.finance.example.com", requireSatisfiableChallenge: true);
+            var engineering = await Authorize("sp-two-teams", "app.eng.example.com", requireSatisfiableChallenge: true);
+
+            Assert.IsTrue(finance.IsSuccess, finance.Message);
+            Assert.IsFalse(engineering.IsSuccess, "only the finance challenge answers for eng.example.com, and finance does not permit it");
+        }
+
         [TestMethod]
         [Description("A principal whose roles do not grant the action is denied")]
         public async Task AuthorizeIdentifiers_PrincipalWithoutAuthorizingRole_IsDenied()

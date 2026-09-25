@@ -2388,6 +2388,44 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
+        /// A resource is reached through a single role assignment: its tags and its identifiers must both be
+        /// permitted by the same one. One assignment's tag scope must not be combined with another's domains.
+        /// </summary>
+        [TestMethod]
+        public async Task TestIsSecurityPrincipalAuthorisedPairsTagsAndDomainsWithinOneAssignment()
+        {
+            await AccessControlConfig.UpdateStandardAccessConfig(access);
+
+            const string principalId = "sp-paired";
+
+            AssignedRole Assignment(string environment, string domain) => new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.CertificateConsumer.Id,
+                SecurityPrincipalId = principalId,
+                ScopedTags = [new TagScope { CategoryKey = "environment", Value = environment }],
+                IncludedResources = [new Resource { ResourceType = ResourceTypes.Domain, Identifier = domain }]
+            };
+
+            await access.AddAssignedRole(contextUserId, Assignment("production", "*.a.example.com"), bypassIntegrityCheck: true);
+            await access.AddAssignedRole(contextUserId, Assignment("development", "*.b.example.com"), bypassIntegrityCheck: true);
+
+            Task<bool> CanDownload(string environment, string identifier) => access.IsSecurityPrincipalAuthorised(new AccessCheck
+            {
+                SecurityPrincipalId = principalId,
+                ResourceType = ResourceTypes.Certificate,
+                ResourceActionId = StandardResourceActions.CertificateDownload,
+                ResourceTags = [new TagSummary { CategoryKey = "environment", Value = environment }],
+                ResourceIdentifiers = [identifier]
+            });
+
+            Assert.IsTrue(await CanDownload("production", "www.a.example.com"));
+            Assert.IsTrue(await CanDownload("development", "www.b.example.com"));
+            Assert.IsFalse(await CanDownload("production", "www.b.example.com"), "production is only reached through the assignment restricted to a.example.com");
+            Assert.IsFalse(await CanDownload("development", "www.a.example.com"), "development is only reached through the assignment restricted to b.example.com");
+        }
+
+        /// <summary>
         /// Role status is a read of stored config, which an import can leave holding a policy with no action list.
         /// </summary>
         [TestMethod]

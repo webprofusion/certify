@@ -23,6 +23,30 @@ namespace SourceGenerator
         /// it cannot be reached by an id the item listing would not show them. Requires UseManagementAPI.
         /// </summary>
         public string ManagedItemIdParam { get; set; } = string.Empty;
+
+        /// <summary>
+        /// For an operation on a single resource other than a managed item, an expression (a call on ApiControllerBase)
+        /// returning Task&lt;IActionResult?&gt;: null when the resource is within the caller's scope for the required
+        /// action, otherwise the response to return. "{action}" and "{resourceType}" are replaced with the first
+        /// required permission.
+        /// </summary>
+        public string ScopeCheck { get; set; } = string.Empty;
+
+        /// <summary>
+        /// For an operation returning a set of resources, an expression returning a task of the result type which
+        /// narrows the result to the resources within the caller's scope. The result is available as "result".
+        /// "{action}" and "{resourceType}" are replaced as for ScopeCheck. The filter is then responsible for scope, so
+        /// the instance scope check is not also applied.
+        /// </summary>
+        public string ResultFilter { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The parameter holding the managed instance an operation acts on, where it is not named instanceId. Every
+        /// operation taking an instance, and not narrowed by one of the more specific checks above, checks that the
+        /// instance is within the caller's scope for the required action.
+        /// </summary>
+        public string InstanceIdParam { get; set; } = string.Empty;
+
         public bool UseManagementAPI { get; set; } = false;
         public string ManagementHubCommandType { get; set; } = string.Empty;
         public string ServiceAPIRoute { get; set; } = string.Empty;
@@ -145,6 +169,7 @@ namespace SourceGenerator
                         [RequiredPermissions]
 
                         var result = await {(config.UseManagementAPI ? "_mgmtAPI" : "_client")}.{config.OperationName}({apiParamCall.Replace("authContext", "CurrentAuthContext")});
+                        [ResultFilter]
                         return new OkObjectResult(result);
                     }}
                 }}
@@ -167,11 +192,35 @@ namespace SourceGenerator
                     ";
                 }
 
+                var primary = config.RequiredPermissions.First();
+                string ExpandTokens(string expression) => expression
+                    .Replace("{action}", primary.Action)
+                    .Replace("{resourceType}", primary.ResourceType);
+
+                var instanceIdParam = !string.IsNullOrEmpty(config.InstanceIdParam)
+                    ? config.InstanceIdParam
+                    : config.Params.ContainsKey("instanceId") ? "instanceId" : null;
+
+                string? scopeCheck = null;
+
                 if (!string.IsNullOrEmpty(config.ManagedItemIdParam))
+                {
+                    scopeCheck = $@"CheckManagedItemInScope(_client, _mgmtAPI, ""{primary.Action}"", instanceId, {config.ManagedItemIdParam})";
+                }
+                else if (!string.IsNullOrEmpty(config.ScopeCheck))
+                {
+                    scopeCheck = ExpandTokens(config.ScopeCheck);
+                }
+                else if (string.IsNullOrEmpty(config.ResultFilter) && instanceIdParam != null)
+                {
+                    scopeCheck = $@"CheckInstanceInScope(_client, _mgmtAPI, ""{primary.ResourceType}"", ""{primary.Action}"", {instanceIdParam})";
+                }
+
+                if (scopeCheck != null)
                 {
                     fragment += $@"
 
-                            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, ""{config.RequiredPermissions.First().Action}"", instanceId, {config.ManagedItemIdParam});
+                            var outOfScope = await {scopeCheck};
 
                             if (outOfScope != null)
                             {{
@@ -182,12 +231,18 @@ namespace SourceGenerator
                 }
 
                 publicApiSrc = publicApiSrc.Replace("[RequiredPermissions]", fragment);
+
+                publicApiSrc = publicApiSrc.Replace(
+                    "[ResultFilter]",
+                    string.IsNullOrEmpty(config.ResultFilter) ? "" : $"result = await {ExpandTokens(config.ResultFilter)};");
             }
             else
             {
                 publicApiSrc = publicApiSrc.Replace("[AuthorizedApi]", "");
 
                 publicApiSrc = publicApiSrc.Replace("[RequiredPermissions]", "");
+
+                publicApiSrc = publicApiSrc.Replace("[ResultFilter]", "");
             }
 
             context.AddSource($"{config.PublicAPIController}Controller.{config.OperationName}.g.cs", SourceText.From(publicApiSrc, Encoding.UTF8));

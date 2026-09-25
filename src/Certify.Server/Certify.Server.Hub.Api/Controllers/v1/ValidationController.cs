@@ -54,7 +54,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             // a pending challenge does not say which item it belongs to, so a caller restricted to some items cannot
             // be shown just theirs, and is shown none
-            var visibility = await ManagedItemVisibility.Resolve(_client, CurrentAuthContext);
+            var visibility = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
 
             if (!visibility.IsUnrestricted)
             {

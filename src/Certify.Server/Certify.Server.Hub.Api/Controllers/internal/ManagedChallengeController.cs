@@ -1,6 +1,7 @@
 ﻿using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Hub.Api.Controllers
@@ -48,13 +49,13 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Forbid();
             }
 
-            // Get user's tag scopes from their scoped assigned roles
-            var tagScopes = await GetCallerTagScopes(_client);
+            // the tag scopes on the role assignments granting the list action limit which challenges the caller sees
+            var scope = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeList);
 
-            if (tagScopes?.Count == 0)
+            if (!scope.HasAction)
             {
-                // null means unrestricted; an empty set means the caller's role assignments could not be read, so
-                // there is nothing to show which challenges are within their scope
+                // the caller's role assignments could not be read, so there is nothing to show which challenges are
+                // within their scope
                 return new OkObjectResult(new List<ManagedChallengeSummary>());
             }
 
@@ -62,12 +63,12 @@ namespace Certify.Server.Hub.Api.Controllers
             var challenges = await _client.GetManagedChallenges(CurrentAuthContext);
 
             // Load all tags for managed challenges
-            var allChallengeTags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge, null, CurrentAuthContext);
+            var allChallengeTags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge, null, SystemAuthContext);
             var tagsByChallengeId = allChallengeTags?.GroupBy(t => t.TaggedItemId)
                 .ToDictionary(g => g.Key, g => g.ToList()) ?? new Dictionary<string, List<ItemTag>>();
 
             // Load categories for display names
-            var categories = await _client.GetTagCategories(CurrentAuthContext);
+            var categories = await _client.GetTagCategories(SystemAuthContext);
             var categoriesByKey = categories?.ToDictionary(c => c.CategoryKey, c => c) ?? new Dictionary<string, TagCategory>();
 
             var summaries = new List<ManagedChallengeSummary>();
@@ -78,12 +79,9 @@ namespace Certify.Server.Hub.Api.Controllers
                 tagsByChallengeId.TryGetValue(challenge.Id, out var itemTags);
                 var challengeTags = itemTags ?? new List<ItemTag>();
 
-                // A tag restricted caller only sees matching challenges, and never an untagged one. This used to be
-                // matched by a loop written here, which compared category keys and values case sensitively while
-                // every other tag comparison in the product is case insensitive - so a challenge tagged
-                // "Production" was invisible to a role scoped to "production".
-                if (tagScopes != null
-                    && !TagScopeFilter.Matches(challengeTags, tagScopes, matchAll: false))
+                // A tag restricted caller only sees matching challenges, and never an untagged one. Each role assignment
+                // is matched on its own tags, including whether it requires all of them.
+                if (!scope.PermitsTags(challengeTags, challenge.Id))
                 {
                     continue;
                 }
@@ -138,6 +136,13 @@ namespace Certify.Server.Hub.Api.Controllers
             if (string.IsNullOrWhiteSpace(id))
             {
                 return new OkObjectResult(new List<ManagedChallengeSummary>());
+            }
+
+            // this reports what another principal reaches, whatever the caller's own scope
+            var notPermitted = await CheckPrincipalEvaluationAllowed(_client, id);
+            if (notPermitted != null)
+            {
+                return notPermitted;
             }
 
             List<string> scopedAssignedRoles = [];
@@ -232,6 +237,12 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Forbid();
             }
 
+            var outOfScope = await CheckManagedChallengeInScope(_client, StandardResourceActions.ManagedChallengeList, id, allowNew: false);
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
             var tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedChallenge, id, CurrentAuthContext);
             return new OkObjectResult(tags);
         }
@@ -258,6 +269,13 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!await IsAuthorized(_client, accessCheck))
             {
                 return Forbid();
+            }
+
+            // retagging a challenge moves it into or out of scopes, so it is limited to challenges already within the caller's
+            var outOfScope = await CheckManagedChallengeInScope(_client, StandardResourceActions.ManagedChallengeUpdate, id, allowNew: false);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             var itemTags = tags.Where(t => t.Value != null).Select(t => new ItemTag
@@ -295,6 +313,13 @@ namespace Certify.Server.Hub.Api.Controllers
             if (!await IsAuthorized(_client, accessCheck))
             {
                 return Forbid();
+            }
+
+            // retagging a challenge moves it into or out of scopes, so it is limited to challenges already within the caller's
+            var outOfScope = await CheckManagedChallengeInScope(_client, StandardResourceActions.ManagedChallengeUpdate, id, allowNew: false);
+            if (outOfScope != null)
+            {
+                return outOfScope;
             }
 
             // Get all tags for this item and find the one to remove
