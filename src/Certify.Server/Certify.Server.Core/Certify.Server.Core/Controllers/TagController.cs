@@ -398,10 +398,21 @@ namespace Certify.Service.Controllers
         /// </summary>
         private async Task<ActionResultConfig> CheckItemTaggingAuthorization(string itemType)
         {
-            // Check if user has TagAdmin permission (full tag access)
-            if (await HasTagPermission(StandardResourceActions.TagAdd))
+            if (IsInternalSystemContext())
             {
                 return new ActionResultConfig("Authorized", true);
+            }
+
+            // Tag administration permits tagging any item, but only when it is held without a tag scope. A tag scoped
+            // assignment granting it would otherwise let the holder tag items into their own scope.
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var tagAddScope = await accessControl.EvaluateAccessScope(new AccessCheck(GetContextUserId(), ResourceTypes.Tag, StandardResourceActions.TagAdd));
+
+            if (tagAddScope.HasAccess)
+            {
+                return ResourceAccess.IsScopeUnrestricted(tagAddScope, ResourceTypes.Tag)
+                    ? new ActionResultConfig("Authorized", true)
+                    : new ActionResultConfig("Unauthorized: Tag administration held with a tag scope cannot modify item tags", false);
             }
 
             // Check if user has tag-scoped access - if so, they cannot tag items

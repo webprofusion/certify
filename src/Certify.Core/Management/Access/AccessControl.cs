@@ -703,8 +703,25 @@ namespace Certify.Core.Management.Access
                 return false;
             }
 
+            if (IsRestrictedAdministratorAssignment(r))
+            {
+                await AuditWarning("User {contextUserId} attempted to add an Administrator role assignment with tag or resource restrictions, which cannot be enforced.", contextUserId);
+                return false;
+            }
+
             await _store.Add(nameof(AssignedRole), r);
             return true;
+        }
+
+        /// <summary>
+        /// Whether an assignment restricts the Administrator role to tags or resources. Administration is authorized by
+        /// role membership alone, and an administrator can change their own assignments, so such a restriction would
+        /// read as limiting the principal while limiting nothing. It is refused rather than stored.
+        /// </summary>
+        public static bool IsRestrictedAdministratorAssignment(AssignedRole? assignment)
+        {
+            return assignment?.RoleId == StandardRoles.Administrator.Id
+                && (assignment.ScopedTags?.Count > 0 || assignment.IncludedResources?.Count > 0);
         }
 
         public async Task<bool> AddResourceAction(string contextUserId, ResourceAction action, bool bypassIntegrityCheck = false)
@@ -768,6 +785,12 @@ namespace Certify.Core.Management.Access
             if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to update assigned role for [{id}] without being in required role.", contextUserId, update.SecurityPrincipalId);
+                return false;
+            }
+
+            if (update.AddedAssignedRoles.Any(IsRestrictedAdministratorAssignment))
+            {
+                await AuditWarning("User {contextUserId} attempted to restrict the Administrator role for [{id}] to tags or resources, which cannot be enforced.", contextUserId, update.SecurityPrincipalId);
                 return false;
             }
 

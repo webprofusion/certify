@@ -2388,6 +2388,35 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
+        /// Administration is authorized by holding the Administrator role, so a tag scope or domain restriction on
+        /// that assignment would read as limiting the principal while limiting nothing. It is refused.
+        /// </summary>
+        [TestMethod]
+        public async Task TestUpdateAssignedRolesRefusesARestrictedAdministratorAssignment()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            Assert.IsFalse(await access.UpdateAssignedRoles(adminId, new SecurityPrincipalAssignedRoleUpdate
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                AddedAssignedRoles = [
+                    new AssignedRole
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        RoleId = StandardRoles.Administrator.Id,
+                        SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                        ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
+                    }
+                ],
+                RemovedAssignedRoles = []
+            }));
+
+            Assert.IsFalse(await access.IsPrincipalInRole(TestSecurityPrincipals.DevopsUser.Id, StandardRoles.Administrator.Id));
+        }
+
+        /// <summary>
         /// A resource is reached through a single role assignment: its tags and its identifiers must both be
         /// permitted by the same one. One assignment's tag scope must not be combined with another's domains.
         /// </summary>
