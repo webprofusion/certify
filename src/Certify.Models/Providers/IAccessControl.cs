@@ -77,12 +77,12 @@ namespace Certify.Core.Management.Access
         Task<bool> AddResourceAction(string contextUserId, ResourceAction action, bool bypassIntegrityCheck = false);
 
         Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId);
-        Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken token);
+        Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken token, bool bypassIntegrityCheck = false);
 
         /// <summary>
         /// Update the title, description and role scope of an assigned access token without changing the token itself
         /// </summary>
-        Task<Models.Config.ActionResult> UpdateAssignedAccessToken(string contextUserId, AssignedAccessToken token);
+        Task<Models.Config.ActionResult> UpdateAssignedAccessToken(string contextUserId, AssignedAccessToken token, bool bypassIntegrityCheck = false);
 
         Task<bool> DeleteAssignedAccessToken(string contextUserId, string id);
         Task<bool> IsInitialized();

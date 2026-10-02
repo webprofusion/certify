@@ -779,13 +779,13 @@ namespace Certify.Models.Hub
 
             // setup roles with policies
 
-            var adminSvcPrincipal = AdminSecurityPrincipalId;
+            var contextUserId = StandardSecurityPrincipals.System;
 
             // fetch the currently stored config so we only write items which are new or have changed, otherwise every startup rewrites (and audit logs) the entire standard config
 
-            var storedActions = await access.GetResourceActions(adminSvcPrincipal) ?? [];
-            var storedPolicies = await access.GetResourcePolicies(adminSvcPrincipal) ?? [];
-            var storedRoles = await access.GetRoles(adminSvcPrincipal) ?? [];
+            var storedActions = await access.GetResourceActions(contextUserId) ?? [];
+            var storedPolicies = await access.GetResourcePolicies(contextUserId) ?? [];
+            var storedRoles = await access.GetRoles(contextUserId) ?? [];
 
             var actions = DistinctById(Policies.GetStandardResourceActions());
 
@@ -793,7 +793,7 @@ namespace Certify.Models.Hub
             {
                 if (!IsResourceActionUnchanged(storedActions.FirstOrDefault(a => a.Id == action.Id), action))
                 {
-                    if (await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true))
+                    if (await access.AddResourceAction(contextUserId, action, bypassIntegrityCheck: true))
                     {
                         result.ResourceActionsUpdated++;
                     }
@@ -813,7 +813,7 @@ namespace Certify.Models.Hub
             {
                 if (!IsResourcePolicyUnchanged(storedPolicies.FirstOrDefault(p => p.Id == r.Id), r))
                 {
-                    if (await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true))
+                    if (await access.AddResourcePolicy(contextUserId, r, bypassIntegrityCheck: true))
                     {
                         result.ResourcePoliciesUpdated++;
                     }
@@ -832,7 +832,7 @@ namespace Certify.Models.Hub
                 if (!IsRoleUnchanged(storedRoles.FirstOrDefault(role => role.Id == r.Id), r))
                 {
                     // add roles and policy assignments to store
-                    if (await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true))
+                    if (await access.AddRole(contextUserId, r, bypassIntegrityCheck: true))
                     {
                         result.RolesUpdated++;
                     }
@@ -846,7 +846,7 @@ namespace Certify.Models.Hub
             // authorization reads the store, not the standard config, so confirm the update actually landed rather
             // than assuming it did. A partially applied update leaves assigned roles and access tokens working but
             // missing the actions the upgrade was supposed to grant them.
-            result.IntegrityProblems.AddRange(await GetStoredConfigIntegrityProblems(access, adminSvcPrincipal));
+            result.IntegrityProblems.AddRange(await GetStoredConfigIntegrityProblems(access, contextUserId));
 
             return result;
         }
@@ -995,7 +995,7 @@ namespace Certify.Models.Hub
         }
 
         /// <summary>
-        /// Id of the built-in admin security principal. Standard config is written to the store as this principal.
+        /// Id of the built-in admin security principal, created on first run.
         /// </summary>
         public const string AdminSecurityPrincipalId = "admin_01";
 
@@ -1014,13 +1014,15 @@ namespace Certify.Models.Hub
             // setup roles with policies
             var result = await UpdateStandardAccessConfig(access);
 
-            // setup standard security principals
+            // setup standard security principals. This acts as the system rather than as the built-in admin, so it
+            // still runs on a deployment which has removed the built-in admin in favour of its own administrators.
+            var contextUserId = StandardSecurityPrincipals.System;
 
             // admin user
             var adminSpId = AdminSecurityPrincipalId;
             var managedInstanceSpId = ManagedInstanceSecurityPrincipalId;
 
-            var users = await access.GetSecurityPrincipals(adminSpId) ?? [];
+            var users = await access.GetSecurityPrincipals(contextUserId) ?? [];
 
             // The default admin is only created when the store holds no security principals at all, i.e. a genuine
             // first run. Recreating it whenever this particular id is missing would resurrect, with the default
@@ -1038,27 +1040,20 @@ namespace Certify.Models.Hub
                     IsBuiltIn = true
                 };
 
-                if (!await access.AddSecurityPrincipal(adminSp.Id, adminSp, bypassIntegrityCheck: true))
+                if (!await access.AddSecurityPrincipal(contextUserId, adminSp, bypassIntegrityCheck: true))
                 {
                     result.Failures.Add($"The default admin security principal [{adminSpId}] could not be created.");
                     return result;
                 }
 
-                users = await access.GetSecurityPrincipals(adminSpId) ?? [];
+                users = await access.GetSecurityPrincipals(contextUserId) ?? [];
             }
 
-            if (!users.Any(u => u.Id == adminSpId))
+            if (users.Any(u => u.Id == adminSpId))
             {
-                // an established deployment which no longer holds the built-in admin. The remaining setup acts as
-                // that principal, so it cannot run, but the standard roles and policies above are already applied.
-                result.Failures.Add(
-                    $"The built-in admin security principal [{adminSpId}] is not present, so standard service principal and access token setup was skipped.");
-
-                return result;
+                // get assigned roles for admin and add the admin role if it is missing
+                _ = await EnsureAssignedRole(access, result, contextUserId, adminSpId, StandardRoles.Administrator.Id);
             }
-
-            // get assigned roles for admin and add the admin role if it is missing
-            _ = await EnsureAssignedRole(access, result, adminSpId, adminSpId, StandardRoles.Administrator.Id);
 
             // add managed instance service principal if not already present
             if (!users.Any(u => u.Id == managedInstanceSpId))
@@ -1072,7 +1067,7 @@ namespace Certify.Models.Hub
                     IsBuiltIn = true
                 };
 
-                if (!await access.AddSecurityPrincipal(adminSpId, managedInstanceServicePrincipal, bypassIntegrityCheck: true))
+                if (!await access.AddSecurityPrincipal(contextUserId, managedInstanceServicePrincipal, bypassIntegrityCheck: true))
                 {
                     result.Failures.Add($"The managed instance service principal [{managedInstanceSpId}] could not be created.");
                     return result;
@@ -1082,9 +1077,9 @@ namespace Certify.Models.Hub
             // The role assignment and joining token are checked on every startup rather than only when the principal
             // is first created, so an instance whose managed instance access was removed, or whose config was
             // restored without them, is repaired instead of failing later with no explanation.
-            var managedInstanceAssignedRole = await EnsureAssignedRole(access, result, adminSpId, managedInstanceSpId, StandardRoles.ManagedInstance.Id);
+            var managedInstanceAssignedRole = await EnsureAssignedRole(access, result, contextUserId, managedInstanceSpId, StandardRoles.ManagedInstance.Id);
 
-            var (joiningToken, joiningTokenIsNew) = await EnsureManagedInstanceJoiningToken(access, result, adminSpId, managedInstanceSpId, managedInstanceAssignedRole);
+            var (joiningToken, joiningTokenIsNew) = await EnsureManagedInstanceJoiningToken(access, result, contextUserId, managedInstanceSpId, managedInstanceAssignedRole);
 
             // if we don't have a stored credential as a client secret for the managed instance to join it's own hub, create one
             // direct instances don't really need this, but remote backends do so they can join back to their own hub.
@@ -1202,7 +1197,7 @@ namespace Certify.Models.Hub
                 ],
             };
 
-            if (!await access.AddAssignedAccessToken(contextUserId, assignedApiAccessToken))
+            if (!await access.AddAssignedAccessToken(contextUserId, assignedApiAccessToken, bypassIntegrityCheck: true))
             {
                 result.Failures.Add("The managed instance joining token could not be written to the store.");
                 return (null, false);
@@ -1242,7 +1237,7 @@ namespace Certify.Models.Hub
             // other id it still carries is the stale one being corrected, which the update would reject.
             existingAssignedToken.ScopedAssignedRoles = [scopedAssignedRole.Id];
 
-            var rescoped = await access.UpdateAssignedAccessToken(contextUserId, existingAssignedToken);
+            var rescoped = await access.UpdateAssignedAccessToken(contextUserId, existingAssignedToken, bypassIntegrityCheck: true);
 
             if (!rescoped.IsSuccess)
             {

@@ -402,7 +402,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
-        public async Task ConfigureStandardUsersAndRolesDoesNotRecreateADeletedBuiltInAdmin()
+        public async Task ConfigureStandardUsersAndRolesCompletesWithoutRecreatingADeletedBuiltInAdmin()
         {
             var creds = new TestCredentialsManager();
 
@@ -426,10 +426,20 @@ namespace Certify.Tests.Core.Unit.Tests
                 principals.Any(p => p.Id == AdminId),
                 "a deliberately removed built-in admin must not be recreated with the default password on the next restart");
 
-            Assert.IsNotEmpty(result.Failures, "skipping standard principal setup should be reported");
+            // setup acts as the system rather than the built-in admin, so the rest of it still has to complete
+            AssertNoProblems(result);
 
-            // the roles and policies themselves still have to be applied, they are what existing assignments resolve against
             Assert.AreEqual(Policies.GetStandardRoles().Count, (await _access.GetRoles(ownAdmin.Id)).Count, "standard roles should still be applied");
+
+            Assert.IsTrue(principals.Any(p => p.Id == AccessControlConfig.ManagedInstanceSecurityPrincipalId), "the managed instance service principal should be created");
+
+            var managedInstanceAssignment = (await _access.GetAssignedRoles(StandardSecurityPrincipals.System, AccessControlConfig.ManagedInstanceSecurityPrincipalId)).Single();
+            Assert.AreEqual(StandardRoles.ManagedInstance.Id, managedInstanceAssignment.RoleId);
+
+            var joiningToken = (await _access.GetAssignedAccessTokens(StandardSecurityPrincipals.System)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
+            CollectionAssert.AreEqual(new[] { managedInstanceAssignment.Id }, joiningToken.ScopedAssignedRoles, "the joining token should be scoped to the managed instance role assignment");
+
+            Assert.IsNotNull(await creds.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId), "the joining key credential should be stored");
         }
 
         #endregion
