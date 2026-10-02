@@ -50,102 +50,63 @@ namespace Certify.Server.Hub.Api.Services.Acme
         {
             _configStore = configStore;
             _acmeServerConfigPath = acmeServerConfigPath;
-
-            LoadSavedState();
         }
 
         /// <summary>
-        /// Loads the saved state from persistent storage and migrates file-based state to the database if it exists.
+        /// Migrates legacy file-based state into the config store. Each file is removed only once all of its entries
+        /// have been stored, so a failed migration is retried on the next start.
         /// </summary>
-        public void LoadSavedState()
-        {
-            // migrate file based state to database if exists
-            MigrateSavedState();
-        }
-
         public async Task MigrateSavedState()
         {
-            var accounts = new ConcurrentDictionary<string, AcmeAccount>();
-            var accountKeys = new ConcurrentDictionary<string, JsonWebKey>();
-            var consumedEab = new ConcurrentDictionary<string, string>();
-            LoadStateFromFile("accounts.json", accounts, removeExistingAfterRead: true);
-            LoadStateFromFile("account-keys.json", accountKeys, removeExistingAfterRead: true);
-            LoadStateFromFile("consumed-eab-keys.json", consumedEab, removeExistingAfterRead: true);
-
-            foreach (var acc in accounts)
+            await MigrateStateFile<AcmeAccount>("accounts.json", async (kid, account) =>
             {
-                var existing = await GetAccount(acc.Key);
-                if (existing == null)
+                if (await GetAccount(kid) == null)
                 {
-                    await StoreAcmeAccount(acc.Key, acc.Value);
+                    await StoreAcmeAccount(kid, account);
                 }
-            }
+            });
 
-            foreach (var key in accountKeys)
+            await MigrateStateFile<JsonWebKey>("account-keys.json", async (kid, key) =>
             {
-                var existing = await GetAccountKey(key.Key);
-                if (existing == null)
+                if (await GetAccountKey(kid) == null)
                 {
-                    await StoreAcmeAccountKey(key.Key, key.Value);
+                    await StoreAcmeAccountKey(kid, key);
                 }
-            }
+            });
 
-            foreach (var eab in consumedEab)
+            await MigrateStateFile<string>("consumed-eab-keys.json", async (keyId, consumed) =>
             {
-                if (await IsEabKeyConsumed(eab.Key))
+                if (!await IsEabKeyConsumed(keyId))
                 {
-                    await StoreAcmeConsumedEabKey(eab.Key, eab.Value);
+                    await StoreAcmeConsumedEabKey(keyId, consumed);
                 }
-            }
+            });
         }
 
-        public void SaveStateToFile<T>(string fileName, ConcurrentDictionary<string, T> data)
+        private async Task MigrateStateFile<T>(string fileName, Func<string, T, Task> storeItem)
         {
-            var settingsPath = EnvironmentUtil.EnsuredAppDataPath(_acmeServerConfigPath);
-            var filePath = Path.Join(settingsPath, fileName);
-            var json = System.Text.Json.JsonSerializer.Serialize(data);
-            System.IO.File.WriteAllText(filePath, json);
-        }
-
-        public void LoadStateFromFile<T>(string fileName, ConcurrentDictionary<string, T> targetDictionary, bool removeExistingAfterRead = false)
-        {
-            if (targetDictionary.Count > 0)
-            {
-                return;
-            }
-
-            var settingsPath = EnvironmentUtil.EnsuredAppDataPath(_acmeServerConfigPath);
-            var filePath = Path.Join(settingsPath, fileName);
+            var filePath = Path.Join(EnvironmentUtil.EnsuredAppDataPath(_acmeServerConfigPath), fileName);
 
             if (!System.IO.File.Exists(filePath))
             {
                 return;
             }
 
-            var json = System.IO.File.ReadAllText(filePath);
-            var data = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, T>>(json);
+            var json = await System.IO.File.ReadAllTextAsync(filePath);
+            var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, T>>(json);
 
-            if (data == null)
+            foreach (var item in data ?? [])
             {
-                return;
+                await storeItem(item.Key, item.Value);
             }
 
-            targetDictionary.Clear();
-            foreach (var item in data)
+            try
             {
-                targetDictionary.TryAdd(item.Key, item.Value);
+                System.IO.File.Delete(filePath);
             }
-
-            if (removeExistingAfterRead)
+            catch
             {
-                try
-                {
-                    System.IO.File.Delete(filePath);
-                }
-                catch
-                {
-                    // best effort
-                }
+                // best effort, migration skips entries already stored
             }
         }
 

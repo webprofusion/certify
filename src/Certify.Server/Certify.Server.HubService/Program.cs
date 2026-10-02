@@ -299,6 +299,7 @@ var acmeStore = new Certify.Datastore.SQLite.SQLiteConfigurationStore("acme-serv
 await acmeStore.PerformMaintenance();
 
 var acmeServerState = new AcmeServerConfig(acmeStore, "acme-server");
+await acmeServerState.MigrateSavedState();
 builder.Services.AddSingleton<AcmeServerConfig>(acmeServerState);
 builder.Services.AddAcmeServices();
 
