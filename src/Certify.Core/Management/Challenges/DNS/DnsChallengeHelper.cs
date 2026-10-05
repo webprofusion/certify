@@ -450,6 +450,13 @@ namespace Certify.Core.Management.Challenges
                 return sourceChallengeTXTRecordName;
             }
 
+            // a wildcard identifier is validated against its root domain record
+            var identifierKey = identifier?.Trim().ToLowerInvariant() ?? "";
+            if (identifierKey.StartsWith("*.", StringComparison.Ordinal))
+            {
+                identifierKey = identifierKey.Substring(2);
+            }
+
             var rules = challengeDelegationRule.Split(';');
             foreach (var r in rules)
             {
@@ -460,20 +467,24 @@ namespace Certify.Core.Management.Challenges
                     var ruleComponents = r.Split(':');
                     if (ruleComponents.Length == 2)
                     {
-                        var ruleSourceDomain = ruleComponents[0].ToLower().Trim();
-                        var ruleTargetDomain = ruleComponents[1].ToLower().Trim();
+                        var ruleSourceDomain = ruleComponents[0].ToLowerInvariant().Trim();
+                        var ruleTargetDomain = ruleComponents[1].ToLowerInvariant().Trim();
 
                         // if rule source domain matches our domain identifier, apply this rule
-                        if (identifier == ruleSourceDomain || (ruleSourceDomain.StartsWith("*.") && identifier.EndsWith(ruleSourceDomain.Replace("*.", ""))))
+                        if (IsChallengeDelegationSourceMatch(identifierKey, ruleSourceDomain))
                         {
-                            // if wildcard rule matches on both sides, substitute record name value, e.g.  _acme-challenge.www.[test.com] becomes _acme-challenge.www.[auth.example.com]
-
-                            if (ruleTargetDomain.StartsWith("*.") && identifier.EndsWith(ruleSourceDomain.Replace("*.", "")))
+                            if (ruleTargetDomain.StartsWith("*.", StringComparison.Ordinal))
                             {
-                                return sourceChallengeTXTRecordName.Replace(ruleSourceDomain.Replace("*.", ""), ruleTargetDomain.Replace("*.", ""));
+                                // wildcard target, swap the source domain suffix of the record name for the target domain,
+                                // e.g. _acme-challenge.www.[test.com] becomes _acme-challenge.www.[auth.example.com]
+                                var sourceDomain = TrimWildcard(ruleSourceDomain);
 
+                                if (sourceChallengeTXTRecordName.EndsWith(sourceDomain, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    return sourceChallengeTXTRecordName.Substring(0, sourceChallengeTXTRecordName.Length - sourceDomain.Length) + TrimWildcard(ruleTargetDomain);
+                                }
                             }
-                            else if (!ruleTargetDomain.StartsWith("*."))
+                            else
                             {
                                 // non wildcard substitution, all source variants point to same level
                                 // eg. _acme-challenge.[test.com] and _acme-challenge.[www.test.com] point directly to _acme-challenge.[auth.example.com]
@@ -488,6 +499,28 @@ namespace Certify.Core.Management.Challenges
             // no match, fallback to original
             return sourceChallengeTXTRecordName;
         }
+
+        /// <summary>
+        /// True if the delegation rule source matches the identifier. A *.domain source matches the domain itself and its subdomains at any depth.
+        /// </summary>
+        private static bool IsChallengeDelegationSourceMatch(string identifier, string ruleSourceDomain)
+        {
+            if (identifier == ruleSourceDomain)
+            {
+                return true;
+            }
+
+            if (!ruleSourceDomain.StartsWith("*.", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var sourceDomain = TrimWildcard(ruleSourceDomain);
+
+            return identifier == sourceDomain || identifier.EndsWith("." + sourceDomain, StringComparison.Ordinal);
+        }
+
+        private static string TrimWildcard(string domain) => domain.StartsWith("*.", StringComparison.Ordinal) ? domain.Substring(2) : domain;
 
         public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, CertIdentifierItem domain, string txtRecordName, string txtRecordValue)
         {

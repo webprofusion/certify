@@ -142,6 +142,34 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual("_acme-challenge.www.subdomain.auth.example.co.uk", result);
         }
 
+        [TestMethod, Description("Ensure wildcard delegation rules only match on a label boundary, at any depth")]
+        public void ChallengeDelegationRuleLabelBoundary()
+        {
+            var testRule = "*.test.com:*.auth.test.co.uk";
+
+            // a domain merely ending with the same characters is not a subdomain
+            var result = DnsChallengeHelper.ApplyChallengeDelegationRule("mytest.com", "_acme-challenge.mytest.com", testRule);
+            Assert.AreEqual("_acme-challenge.mytest.com", result);
+
+            result = DnsChallengeHelper.ApplyChallengeDelegationRule("www.mytest.com", "_acme-challenge.www.mytest.com", "*.test.com:auth.test.co.uk");
+            Assert.AreEqual("_acme-challenge.www.mytest.com", result);
+
+            // any depth of subdomain matches
+            result = DnsChallengeHelper.ApplyChallengeDelegationRule("a.b.c.test.com", "_acme-challenge.a.b.c.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.a.b.c.auth.test.co.uk", result);
+
+            // only the source domain suffix is substituted, not earlier repeats of it
+            result = DnsChallengeHelper.ApplyChallengeDelegationRule("test.com.test.com", "_acme-challenge.test.com.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.test.com.auth.test.co.uk", result);
+
+            // identifier case and wildcard identifiers are normalised
+            result = DnsChallengeHelper.ApplyChallengeDelegationRule("WWW.Test.com", "_acme-challenge.www.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.www.auth.test.co.uk", result);
+
+            result = DnsChallengeHelper.ApplyChallengeDelegationRule("*.www.test.com", "_acme-challenge.www.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.www.auth.test.co.uk", result);
+        }
+
         [TestMethod, Description("Ensure correct challenge config selected when rule is blank")]
         public void ChallengeDelegationRuleBlankRule()
         {
