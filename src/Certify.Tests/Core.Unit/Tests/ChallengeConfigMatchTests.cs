@@ -102,6 +102,49 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Should match default");
         }
 
+        [TestMethod, Description("Ensure any depth domain match rules select a challenge config, after more specific rules")]
+        public void AnyDepthChallengeConfigMatch()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "example.com",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                    {
+                        new CertRequestChallengeConfig { ChallengeType = "http-01", DomainMatch = null, ChallengeCredentialKey = "config-default" },
+                        new CertRequestChallengeConfig { ChallengeType = "dns-01", DomainMatch = "**.example.com", ChallengeCredentialKey = "config-anydepth" },
+                        new CertRequestChallengeConfig { ChallengeType = "dns-01", DomainMatch = "*.example.com", ChallengeCredentialKey = "config-wildcard" },
+                        new CertRequestChallengeConfig { ChallengeType = "dns-01", DomainMatch = "**.sub.example.com", ChallengeCredentialKey = "config-sub-anydepth" },
+                        new CertRequestChallengeConfig { ChallengeType = "dns-01", DomainMatch = "exact.a.b.example.com", ChallengeCredentialKey = "config-exact" },
+                    }
+                }
+            };
+
+            string Match(string identifier) => managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, identifier)).ChallengeCredentialKey;
+
+            // a first level wildcard rule is preferred over an any depth rule for the same domain
+            Assert.AreEqual("config-wildcard", Match("example.com"));
+            Assert.AreEqual("config-wildcard", Match("www.example.com"));
+            Assert.AreEqual("config-wildcard", Match("*.example.com"));
+
+            // deeper names fall through to the any depth rule
+            Assert.AreEqual("config-anydepth", Match("a.b.example.com"));
+            Assert.AreEqual("config-anydepth", Match("*.a.b.example.com"));
+
+            // a longer any depth rule is more specific than a shorter wildcard
+            Assert.AreEqual("config-sub-anydepth", Match("sub.example.com"));
+            Assert.AreEqual("config-sub-anydepth", Match("x.y.sub.example.com"));
+
+            // exact rules still win
+            Assert.AreEqual("config-exact", Match("exact.a.b.example.com"));
+
+            // label boundary is respected
+            Assert.AreEqual("config-default", Match("notexample.com"));
+            Assert.AreEqual("config-default", Match("a.b.notexample.com"));
+        }
+
         [TestMethod, Description("Ensure correct challenge config selected based on domain")]
         public void ChallengeDelegationRuleTests()
         {

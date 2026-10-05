@@ -326,7 +326,11 @@ namespace Certify.Models.Shared.Validation
 
             var normalized = rule.Trim();
 
-            if (normalized.StartsWith("*.", StringComparison.Ordinal))
+            if (normalized.StartsWith("**.", StringComparison.Ordinal))
+            {
+                normalized = normalized.Substring(3);
+            }
+            else if (normalized.StartsWith("*.", StringComparison.Ordinal))
             {
                 normalized = normalized.Substring(2);
             }

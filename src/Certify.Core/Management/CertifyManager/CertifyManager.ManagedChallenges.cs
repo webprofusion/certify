@@ -244,8 +244,8 @@ namespace Certify.Management
                 var rules = DescribeDomainMatchRules(accessible);
 
                 var detail = unsatisfied.Count == 1
-                    ? $"No accessible managed challenge matches identifier '{unsatisfied[0]}'. Accessible Domain Match rules: {rules}. Note that '*.example.com' matches example.com and one subdomain level only (not deeper subdomains)."
-                    : $"No accessible managed challenge matches identifiers: {string.Join(", ", unsatisfied)}. Accessible Domain Match rules: {rules}. Note that '*.example.com' matches example.com and one subdomain level only (not deeper subdomains).";
+                    ? $"No accessible managed challenge matches identifier '{unsatisfied[0]}'. Accessible Domain Match rules: {rules}. Note that '*.example.com' matches example.com and one subdomain level only, use '**.example.com' to match subdomains at any depth."
+                    : $"No accessible managed challenge matches identifiers: {string.Join(", ", unsatisfied)}. Accessible Domain Match rules: {rules}. Note that '*.example.com' matches example.com and one subdomain level only, use '**.example.com' to match subdomains at any depth.";
 
                 _serviceLog?.Warning(
                     "Managed challenge identifier matching failed for principal {principalId} against {count} accessible challenge(s). Unsatisfied: {identifiers}. Accessible Domain Match rules: {rules}",

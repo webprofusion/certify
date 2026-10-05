@@ -12,11 +12,20 @@ namespace Certify.Models
     /// <list type="bullet">
     /// <item><description><c>domain.com</c> - matches that exact domain</description></item>
     /// <item><description><c>*.domain.com</c> - matches the domain and its first level subdomains</description></item>
+    /// <item><description><c>**.domain.com</c> - matches the domain and its subdomains at any depth</description></item>
     /// </list>
     /// Multiple rules can be supplied in one value, separated by semicolons (commas are also tolerated).
     /// </summary>
     public static class DomainMatchRules
     {
+        private const string WildcardPrefix = "*.";
+        private const string AnyDepthPrefix = "**.";
+
+        /// <summary>
+        /// True when the rule is an any depth (**.domain.com) rule.
+        /// </summary>
+        public static bool IsAnyDepthRule(string? rule) => rule?.Trim().StartsWith(AnyDepthPrefix, StringComparison.Ordinal) == true;
+
         /// <summary>
         /// Split a domain match rule value into its individual normalised rules.
         /// </summary>
@@ -71,8 +80,7 @@ namespace Certify.Models
                 return true;
             }
 
-            return rules.Any(r => r.StartsWith("*.", StringComparison.Ordinal)
-                && ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { r }, identifierKey));
+            return rules.Any(r => IsWildcardRuleMatch(r, identifierKey));
         }
 
         /// <summary>
@@ -135,18 +143,47 @@ namespace Certify.Models
                 return exact;
             }
 
-            // most specific wildcard rule first (longest rule wins)
+            // most specific wildcard rule first (longest domain wins, then a first level rule over an any depth rule)
             foreach (var wildcard in itemsPerRule.Keys
-                .Where(k => k.StartsWith("*.", StringComparison.Ordinal))
-                .OrderByDescending(l => l.Length))
+                .Where(k => k.StartsWith(WildcardPrefix, StringComparison.Ordinal) || k.StartsWith(AnyDepthPrefix, StringComparison.Ordinal))
+                .OrderByDescending(k => GetWildcardRuleDomain(k).Length)
+                .ThenBy(k => IsAnyDepthRule(k) ? 1 : 0))
             {
-                if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, identifierKey))
+                if (IsWildcardRuleMatch(wildcard, identifierKey))
                 {
                     return itemsPerRule[wildcard];
                 }
             }
 
             return fallback;
+        }
+
+        /// <summary>
+        /// True when a wildcard rule matches the (normalised) identifier. *.domain.com matches the domain and its first level
+        /// subdomains, **.domain.com matches the domain and its subdomains at any depth.
+        /// </summary>
+        private static bool IsWildcardRuleMatch(string rule, string identifierKey)
+        {
+            if (rule.StartsWith(AnyDepthPrefix, StringComparison.Ordinal))
+            {
+                var domain = GetWildcardRuleDomain(rule);
+
+                return domain.Length > 0
+                    && (identifierKey == domain || identifierKey.EndsWith("." + domain, StringComparison.Ordinal));
+            }
+
+            return rule.StartsWith(WildcardPrefix, StringComparison.Ordinal)
+                && ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { rule }, identifierKey);
+        }
+
+        private static string GetWildcardRuleDomain(string rule)
+        {
+            if (rule.StartsWith(AnyDepthPrefix, StringComparison.Ordinal))
+            {
+                return rule.Substring(AnyDepthPrefix.Length);
+            }
+
+            return rule.StartsWith(WildcardPrefix, StringComparison.Ordinal) ? rule.Substring(WildcardPrefix.Length) : rule;
         }
 
         /// <summary>

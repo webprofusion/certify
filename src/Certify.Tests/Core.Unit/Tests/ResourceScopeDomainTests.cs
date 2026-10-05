@@ -128,6 +128,37 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        [Description("An any depth rule matches the root domain and its subdomains at every level")]
+        public void AnyDepthRuleMatchesAllLevels()
+        {
+            Assert.IsTrue(IsPermitted("example.com", "**.example.com"));
+            Assert.IsTrue(IsPermitted("www.example.com", "**.example.com"));
+            Assert.IsTrue(IsPermitted("a.b.c.example.com", "**.example.com"));
+            Assert.IsTrue(IsPermitted("A.B.Example.com", "**.EXAMPLE.com"));
+            Assert.IsTrue(IsPermitted("a.b.other.com", "example.com; **.other.com"));
+
+            // only on a label boundary
+            Assert.IsFalse(IsPermitted("notexample.com", "**.example.com"));
+            Assert.IsFalse(IsPermitted("a.notexample.com", "**.example.com"));
+            Assert.IsFalse(IsPermitted("example.com.evil.net", "**.example.com"));
+
+            // a bare any depth prefix is not a rule for everything
+            Assert.IsFalse(IsPermitted("example.com", "**."));
+        }
+
+        [TestMethod]
+        [Description("An any depth rule grants wildcard identifiers within its domain")]
+        public void AnyDepthRuleGrantsWildcardIdentifiers()
+        {
+            Assert.IsTrue(IsPermitted("*.example.com", "**.example.com"));
+            Assert.IsTrue(IsPermitted("*.sub.example.com", "**.example.com"));
+            Assert.IsTrue(IsPermitted("*.a.b.example.com", "other.com;**.example.com"));
+
+            Assert.IsFalse(IsPermitted("*.example.com", "**.sub.example.com"));
+            Assert.IsFalse(IsPermitted("*.notexample.com", "**.example.com"));
+        }
+
+        [TestMethod]
         [Description("Malformed identifiers are rejected rather than matched loosely")]
         public void MalformedIdentifiersDenied()
         {
@@ -195,11 +226,11 @@ namespace Certify.Core.Tests.Unit
         [Description("Domain rule evaluation agrees with the shared DomainMatchRules implementation")]
         public void MatchesSharedDomainMatchRules()
         {
-            string[] rules = ["*.example.com", "specific.other.com", "a.com;*.b.com"];
+            string[] rules = ["*.example.com", "**.example.com", "specific.other.com", "a.com;*.b.com;**.c.com"];
             string[] identifiers =
             [
                 "example.com", "www.example.com", "a.b.example.com", "specific.other.com",
-                "other.com", "a.com", "sub.b.com", "b.com", "unrelated.net"
+                "other.com", "a.com", "sub.b.com", "b.com", "unrelated.net", "c.com", "x.y.c.com", "notc.com"
             ];
 
             foreach (var rule in rules)

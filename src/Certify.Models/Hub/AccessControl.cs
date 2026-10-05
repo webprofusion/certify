@@ -310,7 +310,7 @@ namespace Certify.Models.Hub
         /// check is skipped (unrestricted).
         ///
         /// Each domain resource identifier is treated as a Domain Match rule and evaluated by the shared
-        /// <see cref="DomainMatchRules"/> implementation, so wildcard rules (*.example.com), multiple rules
+        /// <see cref="DomainMatchRules"/> implementation, so wildcard rules (*.example.com, **.example.com), multiple rules
         /// in one value and case insensitivity all behave as they do elsewhere in the product.
         /// </summary>
         public static bool IsIdentifierPermittedByDomainRestrictions(
@@ -345,8 +345,9 @@ namespace Certify.Models.Hub
 
         /// <summary>
         /// True when the identifier is permitted by at least one of the given Domain Match rules.
-        /// A wildcard identifier (e.g. *.example.com) must be granted by an explicit wildcard rule, as a
-        /// rule for the root domain alone does not imply authority over all of its subdomains.
+        /// A wildcard identifier (e.g. *.example.com) must be granted by an explicit wildcard rule, or by an any depth
+        /// rule (**.example.com) covering its domain, as a rule for the root domain alone does not imply authority over
+        /// all of its subdomains.
         /// </summary>
         public static bool IsIdentifierPermittedByDomainRules(IEnumerable<string>? domainRules, string? identifier)
         {
@@ -361,8 +362,10 @@ namespace Certify.Models.Hub
 
             if (requested.StartsWith("*", StringComparison.Ordinal))
             {
-                // only an explicit wildcard rule grants a wildcard identifier
-                return rules.Any(r => DomainMatchRules.ParseRules(r).Contains(requested));
+                // only an explicit wildcard rule, or an any depth rule covering the wildcard's domain, grants a wildcard identifier
+                return rules
+                    .SelectMany(DomainMatchRules.ParseRules)
+                    .Any(r => r == requested || (DomainMatchRules.IsAnyDepthRule(r) && DomainMatchRules.IsMatch(r, requested)));
             }
 
             return rules.Any(r => DomainMatchRules.IsMatch(r, identifier));
