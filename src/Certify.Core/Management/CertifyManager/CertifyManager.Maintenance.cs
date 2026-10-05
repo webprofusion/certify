@@ -805,20 +805,24 @@ namespace Certify.Management
 
                     if (mode == CertificateCleanupMode.FullCleanup)
                     {
+                        var inUseCertificatePaths = managedCerts
+                            .Where(c => !string.IsNullOrWhiteSpace(c.CertificatePath))
+                            .Select(c => c.CertificatePath)
+                            .ToList();
 
                         // cleanup old pfx files in asset store(s), if any
                         var assetPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), "certes", "assets");
                         if (Directory.Exists(assetPath))
                         {
                             var ext = new List<string> { ".pfx" };
-                            DeleteOldCertificateFiles(assetPath, ext);
+                            DeleteOldCertificateFiles(assetPath, ext, inUseCertificatePaths, DateTimeOffset.UtcNow.AddMonths(-12));
                         }
 
                         assetPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), "assets");
                         if (Directory.Exists(assetPath))
                         {
                             var ext = new List<string> { ".pfx", ".key", ".crt", ".pem" };
-                            DeleteOldCertificateFiles(assetPath, ext);
+                            DeleteOldCertificateFiles(assetPath, ext, inUseCertificatePaths, DateTimeOffset.UtcNow.AddMonths(-12));
                         }
                     }
 
@@ -841,23 +845,31 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Perform cleanup of old certificate asset files
+        /// Perform cleanup of old certificate asset files: those created before the cutoff, other than the current
+        /// certificate of a managed certificate and the files alongside it with the same name. A subscription rewrites
+        /// one file in place on each update, which keeps its original creation time, so its age alone does not say it
+        /// is no longer in use.
         /// </summary>
-        /// <param name="assetPath"></param>
-        /// <param name="ext"></param>
-        private static void DeleteOldCertificateFiles(string assetPath, List<string> ext)
+        /// <param name="assetPath">folder to clean up, including subfolders</param>
+        /// <param name="ext">file extensions to clean up</param>
+        /// <param name="inUseCertificatePaths">the certificate paths of all managed certificates</param>
+        /// <param name="createdBefore">files created before this are removed</param>
+        internal static void DeleteOldCertificateFiles(string assetPath, List<string> ext, IEnumerable<string> inUseCertificatePaths, DateTimeOffset createdBefore)
         {
-            // performs a simple delete of certificate files under the assets path where the file creation time is more than 1 year ago
+            var inUseFiles = new HashSet<string>(
+                inUseCertificatePaths.Select(p => Path.ChangeExtension(Path.GetFullPath(p), null)),
+                StringComparer.OrdinalIgnoreCase);
 
             var allFiles = Directory.GetFiles(assetPath, "*.*", SearchOption.AllDirectories)
-                 .Where(s => ext.Contains(Path.GetExtension(s)));
+                 .Where(s => ext.Contains(Path.GetExtension(s)))
+                 .Where(s => !inUseFiles.Contains(Path.ChangeExtension(Path.GetFullPath(s), null)));
 
             foreach (var f in allFiles)
             {
                 try
                 {
                     var createdAt = System.IO.File.GetCreationTime(f);
-                    if (createdAt < DateTimeOffset.UtcNow.AddMonths(-12))
+                    if (createdAt < createdBefore)
                     {
                         //remove old file
                         System.IO.File.Delete(f);
