@@ -1,4 +1,5 @@
-﻿using Certify.Models.Hub;
+﻿using Certify.Models;
+using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +60,7 @@ namespace Certify.Server.Hub.Api.Controllers
             var results = await CheckSubscribableManagedCerts(
                 matchingInstance.SecurityPrincipalId,
                 allKnownInstances,
-                excludeInstanceId: matchingInstance.InstanceId);
+                ownInstanceId: matchingInstance.InstanceId);
 
             return Ok(results);
         }
@@ -108,7 +109,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var allKnownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
 
-            // where the principal is a managed instance, its own items are excluded as they would be when it pulls.
+            // where the principal is a managed instance, its own items are treated as they would be when it pulls.
             // A user, application or group principal has no instance of its own, so nothing is excluded for them.
             var ownInstanceId = allKnownInstances.FirstOrDefault(c => c.SecurityPrincipalId == id)?.InstanceId;
 
@@ -122,16 +123,17 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <param name="securityPrincipalId">the principal whose access is being evaluated</param>
         /// <param name="allKnownInstances">the hub's managed instances, used to title the source of each item</param>
-        /// <param name="excludeInstanceId">
+        /// <param name="ownInstanceId">
         /// the principal's own managed instance, where it has one. Those items are already held there, so an instance
-        /// is never offered its own certificates back. Principal types other than a managed instance have no such
-        /// instance and nothing is excluded for them.
+        /// is not offered its own certificates back, unless it is the hub and the hub is allowed to subscribe to its
+        /// own certificates. Principal types other than a managed instance have no such instance and nothing is
+        /// excluded for them.
         /// </param>
         /// <param name="scopedAssignedRoles">the role assignments to narrow to, when evaluating access as an API token</param>
         private async Task<List<ManagedCertificateSummary>> CheckSubscribableManagedCerts(
             string? securityPrincipalId,
             ICollection<ManagedInstanceInfo> allKnownInstances,
-            string? excludeInstanceId = null,
+            string? ownInstanceId = null,
             ICollection<string>? scopedAssignedRoles = null)
         {
             // check which items we can download, TODO: optimize based on tagged items
@@ -148,9 +150,13 @@ namespace Certify.Server.Hub.Api.Controllers
             // download would be allowed: the cert's tags and every identifier on it within a single role assignment
             var tagsByItemId = await HubItemTags.GetAllItemTags(_client, TaggedItemTypes.ManagedCertificate);
 
+            var includeOwnItems = await IsHubSelfSubscriptionAllowed(ownInstanceId);
+
             foreach (var sourceItems in allInstanceItems.Values.ToList())
             {
-                if (!string.IsNullOrWhiteSpace(excludeInstanceId) && sourceItems.InstanceId == excludeInstanceId)
+                var isOwnInstance = !string.IsNullOrWhiteSpace(ownInstanceId) && sourceItems.InstanceId == ownInstanceId;
+
+                if (isOwnInstance && !includeOwnItems)
                 {
                     //skip items from the principal's own instance
                     continue;
@@ -160,6 +166,13 @@ namespace Certify.Server.Hub.Api.Controllers
                 foreach (var cert in sourceItems.Items)
                 {
                     if (string.IsNullOrWhiteSpace(cert.Id))
+                    {
+                        continue;
+                    }
+
+                    // the hub's own subscriptions are not offered back to it, which would subscribe an item to itself
+                    // or to another copy of the same source
+                    if (isOwnInstance && ManagedCertificate.IsExternalSourceItemType(cert.ItemType))
                     {
                         continue;
                     }
@@ -194,6 +207,22 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Whether the given instance is the hub and the hub is allowed to subscribe to its own certificates, so that
+        /// one certificate can have several subscriptions on the hub with deployment tasks split between them
+        /// </summary>
+        private async Task<bool> IsHubSelfSubscriptionAllowed(string? instanceId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) || instanceId != _mgmtStateProvider.GetManagementHubInstanceId())
+            {
+                return false;
+            }
+
+            var settings = await _client.GetHubSettings(SystemAuthContext);
+
+            return settings?.Subscriptions?.AllowHubSelfSubscription == true;
         }
     }
 }

@@ -34,6 +34,24 @@ namespace Certify.Models.Hub
         /// Settings for the hub activity history
         /// </summary>
         public ActivitySettings Activity { get; set; } = new ActivitySettings();
+
+        /// <summary>
+        /// Settings for managed certificate subscriptions
+        /// </summary>
+        public SubscriptionSettings Subscriptions { get; set; } = new SubscriptionSettings();
+    }
+
+    /// <summary>
+    /// Settings for managed certificate subscriptions
+    /// </summary>
+    public class SubscriptionSettings
+    {
+        /// <summary>
+        /// If true, the hub's own instance may subscribe to the managed certificates it holds itself, so that one
+        /// certificate can have several subscriptions on the hub with deployment tasks split between them.
+        /// Default is false, where an instance is never offered its own certificates.
+        /// </summary>
+        public bool AllowHubSelfSubscription { get; set; }
     }
 
     /// <summary>

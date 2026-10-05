@@ -877,6 +877,11 @@ namespace Certify.Management
                 };
             }
 
+            if (_isDirectMgmtHubBackend && sourceInstanceId == _serverConfig?.HubAssignedInstanceId)
+            {
+                return await FetchFromHubInstance(item, sourceManagedCertificateId, sourceConfig, ignoreCurrentVersion);
+            }
+
             var hubApiBase = sourceConfig.SourceConnection?.Trim().TrimEnd('/')
                              ?? _serverConfig?.ManagementServerHubAPI?.Trim().TrimEnd('/');
 
@@ -959,6 +964,55 @@ namespace Certify.Management
                     Message = $"Unexpected error retrieving certificate from management hub ({hubApiBase}): {ex.Message}"
                 };
             }
+        }
+
+        /// <summary>
+        /// Fetch a certificate the hub holds itself, for a subscription on the hub. The hub's own instance is not joined
+        /// over the hub API, so the certificate is exported in-process rather than downloaded.
+        /// </summary>
+        private async Task<ExternalCertificateFetchResult> FetchFromHubInstance(ManagedCertificate item, string sourceManagedCertificateId, ExternalCertificateSubscription sourceConfig, bool ignoreCurrentVersion)
+        {
+            if (sourceManagedCertificateId == item.Id)
+            {
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = false,
+                    Message = "A subscription cannot use itself as its source certificate."
+                };
+            }
+
+            var hubSettings = await GetHubSettings();
+            if (hubSettings.Subscriptions?.AllowHubSelfSubscription != true)
+            {
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = false,
+                    Message = "Subscribing to the hub's own managed certificates is not enabled. Enable it under Settings > Hub > General."
+                };
+            }
+
+            var source = await GetManagedCertificate(sourceManagedCertificateId);
+            if (source == null)
+            {
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = false,
+                    Message = "The source managed certificate was not found on the hub."
+                };
+            }
+
+            var export = await ExportCertificate(sourceManagedCertificateId, "pfx");
+            if (!export.IsSuccess || export.Result == null)
+            {
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = false,
+                    Message = export.Message ?? "The source certificate could not be exported."
+                };
+            }
+
+            // versioned by thumbprint, as the hub's download endpoint versions it with its ETag
+            return ResolveFetchedCertificate(export.Result, source.CertificateThumbprintHash?.ToLowerInvariant(), sourceConfig.LastSourceVersion, ignoreCurrentVersion);
         }
 
         /// <summary>

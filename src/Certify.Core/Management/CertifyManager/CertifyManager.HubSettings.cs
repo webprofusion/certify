@@ -36,6 +36,7 @@ namespace Certify.Management
             settings.ManagedChallenge ??= new ManagedChallengeSettings();
             settings.ManagedAcme ??= new ManagedAcmeSettings();
             settings.Activity ??= new ActivitySettings();
+            settings.Subscriptions ??= new SubscriptionSettings();
 
             _cachedHubSettings = settings;
 
@@ -57,6 +58,7 @@ namespace Certify.Management
             settings.ManagedChallenge ??= new ManagedChallengeSettings();
             settings.ManagedAcme ??= new ManagedAcmeSettings();
             settings.Activity ??= new ActivitySettings();
+            settings.Subscriptions ??= new SubscriptionSettings();
 
             try
             {

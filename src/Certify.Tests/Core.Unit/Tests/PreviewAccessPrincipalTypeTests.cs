@@ -30,7 +30,8 @@ namespace Certify.Core.Tests.Unit
     /// access at all - regardless of the roles they actually held.
     ///
     /// The one thing that is specific to a managed instance is that its own items are left out, because it already
-    /// holds them locally and would not subscribe to them.
+    /// holds them locally and would not subscribe to them - unless it is the hub and the hub settings allow it to
+    /// subscribe to its own certificates.
     /// </summary>
     [TestClass]
     public class PreviewAccessPrincipalTypeTests
@@ -101,6 +102,45 @@ namespace Certify.Core.Tests.Unit
                 "every certificate is evaluated against the role assignments the token is scoped to");
         }
 
+        [TestMethod]
+        [Description("The hub's instance is offered its own certificates when hub self subscription is allowed, but not its own subscriptions")]
+        public async Task HubInstancePrincipal_SelfSubscriptionAllowed_IncludesItsOwnCertificates()
+        {
+            var fixture = new Fixture { HubInstanceId = OwnInstanceId, AllowHubSelfSubscription = true, OwnInstanceHoldsSubscription = true };
+            var controller = fixture.CreateController();
+
+            var result = await controller.GetSubscribableManagedCertificatesBySecurityPrincipal(InstancePrincipalId);
+
+            CollectionAssert.AreEquivalent(
+                new[] { "cert-own-instance", "cert-other-instance" },
+                fixture.Items(result).Select(i => i.Id).ToList(),
+                "the hub can subscribe to its own certificates, but not to a subscription it already holds");
+        }
+
+        [TestMethod]
+        [Description("The hub's instance is not offered its own certificates unless hub self subscription is allowed")]
+        public async Task HubInstancePrincipal_SelfSubscriptionNotAllowed_ExcludesItsOwnItems()
+        {
+            var fixture = new Fixture { HubInstanceId = OwnInstanceId, AllowHubSelfSubscription = false };
+            var controller = fixture.CreateController();
+
+            var result = await controller.GetSubscribableManagedCertificatesBySecurityPrincipal(InstancePrincipalId);
+
+            CollectionAssert.AreEquivalent(new[] { "cert-other-instance" }, fixture.Items(result).Select(i => i.Id).ToList());
+        }
+
+        [TestMethod]
+        [Description("Allowing hub self subscription does not offer any other managed instance its own certificates")]
+        public async Task ManagedInstancePrincipal_HubSelfSubscriptionAllowed_StillExcludesItsOwnItems()
+        {
+            var fixture = new Fixture { HubInstanceId = OtherInstanceId, AllowHubSelfSubscription = true };
+            var controller = fixture.CreateController();
+
+            var result = await controller.GetSubscribableManagedCertificatesBySecurityPrincipal(InstancePrincipalId);
+
+            CollectionAssert.AreEquivalent(new[] { "cert-other-instance" }, fixture.Items(result).Select(i => i.Id).ToList());
+        }
+
         #region Fixture
 
         private sealed class Fixture
@@ -110,6 +150,15 @@ namespace Certify.Core.Tests.Unit
 
             /// <summary>Whether the previewed principal's roles permit downloading the certificates.</summary>
             public bool GrantCertificateAccess { get; init; } = true;
+
+            /// <summary>The instance which is the hub's own, if any.</summary>
+            public string? HubInstanceId { get; init; }
+
+            /// <summary>Whether the hub settings allow the hub to subscribe to its own certificates.</summary>
+            public bool AllowHubSelfSubscription { get; init; }
+
+            /// <summary>Whether the own instance also holds a subscription item, alongside its certificate.</summary>
+            public bool OwnInstanceHoldsSubscription { get; init; }
 
             /// <summary>The certificate download checks the endpoint made, in order.</summary>
             public List<AccessCheck> CertificateChecks { get; } = [];
@@ -171,8 +220,12 @@ namespace Certify.Core.Tests.Unit
                 client.Setup(c => c.GetHubItemTags(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<AuthContext>()))
                     .ReturnsAsync(new List<TagSummary>());
 
+                client.Setup(c => c.GetHubSettings(It.IsAny<AuthContext>()))
+                    .ReturnsAsync(new HubSettings { Subscriptions = new SubscriptionSettings { AllowHubSelfSubscription = AllowHubSelfSubscription } });
+
                 var stateProvider = new Mock<IInstanceManagementStateProvider>();
                 stateProvider.Setup(s => s.GetManagedInstanceItems()).Returns(ManagedItems());
+                stateProvider.Setup(s => s.GetManagementHubInstanceId()).Returns(HubInstanceId ?? string.Empty);
 
                 var mgmtApi = new ManagementAPI(
                     stateProvider.Object,
@@ -189,14 +242,23 @@ namespace Certify.Core.Tests.Unit
             /// <summary>
             /// One certificate held by the managed instance principal's own instance, and one held elsewhere.
             /// </summary>
-            private static ConcurrentDictionary<string, ManagedInstanceItems> ManagedItems()
+            private ConcurrentDictionary<string, ManagedInstanceItems> ManagedItems()
             {
                 var items = new ConcurrentDictionary<string, ManagedInstanceItems>();
+
+                List<ManagedCertificate> ownItems = [Certificate("cert-own-instance", OwnInstanceId, "own.example.com")];
+
+                if (OwnInstanceHoldsSubscription)
+                {
+                    var subscription = Certificate("sub-own-instance", OwnInstanceId, "own.example.com");
+                    subscription.ItemType = ManagedCertificateType.SSL_ExternalSubscription;
+                    ownItems.Add(subscription);
+                }
 
                 items[OwnInstanceId] = new ManagedInstanceItems
                 {
                     InstanceId = OwnInstanceId,
-                    Items = [Certificate("cert-own-instance", OwnInstanceId, "own.example.com")]
+                    Items = ownItems
                 };
 
                 items[OtherInstanceId] = new ManagedInstanceItems
