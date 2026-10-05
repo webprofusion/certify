@@ -84,6 +84,12 @@ namespace Certify.Models.Hub
 
         public const string Reconnect = "Reconnect";
         public const string RejoinManagementHub = "RejoinManagementHub";
+
+        /// <summary>
+        /// Sent to an instance being removed from the hub: it forgets its stored hub joining credentials and hub
+        /// address, so it does not reconnect and register itself again, then disconnects once it has replied.
+        /// </summary>
+        public const string LeaveManagementHub = "LeaveManagementHub";
         public const string RefreshExternalManagedCertificates = "RefreshExternalManagedCertificates";
 
         /// <summary>

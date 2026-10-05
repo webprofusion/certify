@@ -149,12 +149,27 @@ namespace Certify.Server.HubService.Services
             // the instance's title is read while it is still known
             var title = activity != null ? await activity.GetInstanceTitleAsync(id) : null;
 
+            // the instance forgets its joining credentials before its registration is removed, otherwise it would
+            // reconnect with them and the hub would register it again
+            var mgmtApi = _services?.GetService<Certify.Server.Hub.Api.Services.ManagementAPI>();
+            var leaveResult = mgmtApi != null ? await mgmtApi.CommandManagedInstanceToLeaveHub(id) : null;
+
             var result = await _managedInstanceController(authContext).Remove(id);
 
             if (result?.IsSuccess == true && activity != null)
             {
                 activity.NoteInstanceTitle(id, title);
                 await activity.InstanceRemovedAsync(id, authContext);
+            }
+
+            if (result?.IsSuccess == true && leaveResult != null && (!leaveResult.IsSuccess || leaveResult.IsWarning))
+            {
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    IsWarning = true,
+                    Message = $"Managed instance removed from the hub. {leaveResult.Message}"
+                };
             }
 
             return result!;

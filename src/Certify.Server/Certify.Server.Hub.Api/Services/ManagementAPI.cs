@@ -222,6 +222,51 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// Command a managed instance which is being removed from the hub to forget its hub joining credentials, so it
+        /// does not reconnect and register itself again. Only a connected instance can be told.
+        /// </summary>
+        public async Task<ActionResult> CommandManagedInstanceToLeaveHub(string instanceId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) || string.Equals(instanceId, _mgmtStateProvider.GetManagementHubInstanceId(), StringComparison.Ordinal))
+            {
+                return new ActionResult("The integrated management hub instance does not hold hub joining credentials.", true);
+            }
+
+            if (_mgmtStateProvider.GetConnectionIdForInstance(instanceId) == null)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "The instance is not connected, so it could not be told to forget its hub joining credentials and will register with the hub again when it next connects."
+                };
+            }
+
+            try
+            {
+                var result = await PerformInstanceCommandTaskWithResult<ActionResult>(instanceId, [], ManagementHubCommands.LeaveManagementHub, TimeSpan.FromSeconds(15));
+
+                return result ?? new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "The instance did not confirm it has forgotten its hub joining credentials (it may need to be updated), so it may register with the hub again."
+                };
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Failed to send leave hub command to instance {instanceId}.", instanceId);
+
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = $"The instance could not be told to forget its hub joining credentials: {ex.Message}"
+                };
+            }
+        }
+
+        /// <summary>
         /// Set or clear the key a managed instance signs its requests with (the hash of its request auth secret). Clearing
         /// it means the instance is issued a new secret when it next checks in.
         /// </summary>
@@ -283,8 +328,9 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="cmd">The command request to send.</param>
+        /// <param name="timeout">How long to wait for a remote instance to respond, the default wait if not given.</param>
         /// <returns>An <see cref="InstanceCommandResult"/> that contains the result of the command if available.</returns>
-        private async Task<InstanceCommandResult?> GetCommandResult(string instanceId, InstanceCommandRequest cmd)
+        private async Task<InstanceCommandResult?> GetCommandResult(string instanceId, InstanceCommandRequest cmd, TimeSpan? timeout = null)
         {
             if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
             {
@@ -303,7 +349,7 @@ namespace Certify.Server.Hub.Api.Services
 
                 _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
                 await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
-                return await _mgmtStateProvider.ConsumeAwaitedCommandResult(cmd);
+                return await _mgmtStateProvider.ConsumeAwaitedCommandResult(cmd, timeout);
             }
         }
 
@@ -396,15 +442,16 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="args">The key value pair arguments to send with the command.</param>
         /// <param name="commandType">The command type identifier.</param>
+        /// <param name="timeout">How long to wait for a remote instance to respond, the default wait if not given.</param>
         /// <returns>The deserialized result as type <typeparamref name="T"/> if available; otherwise, default.</returns>
-        private async Task<T?> PerformInstanceCommandTaskWithResult<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType)
+        private async Task<T?> PerformInstanceCommandTaskWithResult<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType, TimeSpan? timeout = null)
         {
             var cmd = new InstanceCommandRequest(commandType, args)
             {
                 IsResultAwaited = true
             };
 
-            var result = await GetCommandResult(instanceId, cmd);
+            var result = await GetCommandResult(instanceId, cmd, timeout);
 
             if (result?.Value != null)
             {

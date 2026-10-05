@@ -30,8 +30,10 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <summary>
         /// Wait for a command result to be available
         /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="timeout">how long to wait for the result, 5 seconds if not given</param>
         /// <returns></returns>
-        Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd);
+        Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd, TimeSpan? timeout = null);
         void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
         IEnumerable<string> GetInstancesDueRefresh(int minutes);
         ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null);
@@ -276,15 +278,15 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// Wait for a command result to be available
         /// </summary>
         /// <param name="cmd"></param>
+        /// <param name="timeout">how long to wait for the result, 5 seconds if not given</param>
         /// <returns></returns>
-        public async Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd)
+        public async Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd, TimeSpan? timeout = null)
         {
             _logger.LogDebug("[ConsumeAwaitedCommandResult] Waiting for command result {commandId}..", cmd.CommandId);
-            var attempts = 50;
+            var giveUpAt = DateTimeOffset.UtcNow + (timeout ?? TimeSpan.FromSeconds(5));
 
-            while (attempts > 0 && !_awaitedCommandResults.TryGetValue(cmd.CommandId, out _))
+            while (DateTimeOffset.UtcNow < giveUpAt && !_awaitedCommandResults.TryGetValue(cmd.CommandId, out _))
             {
-                attempts--;
                 await Task.Delay(100);
             }
 

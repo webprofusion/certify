@@ -143,6 +143,92 @@ namespace Certify.Tests.Server.Core.Unit
             manager.Verify(x => x.PerformHubCommandWithResult(It.Is<InstanceCommandRequest>(cmd => cmd.CommandType == ManagementHubCommands.RefreshExternalManagedCertificates)), Times.Once);
         }
 
+        [TestMethod]
+        public async Task CommandManagedInstanceToLeaveHub_ReturnsWarning_WhenInstanceIsNotConnected()
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                CreateManagerMock().Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.CommandManagedInstanceToLeaveHub("remote-1");
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.IsTrue(result.IsWarning);
+            hubClients.Verify(x => x.Client(It.IsAny<string>()), Times.Never);
+        }
+
+        [TestMethod]
+        public async Task CommandManagedInstanceToLeaveHub_SendsLeaveCommandAndReturnsInstanceResult()
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetConnectionIdForInstance("remote-1")).Returns("conn-1");
+            stateProvider
+                .Setup(x => x.ConsumeAwaitedCommandResult(It.IsAny<InstanceCommandRequest>(), It.IsAny<TimeSpan?>()))
+                .ReturnsAsync((InstanceCommandRequest cmd, TimeSpan? _) => new InstanceCommandResult
+                {
+                    CommandId = cmd.CommandId,
+                    Value = JsonSerializer.Serialize(new ActionResult("Instance has forgotten its hub joining credentials.", true))
+                });
+
+            var hubClient = new Mock<IInstanceManagementHub>();
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            hubClients.Setup(x => x.Client("conn-1")).Returns(hubClient.Object);
+
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                CreateManagerMock().Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.CommandManagedInstanceToLeaveHub("remote-1");
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.IsFalse(result.IsWarning);
+            hubClient.Verify(x => x.SendCommandRequest(It.Is<InstanceCommandRequest>(cmd => cmd.CommandType == ManagementHubCommands.LeaveManagementHub)), Times.Once);
+        }
+
+        [TestMethod]
+        public async Task CommandManagedInstanceToLeaveHub_ReturnsWarning_WhenInstanceDoesNotConfirm()
+        {
+            // an instance which predates the command replies with no result
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetConnectionIdForInstance("remote-1")).Returns("conn-1");
+            stateProvider
+                .Setup(x => x.ConsumeAwaitedCommandResult(It.IsAny<InstanceCommandRequest>(), It.IsAny<TimeSpan?>()))
+                .ReturnsAsync((InstanceCommandRequest cmd, TimeSpan? _) => new InstanceCommandResult { CommandId = cmd.CommandId, Value = "null" });
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            hubClients.Setup(x => x.Client("conn-1")).Returns(Mock.Of<IInstanceManagementHub>());
+
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                CreateManagerMock().Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.CommandManagedInstanceToLeaveHub("remote-1");
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.IsTrue(result.IsWarning);
+        }
+
         private static bool HasExpectedRejoinPayload(InstanceCommandRequest command, string clientId, string secret)
         {
             var payload = JsonSerializer.Deserialize<ManagementHubRejoinRequest>(command.Value ?? "{}", Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);

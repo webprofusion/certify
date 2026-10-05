@@ -88,7 +88,7 @@ namespace Certify.Management
             }
             catch (Exception ex)
             {
-                _serviceLog.Warning($"Failed to clear management hub request auth secret from credentials store before rejoin: {ex.Message}");
+                _serviceLog.Warning($"Failed to clear management hub request auth secret from credentials store: {ex.Message}");
             }
         }
 
@@ -271,6 +271,73 @@ namespace Certify.Management
             {
                 _serviceLog.Error(ex, "Management hub rejoin command failed.");
             }
+        }
+
+        /// <summary>
+        /// Forget the stored hub joining key, request auth secret and hub address, as the hub has removed this instance.
+        /// Otherwise the instance reconnects with them and the hub registers it again. The hub assigned instance id is
+        /// kept, as it is immutable.
+        /// </summary>
+        private async Task<ActionResult> LeaveManagementHub()
+        {
+            // the scheduled connection check and token refresh are held off so neither restores what is cleared here
+            await _hubConnectionCheckSync.WaitAsync();
+            await _hubTokenSync.WaitAsync();
+
+            try
+            {
+                _mgmtHubJoiningSecret = null;
+                _resolvedMgmtHubApi = null;
+                StoreHubConnectionToken(null);
+
+                await ClearManagementHubRequestAuthSecret();
+
+                try
+                {
+                    await _credentialsManager.Delete(_itemManager, HubSharedConstants.MgmtHubJoiningCredId);
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog.Warning($"Failed to clear management hub joining key from credentials store: {ex.Message}");
+                }
+
+                _serverConfig.ManagementServerHubAPI = string.Empty;
+                _serverConfig.ManagementServerHubEndpoint = string.Empty;
+                SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
+            }
+            finally
+            {
+                _hubTokenSync.Release();
+                _hubConnectionCheckSync.Release();
+            }
+
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,
+                "Management Hub Joining Key",
+                "This instance was removed from the management hub and has forgotten its hub joining key."
+            );
+
+            // hub joining set by environment variables can't be cleared from here, so the instance will join again
+            var isJoinedByEnvironment = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB"))
+                && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID"))
+                && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET"));
+
+            if (isJoinedByEnvironment)
+            {
+                _serviceLog.Warning("Removed from the management hub, but hub joining is configured by environment variables, so this instance will join again while they are set.");
+
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    IsWarning = true,
+                    Message = "Instance has forgotten its stored hub joining credentials, but it is configured to join the hub by environment variables and will join again while they are set."
+                };
+            }
+
+            _serviceLog.Information("Removed from the management hub, hub joining credentials have been cleared.");
+
+            return new ActionResult("Instance has forgotten its hub joining credentials.", true);
         }
 
         /// <summary>
@@ -1392,6 +1459,13 @@ namespace Certify.Management
                     val = new ActionResult("Management hub rejoin initiated.", true);
                 }
             }
+            else if (arg.CommandType == ManagementHubCommands.LeaveManagementHub)
+            {
+                _serviceLog.Information("Hub has removed this instance, forgetting management hub joining credentials.");
+
+                // the client closes the hub connection once this reply is sent
+                val = await LeaveManagementHub();
+            }
             else if (arg.CommandType == ManagementHubCommands.RefreshExternalManagedCertificates)
             {
                 _serviceLog.Information("Hub has requested that this instance refresh its external certificate manager cache.");
@@ -1668,6 +1742,19 @@ namespace Certify.Management
 
         private void _managementServerClient_OnConnectionClosed()
         {
+            // the joining key is only cleared when the hub has removed this instance, so it has no hub to reconnect to
+            if (_mgmtHubJoiningSecret == null)
+            {
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                    "Management Hub Connection",
+                    "Disconnected from Management Hub, this instance was removed from the hub."
+                );
+
+                return;
+            }
+
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,

@@ -239,6 +239,13 @@ namespace Certify.Client
                 }
 
                 await connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+
+                // the instance has forgotten its hub credentials, the connection is closed once the hub has its reply.
+                // Not awaited here, as stopping the connection waits for the receive loop this handler is running on.
+                if (cmd.CommandType == ManagementHubCommands.LeaveManagementHub)
+                {
+                    _ = Task.Run(Disconnect);
+                }
             }
             catch (Exception ex)
             {
