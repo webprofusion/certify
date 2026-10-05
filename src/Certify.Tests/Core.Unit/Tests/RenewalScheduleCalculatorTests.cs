@@ -89,18 +89,18 @@ namespace Certify.Tests.Core.Unit.Tests
                 EndTime = TimeSpan.FromHours(2)
             };
 
+            // a Monday, outside the configured Sunday window
+            var checkDate = new DateTimeOffset(2026, 8, 10, 12, 0, 0, TimeSpan.Zero);
+
             var item = new ManagedCertificate
             {
                 Id = "test-item",
                 IncludeInAutoRenew = true,
                 MaintenanceWindowId = window.Id,
-                DateStart = DateTimeOffset.UtcNow.AddDays(-80),
-                DateRenewed = DateTimeOffset.UtcNow.AddDays(-80),
-                DateExpiry = DateTimeOffset.UtcNow.AddDays(5)
+                DateStart = checkDate.AddDays(-80),
+                DateRenewed = checkDate.AddDays(-80),
+                DateExpiry = checkDate.AddDays(5)
             };
-
-            // a Monday, outside the configured Sunday window
-            var checkDate = new DateTimeOffset(2026, 8, 10, 12, 0, 0, TimeSpan.Zero);
 
             var plan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, GetPrefs(window), checkDate);
 
