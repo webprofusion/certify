@@ -266,6 +266,20 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 _stateProvider.UpdateInstanceItemInfo(instanceId, val!.Items);
+
+                // the items name their CA by id, and custom CAs are defined on the instance, so fetch its CA titles too
+                await IssueInstanceCommand(instanceId, ManagementHubCommands.GetCertificateAuthorities);
+            }
+            else if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetCertificateAuthorities && result.Value != null)
+            {
+                _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
+
+                var val = System.Text.Json.JsonSerializer.Deserialize<List<CertificateAuthority>>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
+
+                if (val != null)
+                {
+                    _stateProvider.UpdateInstanceCertificateAuthorities(instanceId, val);
+                }
             }
             else if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetStatusSummary && result.Value != null)
             {

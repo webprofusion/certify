@@ -49,6 +49,28 @@ namespace Certify.Models.Hub
         public DateTimeOffset? DateRetrieved { get; set; }
 
         /// <summary>
+        /// Id of the CA last used for this item: the CA which issued the current certificate, otherwise the CA of the
+        /// most recent attempt. Not set where no CA has been used, e.g. for externally managed certificates.
+        /// </summary>
+        public string? CertificateAuthorityId { get; set; }
+
+        /// <summary>
+        /// Display title for <see cref="CertificateAuthorityId"/>, or the id itself where the hub does not know the CA
+        /// </summary>
+        public string? CertificateAuthorityTitle { get; set; }
+
+        /// <summary>
+        /// Key type of the current certificate as a <see cref="StandardKeyTypes"/> value, otherwise the configured key
+        /// type where one is set. See <see cref="StandardKeyTypes.GetDisplayName"/>.
+        /// </summary>
+        public string? KeyType { get; set; }
+
+        /// <summary>
+        /// Readable name of the issuer of the current certificate, e.g. "R11 (Let's Encrypt)"
+        /// </summary>
+        public string? Issuer { get; set; }
+
+        /// <summary>
         /// Most recent request/renewal status for this item
         /// </summary>
         public string Status { get; set; } = string.Empty;
@@ -78,6 +100,31 @@ namespace Certify.Models.Hub
         /// Tags assigned to this managed certificate
         /// </summary>
         public List<TagSummary> Tags { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Count of managed certificates sharing one value of a property, such as their CA or key type
+    /// </summary>
+    public record ManagedCertificateGroupCount
+    {
+        /// <summary>
+        /// The shared value, as used to filter on it. Null for the items which have no value.
+        /// </summary>
+        public string? Key { get; set; }
+
+        public string Title { get; set; } = string.Empty;
+
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// Counts of managed certificates by CA and by key type, largest first
+    /// </summary>
+    public record ManagedCertificateBreakdown
+    {
+        public List<ManagedCertificateGroupCount> CertificateAuthorities { get; set; } = new();
+
+        public List<ManagedCertificateGroupCount> KeyTypes { get; set; } = new();
     }
 
     public record ManagedCertificateSummaryResult

@@ -407,6 +407,19 @@ namespace Certify.Models
         /// Particularly important for ARI replacement as attempting to replace a cert with the id from another CA will result in order rejection.
         /// </summary>
         public string? CertificateCurrentCA { get; set; }
+
+        /// <summary>
+        /// Key type of the current certificate as a <see cref="StandardKeyTypes"/> value (e.g. RS256, ECDSA256), read from
+        /// the certificate itself when it is stored. Unlike RequestConfig.CSRKeyAlg this is known where the instance
+        /// default key type applied, and for certificates this instance did not order.
+        /// </summary>
+        public string? CertificateKeyType { get; set; }
+
+        /// <summary>
+        /// Issuer distinguished name of the current certificate (e.g. "CN=R11, O=Let's Encrypt, C=US"), read from the
+        /// certificate itself when it is stored
+        /// </summary>
+        public string? CertificateIssuer { get; set; }
         public string? CertificatePath { get; set; }
         public string? CertificateFriendlyName { get; set; }
         public string? CertificateThumbprintHash { get; set; }
@@ -757,6 +770,8 @@ namespace Certify.Models
             managedCert.LastRenewalStatus = null;
             managedCert.CurrentOrderUri = null;
             managedCert.CertificatePath = null;
+            managedCert.CertificateKeyType = null;
+            managedCert.CertificateIssuer = null;
             managedCert.ARICertificateId = null;
             managedCert.CertificateFriendlyName = null;
             managedCert.ItemType = ManagedCertificateType.SSL_ACME;

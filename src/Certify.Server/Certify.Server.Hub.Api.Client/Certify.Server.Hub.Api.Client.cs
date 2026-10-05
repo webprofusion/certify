@@ -3303,10 +3303,12 @@ namespace Certify.Server.Hub.Api
         /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
         /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
         /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
+        /// <param name="certificateAuthority">optional id of the CA last used for the item to match</param>
+        /// <param name="keyType">optional key type to match, as a StandardKeyTypes value such as RS256 or ECDSA256</param>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize)
+        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, string certificateAuthority, string keyType)
         {
-            return GetHubManagedItemsAsync(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged, page, pageSize, System.Threading.CancellationToken.None);
+            return GetHubManagedItemsAsync(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged, page, pageSize, certificateAuthority, keyType, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -3319,8 +3321,10 @@ namespace Certify.Server.Hub.Api
         /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
         /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
         /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
+        /// <param name="certificateAuthority">optional id of the CA last used for the item to match</param>
+        /// <param name="keyType">optional key type to match, as a StandardKeyTypes value such as RS256 or ECDSA256</param>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, string certificateAuthority, string keyType, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -3367,6 +3371,14 @@ namespace Certify.Server.Hub.Api
                     if (pageSize != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("pageSize")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(pageSize, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (certificateAuthority != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("certificateAuthority")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(certificateAuthority, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (keyType != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("keyType")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(keyType, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     urlBuilder_.Length--;
 
@@ -3518,6 +3530,126 @@ namespace Certify.Server.Hub.Api
                         if (status_ == 200)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<StatusSummary>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Get counts of the managed certificates matching criteria by the CA last used and by key type
+        /// </summary>
+        /// <param name="instanceId">optionally restrict results to a single managed instance</param>
+        /// <param name="keyword">optional keyword to match against the item name</param>
+        /// <param name="health">optional health status to match</param>
+        /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
+        /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
+        /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ManagedCertificateBreakdown> GetHubManagedItemsBreakdownAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged)
+        {
+            return GetHubManagedItemsBreakdownAsync(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Get counts of the managed certificates matching criteria by the CA last used and by key type
+        /// </summary>
+        /// <param name="instanceId">optionally restrict results to a single managed instance</param>
+        /// <param name="keyword">optional keyword to match against the item name</param>
+        /// <param name="health">optional health status to match</param>
+        /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
+        /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
+        /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<ManagedCertificateBreakdown> GetHubManagedItemsBreakdownAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, System.Threading.CancellationToken cancellationToken)
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "internal/v1/hub/items/breakdown"
+                    urlBuilder_.Append("internal/v1/hub/items/breakdown");
+                    urlBuilder_.Append('?');
+                    if (instanceId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("instanceId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (keyword != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("keyword")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(keyword, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (health != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("health")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(health, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (tagScopes != null)
+                    {
+                            foreach (var item_ in tagScopes) { urlBuilder_.Append(System.Uri.EscapeDataString("tagScopes")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append('&'); }
+                    }
+                    if (requireAllTags != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("requireAllTags")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(requireAllTags, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (includeUntagged != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("includeUntagged")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(includeUntagged, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    urlBuilder_.Length--;
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ManagedCertificateBreakdown>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);

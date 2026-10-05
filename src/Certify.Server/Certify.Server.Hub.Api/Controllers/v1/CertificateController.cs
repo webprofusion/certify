@@ -216,7 +216,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, "pem_fullchain_root", strictExport, CurrentAuthContext);
 
-            if (exportResult.IsSuccess && exportResult.Result != null)
+            if (exportResult?.IsSuccess == true && exportResult.Result != null)
             {
                 var pem = Encoding.ASCII.GetString(exportResult.Result ?? []);
 
@@ -228,7 +228,7 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             else
             {
-                return Problem(detail: exportResult.Message, statusCode: (int)HttpStatusCode.BadRequest);
+                return Problem(detail: exportResult?.Message ?? "The instance did not return the certificate. It may not be connected.", statusCode: (int)HttpStatusCode.BadRequest);
             }
         }
 

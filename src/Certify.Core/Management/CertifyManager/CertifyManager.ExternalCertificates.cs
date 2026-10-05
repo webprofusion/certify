@@ -1371,6 +1371,7 @@ namespace Certify.Management
                 item.CertificatePreviousThumbprintHash = item.CertificateThumbprintHash;
                 item.CertificateThumbprintHash = certInfo.Thumbprint;
                 item.CertificateFriendlyName = certInfo.FriendlyName;
+                RecordCurrentCertificateDetails(item, certInfo);
                 item.CertificatePEM = null;
 
                 item.DateStart = new DateTimeOffset(certInfo.NotBefore);

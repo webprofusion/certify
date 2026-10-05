@@ -41,6 +41,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         void RemoveManagedInstanceRuntimeState(string instanceId);
         bool HasItemsForManagedInstance(string instanceId);
 
+        /// <summary>
+        /// Record the CAs an instance reported, so its items can name their CA, including custom CAs the hub does not have
+        /// </summary>
+        void UpdateInstanceCertificateAuthorities(string instanceId, IEnumerable<CertificateAuthority> certificateAuthorities);
+
+        /// <summary>
+        /// CA titles keyed by CA id, as last reported by the instance, or null if it has not reported them
+        /// </summary>
+        IReadOnlyDictionary<string, string>? GetInstanceCertificateAuthorityTitles(string instanceId);
+
         bool HasStatusSummaryForManagedInstance(string instanceId);
         ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
         StatusSummary? GetManagedInstanceStatusSummary(string instanceId);
@@ -64,6 +74,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
         private ConcurrentDictionary<string, ManagedInstanceItems> _managedInstanceItems = [];
         private ConcurrentDictionary<string, StatusSummary> _managedInstanceStatusSummary = [];
+        private ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> _instanceCertificateAuthorityTitles = new(StringComparer.OrdinalIgnoreCase);
 
         private List<ActionStep> _systemStatusItems = [];
 
@@ -433,6 +444,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             var removedItems = _managedInstanceItems.TryRemove(instanceId, out var managedItems);
             var removedSummary = _managedInstanceStatusSummary.TryRemove(instanceId, out _);
+            _instanceCertificateAuthorityTitles.TryRemove(instanceId, out _);
 
             if (removedItems || removedSummary)
             {
@@ -443,6 +455,37 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     managedItems?.Items?.Count ?? 0,
                     removedSummary);
             }
+        }
+
+        /// <summary>
+        /// Record the CAs an instance reported, so its items can name their CA
+        /// </summary>
+        public void UpdateInstanceCertificateAuthorities(string instanceId, IEnumerable<CertificateAuthority> certificateAuthorities)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                return;
+            }
+
+            var titles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var ca in certificateAuthorities)
+            {
+                if (!string.IsNullOrEmpty(ca.Id) && !string.IsNullOrEmpty(ca.Title))
+                {
+                    titles[ca.Id] = ca.Title;
+                }
+            }
+
+            _instanceCertificateAuthorityTitles[instanceId] = titles;
+        }
+
+        /// <summary>
+        /// CA titles keyed by CA id, as last reported by the instance, or null if it has not reported them
+        /// </summary>
+        public IReadOnlyDictionary<string, string>? GetInstanceCertificateAuthorityTitles(string instanceId)
+        {
+            return _instanceCertificateAuthorityTitles.TryGetValue(instanceId, out var titles) ? titles : null;
         }
 
         /// <summary>

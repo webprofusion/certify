@@ -383,6 +383,44 @@ namespace Certify.Shared.Core.Utils.PKI
             return GetARICertIdBase64(cert);
         }
 
+        /// <summary>
+        /// The key type of a certificate's public key as a <see cref="Certify.Models.StandardKeyTypes"/> value, e.g. RS256
+        /// for RSA 2048 or ECDSA384 for an ECDSA P-384 key. Other RSA key sizes are given as RS256_{size}.
+        /// </summary>
+        /// <returns>The key type, or null if it is not an RSA or ECDSA key or cannot be read</returns>
+        public static string GetKeyType(X509Certificate2 sourceCert)
+        {
+            try
+            {
+                var key = new Org.BouncyCastle.X509.X509CertificateParser().ReadCertificate(sourceCert.GetRawCertData()).GetPublicKey();
+
+                if (key is Org.BouncyCastle.Crypto.Parameters.RsaKeyParameters rsa)
+                {
+                    var size = rsa.Modulus.BitLength;
+                    return size == 2048 ? Certify.Models.StandardKeyTypes.RSA256 : $"{Certify.Models.StandardKeyTypes.RSA256}_{size}";
+                }
+
+                if (key is Org.BouncyCastle.Crypto.Parameters.ECPublicKeyParameters ec)
+                {
+                    switch (ec.Parameters.Curve.FieldSize)
+                    {
+                        case 256:
+                            return Certify.Models.StandardKeyTypes.ECDSA256;
+                        case 384:
+                            return Certify.Models.StandardKeyTypes.ECDSA384;
+                        case 521:
+                            return Certify.Models.StandardKeyTypes.ECDSA521;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // an unreadable key has no known type
+            }
+
+            return null;
+        }
+
         public static string GetARICertIdBase64(Org.BouncyCastle.X509.X509Certificate cert)
         {
             // https://letsencrypt.org/2024/04/25/guide-to-integrating-ari-into-existing-acme-clients

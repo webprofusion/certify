@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -187,6 +188,20 @@ namespace Certify.Management
                     else
                     {
                         _serviceLog?.Error($"Failed to create one or more certificate manager plugins");
+                    }
+                }
+
+                // certificate manager providers report the certificate itself, which gives its key type and issuer
+                foreach (var item in list.Where(i => i.CertificateIssuer == null && !string.IsNullOrEmpty(i.CertificatePEM)))
+                {
+                    try
+                    {
+                        using var cert = X509Certificate2.CreateFromPem(item.CertificatePEM);
+                        RecordCurrentCertificateDetails(item, cert);
+                    }
+                    catch (Exception)
+                    {
+                        // these details are only extra information
                     }
                 }
 
@@ -1194,6 +1209,44 @@ namespace Certify.Management
             }
 
             await MigrateSubscriptionItemTypes();
+        }
+
+        /// <summary>
+        /// Record the details read from an item's current certificate: its key type and issuer
+        /// </summary>
+        internal static void RecordCurrentCertificateDetails(ManagedCertificate item, X509Certificate2 cert)
+        {
+            item.CertificateKeyType = CertUtils.GetKeyType(cert);
+            item.CertificateIssuer = cert.Issuer;
+        }
+
+        /// <summary>
+        /// Record the current certificate details of items which do not have them yet, such as those stored before the
+        /// details were recorded with the certificate. Run at every startup rather than as a version upgrade, so it also
+        /// applies where the version has not changed, and once recorded an item is not read again.
+        /// </summary>
+        /// <returns></returns>
+        private async Task RecordMissingCertificateDetails()
+        {
+            var storedItems = await _itemManager.Find(ManagedCertificateFilter.ALL);
+
+            // the issuer is always readable, unlike the key type, so it marks an item as done
+            foreach (var item in storedItems.Where(i => i.CertificateIssuer == null && !string.IsNullOrEmpty(i.CertificatePath) && File.Exists(i.CertificatePath)))
+            {
+                try
+                {
+                    using var cert = CertificateManager.LoadCertificate(item.CertificatePath, await GetPfxPassword(item), throwOnError: true, ephemeralKeySet: true);
+
+                    RecordCurrentCertificateDetails(item, cert);
+
+                    await UpdateManagedCertificate(item);
+                }
+                catch (Exception ex)
+                {
+                    // retried at the next startup, so not a warning each time
+                    _serviceLog?.Debug("Could not read the details of the certificate for {name} [{id}]: {error}", item.Name, item.Id, ex.Message);
+                }
+            }
         }
 
         /// <summary>

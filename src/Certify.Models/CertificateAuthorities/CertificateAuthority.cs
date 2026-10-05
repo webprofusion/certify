@@ -89,6 +89,30 @@ namespace Certify.Models
         /// ECDSA 521
         /// </summary>
         public const string ECDSA521 = "ECDSA521";
+
+        /// <summary>
+        /// A readable name for a key type, e.g. "RSA 2048" for RS256. RSA key sizes other than the standard ones are
+        /// named RS256_{size}.
+        /// </summary>
+        public static string GetDisplayName(string? keyType)
+        {
+            switch (keyType)
+            {
+                case null:
+                case "":
+                    return "Unknown";
+                case RSA256:
+                    return "RSA 2048";
+                case ECDSA256:
+                    return "ECDSA P-256";
+                case ECDSA384:
+                    return "ECDSA P-384";
+                case ECDSA521:
+                    return "ECDSA P-521";
+                default:
+                    return keyType.StartsWith(RSA256 + "_") ? "RSA " + keyType.Substring(RSA256.Length + 1) : keyType;
+            }
+        }
     }
 
     public class CertificateAuthority

@@ -669,7 +669,22 @@ namespace Certify.Server.Hub.Api.Services
                         new("instanceId", instanceId)
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ICollection<CertificateAuthority>>(instanceId, args, ManagementHubCommands.GetCertificateAuthorities);
+            var result = await PerformInstanceCommandTaskWithResult<ICollection<CertificateAuthority>>(instanceId, args, ManagementHubCommands.GetCertificateAuthorities);
+
+            if (result != null)
+            {
+                _mgmtStateProvider.UpdateInstanceCertificateAuthorities(instanceId, result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// CA titles keyed by CA id, as the instance last reported them, or null if it has not reported them
+        /// </summary>
+        public IReadOnlyDictionary<string, string>? GetInstanceCertificateAuthorityTitles(string instanceId)
+        {
+            return _mgmtStateProvider.GetInstanceCertificateAuthorityTitles(instanceId);
         }
 
         /// <summary>

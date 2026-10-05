@@ -25,7 +25,9 @@ namespace Certify.Server.Hub.Api.Services
             string? health,
             IEnumerable<string>? tagScopes,
             bool requireAllTags,
-            bool includeUntagged)
+            bool includeUntagged,
+            string? certificateAuthority = null,
+            string? keyType = null)
         {
             var scopes = TagScopeFilter.ParseAll(tagScopes);
 
@@ -36,6 +38,7 @@ namespace Certify.Server.Hub.Api.Services
             var knownInstances = await client.GetHubManagedInstances(PrincipalAccess.SystemAuthContext) ?? [];
 
             var tagsByItemId = await GetItemTagsByItemId(client, TaggedItemTypes.ManagedCertificate);
+            var caTitles = await GetCertificateAuthorityTitles(client);
 
             ManagedCertificateHealth? healthFilter = null;
 
@@ -56,6 +59,9 @@ namespace Certify.Server.Hub.Api.Services
                 var instance = knownInstances.FirstOrDefault(k => k.InstanceId == remote.InstanceId)
                                ?? instances.FirstOrDefault(c => c.InstanceId == remote.InstanceId);
 
+                // a custom CA is defined on the instance itself, so its own titles come first
+                var instanceCATitles = mgmtAPI.GetInstanceCertificateAuthorityTitles(remote.InstanceId);
+
                 foreach (var i in remote.Items)
                 {
                     if (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword, StringComparison.InvariantCultureIgnoreCase) != true)
@@ -64,6 +70,19 @@ namespace Certify.Server.Hub.Api.Services
                     }
 
                     if (healthFilter != null && i.Health != healthFilter)
+                    {
+                        continue;
+                    }
+
+                    var itemCA = GetCertificateAuthorityId(i);
+                    var itemKeyType = GetKeyType(i);
+
+                    if (!string.IsNullOrEmpty(certificateAuthority) && !string.Equals(itemCA, certificateAuthority, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(keyType) && !string.Equals(itemKeyType, keyType, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
@@ -97,6 +116,10 @@ namespace Certify.Server.Hub.Api.Services
                         DateRenewed = i.DateRenewed,
                         DateExpiry = i.DateExpiry,
                         Comments = i.Comments ?? "",
+                        CertificateAuthorityId = itemCA,
+                        CertificateAuthorityTitle = itemCA == null ? null : instanceCATitles?.GetValueOrDefault(itemCA) ?? caTitles.GetValueOrDefault(itemCA, itemCA),
+                        KeyType = itemKeyType,
+                        Issuer = GetIssuerName(i.CertificateIssuer),
                         Status = i.Health.ToString(),
                         DateRetrieved = i.DateRetrieved,
                         HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
@@ -108,6 +131,114 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             return list;
+        }
+
+        /// <summary>
+        /// The CA last used for an item: the CA which issued its current certificate, otherwise the CA of its most recent
+        /// attempt, which covers certificates recorded before the issuing CA was.
+        /// </summary>
+        public static string? GetCertificateAuthorityId(ManagedCertificate item)
+        {
+            return !string.IsNullOrEmpty(item.CertificateCurrentCA) ? item.CertificateCurrentCA
+                : !string.IsNullOrEmpty(item.LastAttemptedCA) ? item.LastAttemptedCA
+                : null;
+        }
+
+        /// <summary>
+        /// The key type of an item's current certificate, otherwise its configured key type. An instance which predates
+        /// recording the key type of the certificate itself reports only the configured key type, and so none where the
+        /// instance default key type applies.
+        /// </summary>
+        public static string? GetKeyType(ManagedCertificate item)
+        {
+            return !string.IsNullOrEmpty(item.CertificateKeyType) ? item.CertificateKeyType
+                : !string.IsNullOrEmpty(item.RequestConfig?.CSRKeyAlg) ? item.RequestConfig.CSRKeyAlg
+                : null;
+        }
+
+        /// <summary>
+        /// A readable name for a certificate issuer distinguished name: its common name, followed by its organization
+        /// where the common name does not already include it, e.g. "R11 (Let's Encrypt)"
+        /// </summary>
+        public static string? GetIssuerName(string? issuerDistinguishedName)
+        {
+            if (string.IsNullOrWhiteSpace(issuerDistinguishedName))
+            {
+                return null;
+            }
+
+            try
+            {
+                var rdns = new System.Security.Cryptography.X509Certificates.X500DistinguishedName(issuerDistinguishedName).EnumerateRelativeDistinguishedNames().ToList();
+
+                string? Attribute(string oid) => rdns.FirstOrDefault(r => !r.HasMultipleElements && r.GetSingleElementType().Value == oid)?.GetSingleElementValue();
+
+                var commonName = Attribute("2.5.4.3");
+                var organization = Attribute("2.5.4.10");
+
+                if (string.IsNullOrWhiteSpace(commonName))
+                {
+                    return organization ?? issuerDistinguishedName;
+                }
+
+                return string.IsNullOrWhiteSpace(organization) || commonName.Contains(organization, StringComparison.OrdinalIgnoreCase)
+                    ? commonName
+                    : $"{commonName} ({organization})";
+            }
+            catch
+            {
+                return issuerDistinguishedName;
+            }
+        }
+
+        /// <summary>
+        /// Count the given items by CA and by key type, largest groups first
+        /// </summary>
+        public static ManagedCertificateBreakdown Breakdown(IEnumerable<ManagedCertificateSummary> items)
+        {
+            var list = items.ToList();
+
+            return new ManagedCertificateBreakdown
+            {
+                CertificateAuthorities = list
+                    .GroupBy(i => i.CertificateAuthorityId, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => new ManagedCertificateGroupCount { Key = g.Key, Title = g.Key == null ? "None" : g.First().CertificateAuthorityTitle ?? g.Key, Count = g.Count() })
+                    .OrderByDescending(g => g.Count).ThenBy(g => g.Title)
+                    .ToList(),
+                KeyTypes = list
+                    .GroupBy(i => i.KeyType, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => new ManagedCertificateGroupCount { Key = g.Key, Title = StandardKeyTypes.GetDisplayName(g.Key), Count = g.Count() })
+                    .OrderByDescending(g => g.Count).ThenBy(g => g.Title)
+                    .ToList()
+            };
+        }
+
+        /// <summary>
+        /// Display titles of the CAs known to the hub itself, keyed by CA id. Used where an item's instance has not
+        /// reported its own CAs, and so for every CA on an instance which has not reported them yet.
+        /// </summary>
+        private static async Task<Dictionary<string, string>> GetCertificateAuthorityTitles(ICertifyInternalApiClient client)
+        {
+            var titles = CertificateAuthority.CoreCertificateAuthorities
+                .Where(ca => ca.Id != null)
+                .ToDictionary(ca => ca.Id!, ca => ca.Title, StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                foreach (var ca in await client.GetCertificateAuthorities(PrincipalAccess.SystemAuthContext) ?? [])
+                {
+                    if (!string.IsNullOrEmpty(ca.Id) && !string.IsNullOrEmpty(ca.Title))
+                    {
+                        titles[ca.Id] = ca.Title;
+                    }
+                }
+            }
+            catch
+            {
+                // the built in CAs are still named
+            }
+
+            return titles;
         }
 
         /// <summary>

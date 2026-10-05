@@ -49,12 +49,14 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
+        /// <param name="certificateAuthority">optional id of the CA last used for the item to match</param>
+        /// <param name="keyType">optional key type to match, as a StandardKeyTypes value such as RS256 or ECDSA256</param>
         /// <returns></returns>
         [HttpGet]
         [Route("items")]
         [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false, int? page = null, int? pageSize = null)
+        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false, int? page = null, int? pageSize = null, string? certificateAuthority = null, string? keyType = null)
         {
             var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
 
@@ -65,7 +67,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             // the tag scopes and domain restrictions on the user's assigned roles limit which items they can see
             var visibility = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
-            var list = await ManagedItemListing.GetItems(_client, _mgmtAPI, visibility, instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged);
+            var list = await ManagedItemListing.GetItems(_client, _mgmtAPI, visibility, instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged, certificateAuthority, keyType);
 
             var resolvedPageSize = pageSize ?? 100;
             var resolvedPageIndex = page > 0 ? (int)page : 0;
@@ -117,6 +119,35 @@ namespace Certify.Server.Hub.Api.Controllers
             var list = await ManagedItemListing.GetItems(_client, _mgmtAPI, visibility, instanceId, keyword, null, tagScopes, requireAllTags, includeUntagged);
 
             return new OkObjectResult(ManagedItemListing.Summarise(list, instanceId));
+        }
+
+        /// <summary>
+        /// Get counts of the managed certificates matching criteria by the CA last used and by key type
+        /// </summary>
+        /// <param name="instanceId">optionally restrict results to a single managed instance</param>
+        /// <param name="keyword">optional keyword to match against the item name</param>
+        /// <param name="health">optional health status to match</param>
+        /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
+        /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
+        /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("items/breakdown")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateBreakdown))]
+        public async Task<IActionResult> GetHubManagedItemsBreakdown(string? instanceId, string? keyword, string? health = null, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false)
+        {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            var visibility = await ResourceScope.Resolve(_client, CurrentAuthContext, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList);
+            var list = await ManagedItemListing.GetItems(_client, _mgmtAPI, visibility, instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged);
+
+            return new OkObjectResult(ManagedItemListing.Breakdown(list));
         }
 
         /// <summary>

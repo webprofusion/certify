@@ -62,6 +62,15 @@ namespace Certify.Management
                 SettingsManager.SaveAppSettings();
             }
 
+            try
+            {
+                await RecordMissingCertificateDetails();
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error($"Failed to record current certificate details. :: {exp}");
+            }
+
             if (_isMgtmHubBackend)
             {
                 _serviceLog?.Information("Hub: checking system roles etc.");
