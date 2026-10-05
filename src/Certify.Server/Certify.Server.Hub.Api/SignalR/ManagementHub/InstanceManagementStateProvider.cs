@@ -8,7 +8,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public interface IInstanceManagementStateProvider
     {
-        void Clear();
         void SetManagementHubInstanceId(string instanceId);
         string GetManagementHubInstanceId();
         void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo);
@@ -78,20 +77,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         public InstanceManagementStateProvider(ILogger<InstanceManagementStateProvider> logger)
         {
             _logger = logger;
-        }
-
-        /// <summary>
-        /// Clear all state
-        /// </summary>
-        public void Clear()
-        {
-            _logger.LogWarning("Flushing management hub state, clients will need to reconnect.");
-            _instanceConnections.Clear();
-            _managedInstanceItems.Clear();
-            _awaitedCommandRequests.Clear();
-            _awaitedCommandResults.Clear();
-            _managedInstanceStatusSummary.Clear();
-
         }
 
         /// <summary>

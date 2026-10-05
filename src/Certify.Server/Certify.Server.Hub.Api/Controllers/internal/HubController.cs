@@ -273,28 +273,6 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Flush all hub managed instances
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("flush")]
-        [AuthorizedApi]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> FlushHubManagedInstances()
-        {
-            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
-
-            if (!accessCheck.IsSuccess)
-            {
-                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
-            }
-
-            _mgmtAPI.ReconnectInstances();
-
-            return new OkResult();
-        }
-
-        /// <summary>
         /// Get info about the hub instance
         /// </summary>
         /// <returns></returns>

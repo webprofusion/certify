@@ -62,17 +62,6 @@ namespace Certify.Server.Hub.Api.Services
             _activityService = activityService;
         }
 
-        /// <summary>
-        /// Flush connections and reconnect all instances.
-        /// </summary>
-        /// <returns></returns>
-        public async Task ReconnectInstances()
-        {
-            _mgmtStateProvider.Clear();
-            //TODO: send command to local instance if present, then send to signalr hub clients
-            await _mgmtHubContext.Clients.All.SendCommandRequest(new InstanceCommandRequest(ManagementHubCommands.Reconnect));
-        }
-
         public async Task<ActionResult> RejoinManagedInstance(string instanceId, AuthContext? currentAuthContext)
         {
             if (string.IsNullOrWhiteSpace(instanceId))
