@@ -1018,7 +1018,15 @@ namespace Certify.Server.Hub.Api.Services
                         new("managedCert",JsonSerializer.Serialize(managedCert))
                     };
 
-            return await PerformInstanceCommandTaskWithResult<List<StatusMessage>>(instanceId, args, ManagementHubCommands.TestManagedItemConfiguration) ?? [];
+            // tests call out to web servers and DNS APIs, which can take far longer than the default wait. This stays under
+            // the UI's 100 second HTTP timeout so the caller is always told the outcome.
+            var results = await PerformInstanceCommandTaskWithResult<List<StatusMessage>>(instanceId, args, ManagementHubCommands.TestManagedItemConfiguration, TimeSpan.FromSeconds(90));
+
+            return results ?? [new StatusMessage
+            {
+                IsOK = false,
+                Message = "The instance did not return test results in time. The test may still be running, check the certificate log for its outcome."
+            }];
         }
 
         /// <summary>

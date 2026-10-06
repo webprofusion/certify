@@ -1046,7 +1046,24 @@ namespace Certify.Management
 
                 var log = ManagedCertificateLog.GetLogger(managedCert.Id, _loggingLevelSwitch);
 
-                val = await TestChallenge(log, managedCert, isPreviewMode: true);
+                // progress reaches the hub UI while the test runs, which for DNS can take some time
+                var progressState = new RequestProgressState(RequestState.Running, "Starting Tests..", managedCert, isPreviewMode: true);
+                var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+
+                ReportProgress(progressIndicator, new RequestProgressState(RequestState.Running, "Starting Tests..", managedCert, isPreviewMode: true), logThisEvent: false);
+
+                try
+                {
+                    val = await TestChallenge(log, managedCert, isPreviewMode: true, progressIndicator);
+                }
+                catch (Exception ex)
+                {
+                    log?.Error(ex, "Configuration test failed: {error}", ex.Message);
+
+                    ReportProgress(progressIndicator, new RequestProgressState(RequestState.Error, "Test failed: " + ex.Message, managedCert, isPreviewMode: true));
+
+                    val = new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "Test failed: " + ex.Message } };
+                }
             }
             else if (arg.CommandType == ManagementHubCommands.ResetManagedItemStatus)
             {
