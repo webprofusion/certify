@@ -103,18 +103,36 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        [Description("The hub's instance is offered its own certificates when hub self subscription is allowed, but not its own subscriptions")]
+        [Description("The hub's instance is offered its own certificates when hub self subscription is allowed")]
         public async Task HubInstancePrincipal_SelfSubscriptionAllowed_IncludesItsOwnCertificates()
         {
-            var fixture = new Fixture { HubInstanceId = OwnInstanceId, AllowHubSelfSubscription = true, OwnInstanceHoldsSubscription = true };
+            var fixture = new Fixture { HubInstanceId = OwnInstanceId, AllowHubSelfSubscription = true };
             var controller = fixture.CreateController();
 
             var result = await controller.GetSubscribableManagedCertificatesBySecurityPrincipal(InstancePrincipalId);
 
             CollectionAssert.AreEquivalent(
                 new[] { "cert-own-instance", "cert-other-instance" },
-                fixture.Items(result).Select(i => i.Id).ToList(),
-                "the hub can subscribe to its own certificates, but not to a subscription it already holds");
+                fixture.Items(result).Select(i => i.Id).ToList());
+        }
+
+        [TestMethod]
+        [Description("Items which are subscriptions themselves are listed and flagged, so the source picker can hide them while existing subscriptions to them still resolve")]
+        public async Task Subscriptions_AreListedAndFlagged()
+        {
+            var fixture = new Fixture { HubInstanceId = OwnInstanceId, AllowHubSelfSubscription = true, InstancesHoldSubscriptions = true };
+            var controller = fixture.CreateController();
+
+            var items = fixture.Items(await controller.GetSubscribableManagedCertificatesBySecurityPrincipal(InstancePrincipalId));
+
+            CollectionAssert.AreEquivalent(
+                new[] { "sub-own-instance", "sub-other-instance" },
+                items.Where(i => i.IsSubscription).Select(i => i.Id).ToList(),
+                "both current and legacy typed subscriptions are flagged");
+
+            CollectionAssert.AreEquivalent(
+                new[] { "cert-own-instance", "cert-other-instance" },
+                items.Where(i => !i.IsSubscription).Select(i => i.Id).ToList());
         }
 
         [TestMethod]
@@ -157,8 +175,8 @@ namespace Certify.Core.Tests.Unit
             /// <summary>Whether the hub settings allow the hub to subscribe to its own certificates.</summary>
             public bool AllowHubSelfSubscription { get; init; }
 
-            /// <summary>Whether the own instance also holds a subscription item, alongside its certificate.</summary>
-            public bool OwnInstanceHoldsSubscription { get; init; }
+            /// <summary>Whether each instance also holds a subscription item, alongside its certificate.</summary>
+            public bool InstancesHoldSubscriptions { get; init; }
 
             /// <summary>The certificate download checks the endpoint made, in order.</summary>
             public List<AccessCheck> CertificateChecks { get; } = [];
@@ -247,12 +265,19 @@ namespace Certify.Core.Tests.Unit
                 var items = new ConcurrentDictionary<string, ManagedInstanceItems>();
 
                 List<ManagedCertificate> ownItems = [Certificate("cert-own-instance", OwnInstanceId, "own.example.com")];
+                List<ManagedCertificate> otherItems = [Certificate("cert-other-instance", OtherInstanceId, "other.example.com")];
 
-                if (OwnInstanceHoldsSubscription)
+                if (InstancesHoldSubscriptions)
                 {
                     var subscription = Certificate("sub-own-instance", OwnInstanceId, "own.example.com");
                     subscription.ItemType = ManagedCertificateType.SSL_ExternalSubscription;
                     ownItems.Add(subscription);
+
+                    // stored before subscriptions had their own item type
+                    var legacySubscription = Certificate("sub-other-instance", OtherInstanceId, "other.example.com");
+                    legacySubscription.ItemType = ManagedCertificateType.SSL_ExternallyManaged;
+                    legacySubscription.ExternalSource = new ExternalCertificateSubscription { SourceType = ExternalCertificateSourceTypes.ManagementHub };
+                    otherItems.Add(legacySubscription);
                 }
 
                 items[OwnInstanceId] = new ManagedInstanceItems
@@ -264,7 +289,7 @@ namespace Certify.Core.Tests.Unit
                 items[OtherInstanceId] = new ManagedInstanceItems
                 {
                     InstanceId = OtherInstanceId,
-                    Items = [Certificate("cert-other-instance", OtherInstanceId, "other.example.com")]
+                    Items = otherItems
                 };
 
                 return items;

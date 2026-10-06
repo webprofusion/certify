@@ -1,5 +1,4 @@
-﻿using Certify.Models;
-using Certify.Models.Hub;
+﻿using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -127,7 +126,8 @@ namespace Certify.Server.Hub.Api.Controllers
         /// the principal's own managed instance, where it has one. Those items are already held there, so an instance
         /// is not offered its own certificates back, unless it is the hub and the hub is allowed to subscribe to its
         /// own certificates. Principal types other than a managed instance have no such instance and nothing is
-        /// excluded for them.
+        /// excluded for them. Items which are subscriptions themselves are flagged as such, for the UI to hide when
+        /// choosing a source.
         /// </param>
         /// <param name="scopedAssignedRoles">the role assignments to narrow to, when evaluating access as an API token</param>
         private async Task<List<ManagedCertificateSummary>> CheckSubscribableManagedCerts(
@@ -154,9 +154,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             foreach (var sourceItems in allInstanceItems.Values.ToList())
             {
-                var isOwnInstance = !string.IsNullOrWhiteSpace(ownInstanceId) && sourceItems.InstanceId == ownInstanceId;
-
-                if (isOwnInstance && !includeOwnItems)
+                if (!string.IsNullOrWhiteSpace(ownInstanceId) && sourceItems.InstanceId == ownInstanceId && !includeOwnItems)
                 {
                     //skip items from the principal's own instance
                     continue;
@@ -166,13 +164,6 @@ namespace Certify.Server.Hub.Api.Controllers
                 foreach (var cert in sourceItems.Items)
                 {
                     if (string.IsNullOrWhiteSpace(cert.Id))
-                    {
-                        continue;
-                    }
-
-                    // the hub's own subscriptions are not offered back to it, which would subscribe an item to itself
-                    // or to another copy of the same source
-                    if (isOwnInstance && ManagedCertificate.IsExternalSourceItemType(cert.ItemType))
                     {
                         continue;
                     }
@@ -200,7 +191,9 @@ namespace Certify.Server.Hub.Api.Controllers
                         DateRenewed = cert.DateRenewed,
                         DateExpiry = cert.DateExpiry,
                         Status = cert.Health.ToString(),
-                        HasCertificate = !string.IsNullOrEmpty(cert.CertificatePath)
+                        HasCertificate = !string.IsNullOrEmpty(cert.CertificatePath),
+                        IsExternallyManaged = cert.IsExternallyManaged,
+                        IsSubscription = cert.IsSubscription
                     });
 
                 }
