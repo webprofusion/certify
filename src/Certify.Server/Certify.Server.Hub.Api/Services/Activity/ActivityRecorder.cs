@@ -368,6 +368,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
                 ActivityEventTypes.ItemRemoved => $"{who} removed {itemTitle}",
                 ActivityEventTypes.ItemRequested => $"{who} requested {itemTitle}",
                 ActivityEventTypes.ItemStatusReset => $"{who} reset the status of {itemTitle}",
+                ActivityEventTypes.ItemRevoked => $"{who} revoked the certificate for {itemTitle}",
                 ActivityEventTypes.ItemTaskExecuted => $"{who} ran a deployment task for {itemTitle}",
                 _ => $"{who} changed {itemTitle}"
             };

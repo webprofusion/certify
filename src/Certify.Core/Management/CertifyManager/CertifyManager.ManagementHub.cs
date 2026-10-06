@@ -1056,6 +1056,27 @@ namespace Certify.Management
 
                 val = await ResetManagedItemStatus(managedCertIdArg.Value);
             }
+            else if (arg.CommandType == ManagementHubCommands.RevokeManagedItemCertificate)
+            {
+                // revoke the current certificate for a single managed item with its CA
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
+                var managedCert = await GetManagedCertificate(managedCertIdArg.Value);
+
+                if (managedCert == null)
+                {
+                    val = new StatusMessage { IsOK = false, Message = "The managed certificate could not be found." };
+                }
+                else if (managedCert.IsExternalSourceItem)
+                {
+                    // the certificate was not ordered by this instance, so is not ours to revoke
+                    val = new StatusMessage { IsOK = false, Message = "Certificates from an external source cannot be revoked here." };
+                }
+                else
+                {
+                    val = await RevokeCertificate(null, managedCert);
+                }
+            }
             else if (arg.CommandType == ManagementHubCommands.PerformManagedItemRequest)
             {
                 // attempt certificate order

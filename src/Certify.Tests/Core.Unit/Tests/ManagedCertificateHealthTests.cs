@@ -93,6 +93,14 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual(ManagedCertificateHealth.Error, cert.Health);
         }
 
+        [TestMethod, Description("Revoking records an error status with one failure, which is still Error health rather than Warning")]
+        public void TestHealthErrorStatusRevokedIsError()
+        {
+            var cert = CreateTestCert(RequestState.Error, renewalFailureCount: 1, daysElapsed: 10, revoked: true);
+
+            Assert.AreEqual(ManagedCertificateHealth.Error, cert.Health);
+        }
+
         [TestMethod, Description("Successful item with plenty of lifetime remaining is OK health")]
         public void TestHealthSuccessStatusIsOK()
         {

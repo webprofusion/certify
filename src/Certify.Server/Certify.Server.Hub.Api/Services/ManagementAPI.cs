@@ -1081,6 +1081,31 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// Revokes the current certificate for a managed certificate with its certificate authority, on the target instance.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="managedCertId">The managed certificate identifier.</param>
+        /// <param name="currentAuthContext">The current authentication context.</param>
+        /// <returns>The outcome of the revocation, or null if the instance did not respond.</returns>
+        internal async Task<StatusMessage?> RevokeManagedItemCertificate(string instanceId, string managedCertId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                 new("instanceId", instanceId) ,
+                 new("managedCertId",managedCertId)
+             };
+
+            // revocation calls out to the certificate authority, which can take far longer than the default wait
+            var result = await PerformInstanceCommandTaskWithResult<StatusMessage?>(instanceId, args, ManagementHubCommands.RevokeManagedItemCertificate, TimeSpan.FromSeconds(60));
+
+            if (result?.IsOK == true && _activity != null)
+            {
+                await _activity.ItemChangedAsync(instanceId, managedCertId, null, ActivityEventTypes.ItemRevoked, currentAuthContext);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Performs an import operation on the target instance.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>

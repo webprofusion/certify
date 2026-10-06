@@ -107,6 +107,7 @@ namespace Certify.Models.Hub
         public const string ItemRemoved = "change.item.removed";
         public const string ItemRequested = "change.item.requested";
         public const string ItemStatusReset = "change.item.reset";
+        public const string ItemRevoked = "change.item.revoked";
         public const string ItemTaskExecuted = "change.item.task";
     }
 

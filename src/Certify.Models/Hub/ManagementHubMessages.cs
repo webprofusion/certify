@@ -32,6 +32,7 @@ namespace Certify.Models.Hub
         public const string TestManagedItemConfiguration = "TestManagedItemConfiguration";
         public const string PerformManagedItemRequest = "PerformManagedItemRequest";
         public const string ResetManagedItemStatus = "ResetManagedItemStatus";
+        public const string RevokeManagedItemCertificate = "RevokeManagedItemCertificate";
 
         public const string GetCertificateAuthorities = "GetCertificateAuthorities";
         public const string UpdateCertificateAuthority = "UpdateCertificateAuthority";

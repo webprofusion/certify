@@ -614,6 +614,40 @@ namespace Certify.Server.Hub.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Revoke the current certificate of a managed item with its certificate authority. This cannot be undone.
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="id">managed item id</param>
+        /// <returns>The outcome of the revocation</returns>
+        [HttpPost]
+        [Route("revoke")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusMessage))]
+        public async Task<IActionResult> RevokeCertificate(string instanceId, string id)
+        {
+            // revocation is as irreversible as removing the item, so needs the same permission
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemDelete));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            var outOfScope = await CheckManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemDelete, instanceId, id);
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
+            var result = await _mgmtAPI.RevokeManagedItemCertificate(instanceId, id, CurrentAuthContext);
+
+            return new OkObjectResult(result ?? new StatusMessage
+            {
+                IsOK = false,
+                Message = "The instance did not respond in time. Check the certificate log to see if the certificate was revoked."
+            });
+        }
+
         private static List<string> NormalizeIdentifierValues(ICollection<string>? values)
         {
             return values?

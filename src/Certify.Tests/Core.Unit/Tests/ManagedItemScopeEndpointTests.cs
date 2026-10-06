@@ -177,6 +177,28 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        [Description("The certificate of an item outside the caller's scope is not revoked")]
+        public async Task RevokeCertificate_OutsideScope_IsNotFound()
+        {
+            var harness = new Harness(domainRules: ["*.example.com"]);
+
+            AssertNotFound(await harness.Certificates().RevokeCertificate(InstanceId, OutsideId));
+            AssertNotSent(harness, ManagementHubCommands.RevokeManagedItemCertificate);
+        }
+
+        [TestMethod]
+        [Description("The certificate of an item within the caller's scope is revoked, and the instance's outcome returned")]
+        public async Task RevokeCertificate_WithinScope_IsSentToTheInstance()
+        {
+            var harness = new Harness(domainRules: ["*.example.com"]);
+
+            var result = await harness.Certificates().RevokeCertificate(InstanceId, WithinId);
+
+            Assert.IsTrue(((StatusMessage)((OkObjectResult)result).Value!).IsOK);
+            CollectionAssert.Contains(harness.SentCommands, ManagementHubCommands.RevokeManagedItemCertificate);
+        }
+
+        [TestMethod]
         [Description("No certificate order is begun for an item outside the caller's scope")]
         public async Task BeginOrder_OutsideScope_IsNotFound()
         {
@@ -653,6 +675,9 @@ namespace Certify.Core.Tests.Unit
 
                     case ManagementHubCommands.ResetManagedItemStatus:
                         return Serialize(InstanceItems().First(i => i.Id == Arg("managedCertId")));
+
+                    case ManagementHubCommands.RevokeManagedItemCertificate:
+                        return Serialize(new StatusMessage { IsOK = true, Message = "Certificate revoked" });
 
                     case ManagementHubCommands.RemoveManagedItem:
                         return Serialize(new Certify.Models.Config.ActionResult("OK", true));

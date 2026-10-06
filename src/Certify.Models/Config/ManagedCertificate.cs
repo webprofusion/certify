@@ -536,6 +536,12 @@ namespace Certify.Models
         {
             get
             {
+                // a revoked certificate is unusable whatever the outcome of the last renewal attempt
+                if (CertificateRevoked)
+                {
+                    return ManagedCertificateHealth.Error;
+                }
+
                 var percentageElapsed = GetPercentageLifetimeElapsed(DateTimeOffset.UtcNow);
 
                 if (LastRenewalStatus == RequestState.Error)
@@ -559,31 +565,24 @@ namespace Certify.Models
                         }
                         else
                         {
-                            if (CertificateRevoked)
+                            // if cert is otherwise OK but is expiring soon, report health as warning or error (expired)
+                            if (percentageElapsed > LifetimeHealthThresholds.PercentageDanger)
                             {
                                 return ManagedCertificateHealth.Error;
                             }
+                            else if (percentageElapsed > LifetimeHealthThresholds.PercentageWarning)
+                            {
+                                return ManagedCertificateHealth.Warning;
+                            }
                             else
                             {
-                                // if cert is otherwise OK but is expiring soon, report health as warning or error (expired)
-                                if (percentageElapsed > LifetimeHealthThresholds.PercentageDanger)
-                                {
-                                    return ManagedCertificateHealth.Error;
-                                }
-                                else if (percentageElapsed > LifetimeHealthThresholds.PercentageWarning)
+                                if (LastRenewalStatus == RequestState.Warning)
                                 {
                                     return ManagedCertificateHealth.Warning;
                                 }
                                 else
                                 {
-                                    if (LastRenewalStatus == RequestState.Warning)
-                                    {
-                                        return ManagedCertificateHealth.Warning;
-                                    }
-                                    else
-                                    {
-                                        return ManagedCertificateHealth.OK;
-                                    }
+                                    return ManagedCertificateHealth.OK;
                                 }
                             }
                         }
