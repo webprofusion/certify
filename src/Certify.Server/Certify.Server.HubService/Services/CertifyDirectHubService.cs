@@ -1,4 +1,4 @@
-﻿using Certify.Client;
+using Certify.Client;
 using Certify.Config;
 using Certify.Management;
 using Certify.Models;
@@ -6,9 +6,9 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
-using Certify.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
+using Certify.Providers;
 using Certify.Shared;
 using Microsoft.AspNetCore.DataProtection;
 using ActionResultConfig = Certify.Models.Config.ActionResult;
@@ -194,7 +194,7 @@ namespace Certify.Server.HubService.Services
         public Task<List<AccountDetails>> GetAccounts(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<string> GetAppVersion(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.SystemController(_certifyManager).GetAppVersion());
 
-        public Task<List<CertificateAuthority>> GetCertificateAuthorities(AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<List<CertificateAuthority>> GetCertificateAuthorities(AuthContext? authContext = null) => new ServiceControllers.AccountsController(_certifyManager).GetCertificateAuthorities();
         public Task<List<ChallengeProviderDefinition>> GetChallengeAPIList(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<StoredCredential>> GetCredentials(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key, AuthContext? authContext = null) => new ServiceControllers.ManagedCertificatesController(_certifyManager).GetCurrentChallenges(type, key);
