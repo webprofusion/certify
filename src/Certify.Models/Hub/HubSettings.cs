@@ -39,6 +39,25 @@ namespace Certify.Models.Hub
         /// Settings for managed certificate subscriptions
         /// </summary>
         public SubscriptionSettings Subscriptions { get; set; } = new SubscriptionSettings();
+
+        /// <summary>
+        /// Settings for managed instance connections to the hub
+        /// </summary>
+        public InstanceConnectionSettings InstanceConnections { get; set; } = new InstanceConnectionSettings();
+    }
+
+    /// <summary>
+    /// Settings for managed instance connections to the hub
+    /// </summary>
+    public class InstanceConnectionSettings
+    {
+        /// <summary>
+        /// If true, an instance holding a request auth secret must sign its joining check with it to be issued a joining
+        /// token. Instances before 7.3.0 do not sign it, so they cannot connect. If false, the shared joining credentials
+        /// and an instance id are enough to connect as that instance. Enabled when a new hub is installed, false on an
+        /// upgraded hub until an administrator enables it.
+        /// </summary>
+        public bool EnforceSignedJoiningChecks { get; set; }
     }
 
     /// <summary>

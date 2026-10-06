@@ -326,8 +326,9 @@ namespace Certify.Server.Hub.Api.Controllers
                 {
                     // The joining credentials are shared by every instance and the hub assigned id is not secret, so they
                     // do not show that the caller is this instance. Once the instance holds a request auth secret, a
-                    // joincheck has to be signed with it: both to be issued a joining token, which the management hub
-                    // connection acts as this instance with, and to have the secret replaced.
+                    // joincheck has to be signed with it to have the secret replaced, and, when the hub enforces signed
+                    // joining checks, to be issued a joining token, which the management hub connection acts as this
+                    // instance with. Instances before 7.3.0 do not sign their joincheck.
                     var hasSecret = !string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash);
                     var isSignedByInstance = false;
 
@@ -340,7 +341,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
                         if (!isSignedByInstance)
                         {
-                            if (!IsLegacyUnsignedJoinCheckAllowed())
+                            if (await IsSignedJoiningCheckEnforced())
                             {
                                 _logger.LogWarning(
                                     "Refused joincheck for managed instance {instanceId}: the request was not signed with the instance's request auth secret ({reason}).",
@@ -348,15 +349,14 @@ namespace Certify.Server.Hub.Api.Controllers
                                     instanceAuth.Message);
 
                                 return Problem(
-                                    detail: "This instance has a request auth secret, so its joincheck must be signed with it. Upgrade the instance, or if it has lost its secret, rejoin it from the hub to issue a new one.",
+                                    detail: "This hub enforces signed joining checks and this instance has a request auth secret, so its joincheck must be signed with it. Upgrade the instance to 7.3.0 or later, or if it has lost its secret, rejoin it from the hub to issue a new one.",
                                     statusCode: (int)HttpStatusCode.Unauthorized,
                                     type: "https://api.certifytheweb.com/problemtype/hub-joincheck-signature-required");
                             }
 
                             _logger.LogWarning(
-                                "Allowing unsigned joincheck for managed instance {instanceId} because {configKey} is enabled. While it is, the joining credentials and an instance id are enough to connect as that instance.",
-                                hubAssignedInstanceId,
-                                ManagedInstanceRequestAuthValidator.AllowLegacyUnsignedJoinCheckConfigKey);
+                                "Allowing unsigned joincheck for managed instance {instanceId} because the hub does not enforce signed joining checks. While it does not, the joining credentials and an instance id are enough to connect as that instance.",
+                                hubAssignedInstanceId);
                         }
                     }
 
@@ -456,8 +456,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
         }
 
-        private bool IsLegacyUnsignedJoinCheckAllowed()
-            => HttpContext.RequestServices.GetRequiredService<IConfiguration>()
-                .GetValue<bool>(ManagedInstanceRequestAuthValidator.AllowLegacyUnsignedJoinCheckConfigKey);
+        private async Task<bool> IsSignedJoiningCheckEnforced()
+            => (await _client.GetHubSettings(SystemAuthContext))?.InstanceConnections?.EnforceSignedJoiningChecks == true;
     }
 }

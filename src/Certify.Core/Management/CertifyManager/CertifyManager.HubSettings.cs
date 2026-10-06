@@ -37,6 +37,7 @@ namespace Certify.Management
             settings.ManagedAcme ??= new ManagedAcmeSettings();
             settings.Activity ??= new ActivitySettings();
             settings.Subscriptions ??= new SubscriptionSettings();
+            settings.InstanceConnections ??= new InstanceConnectionSettings();
 
             _cachedHubSettings = settings;
 
@@ -59,6 +60,7 @@ namespace Certify.Management
             settings.ManagedAcme ??= new ManagedAcmeSettings();
             settings.Activity ??= new ActivitySettings();
             settings.Subscriptions ??= new SubscriptionSettings();
+            settings.InstanceConnections ??= new InstanceConnectionSettings();
 
             try
             {

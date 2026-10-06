@@ -754,6 +754,11 @@ namespace Certify.Models.Hub
         /// </summary>
         public List<string> IntegrityProblems { get; } = [];
 
+        /// <summary>
+        /// True when the store held no security principals, i.e. a new hub install rather than an upgrade.
+        /// </summary>
+        public bool IsFirstRun { get; set; }
+
         public bool IsSuccess => Failures.Count == 0 && IntegrityProblems.Count == 0;
 
         public override string ToString()
@@ -1029,6 +1034,8 @@ namespace Certify.Models.Hub
             // password, an account an administrator had deliberately removed, on the next service restart.
             if (users.Count == 0)
             {
+                result.IsFirstRun = true;
+
                 var adminSp = new SecurityPrincipal
                 {
                     Id = adminSpId,

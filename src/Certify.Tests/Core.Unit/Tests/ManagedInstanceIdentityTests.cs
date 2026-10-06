@@ -78,10 +78,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        [Description("With the legacy setting on, an unsigned joincheck is issued a joining token, but the secret is never replaced")]
-        public async Task CheckJoining_InstanceWithSecret_UnsignedWithLegacySetting_IsIssuedATokenButNoSecret()
+        [Description("When signed joining checks are not enforced, an unsigned joincheck is issued a joining token, but the secret is never replaced")]
+        public async Task CheckJoining_InstanceWithSecret_UnsignedNotEnforced_IsIssuedATokenButNoSecret()
         {
-            var harness = new JoinHarness(hasSecret: true, allowLegacyUnsignedJoinCheck: true);
+            var harness = new JoinHarness(hasSecret: true, enforceSignedJoiningChecks: false);
 
             var joining = Joined(await harness.Controller(reissue: true).CheckJoining(reissueRequestAuthSecret: true));
 
@@ -117,10 +117,13 @@ namespace Certify.Core.Tests.Unit
 
             public string? StoredSecretHash { get; private set; }
 
-            public JoinHarness(bool hasSecret, bool allowLegacyUnsignedJoinCheck = false)
+            public JoinHarness(bool hasSecret, bool enforceSignedJoiningChecks = true)
             {
                 _client.Setup(c => c.CheckSecurityPrincipalHasAccess(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
                     .ReturnsAsync(true);
+
+                _client.Setup(c => c.GetHubSettings(It.IsAny<AuthContext>()))
+                    .ReturnsAsync(new HubSettings { InstanceConnections = new InstanceConnectionSettings { EnforceSignedJoiningChecks = enforceSignedJoiningChecks } });
 
                 _client.Setup(c => c.GetHubManagedInstance(InstanceId, It.IsAny<AuthContext>()))
                     .ReturnsAsync(() => new ManagedInstanceInfo
@@ -147,11 +150,6 @@ namespace Certify.Core.Tests.Unit
                     ["JwtSettings:issuer"] = "Certify.Server.Hub.Api.Tests",
                     ["JwtSettings:authTokenExpirationInMinutes"] = "5"
                 };
-
-                if (allowLegacyUnsignedJoinCheck)
-                {
-                    settings[ManagedInstanceRequestAuthValidator.AllowLegacyUnsignedJoinCheckConfigKey] = "true";
-                }
 
                 _configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
             }

@@ -304,6 +304,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var result = await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
             AssertNoProblems(result);
+            Assert.IsTrue(result.IsFirstRun, "a store with no security principals is a first run");
 
             var principals = await _access.GetSecurityPrincipals(AdminId);
             Assert.IsTrue(principals.Any(p => p.Id == AdminId), "the default admin should be created");
@@ -333,6 +334,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var secondRun = await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
             AssertNoProblems(secondRun);
+            Assert.IsFalse(secondRun.IsFirstRun, "a store which already holds security principals is not a first run");
 
             var tokenAfter = (await _access.GetAssignedAccessTokens(AdminId)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
             var assignmentsAfter = (await _access.GetAssignedRoles(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId)).Single();

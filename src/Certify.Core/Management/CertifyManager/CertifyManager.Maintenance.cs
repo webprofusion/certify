@@ -77,7 +77,16 @@ namespace Certify.Management
 
                 // if we are a management hub backend, upgrade users and roles if required
                 var accessControl = await GetCurrentAccessControl();
-                await ApplyStandardAccessConfig(accessControl);
+                var accessConfigResult = await ApplyStandardAccessConfig(accessControl);
+
+                if (accessConfigResult?.IsFirstRun == true)
+                {
+                    // a new hub has no instances from before joining checks were signed, so it enforces signing from the start.
+                    // An upgraded hub leaves it off until an administrator enables it, so existing instances keep connecting.
+                    var hubSettings = await GetHubSettings();
+                    hubSettings.InstanceConnections.EnforceSignedJoiningChecks = true;
+                    await UpdateHubSettings(hubSettings);
+                }
 
                 // we are the hub backend instance directly connected, if we are not already a registered instance for ourself, register now
 
@@ -123,7 +132,7 @@ namespace Certify.Management
         /// reports rather than throws: a hub which cannot start is harder to recover than one running with a stale
         /// permission set, and an operator needs to be able to sign in to fix it.
         /// </summary>
-        private async Task ApplyStandardAccessConfig(Certify.Core.Management.Access.IAccessControl accessControl)
+        private async Task<StandardAccessConfigResult?> ApplyStandardAccessConfig(Certify.Core.Management.Access.IAccessControl accessControl)
         {
             try
             {
@@ -151,6 +160,8 @@ namespace Certify.Management
                         hasError: true
                     );
                 }
+
+                return result;
             }
             catch (Exception exp)
             {
@@ -163,6 +174,8 @@ namespace Certify.Management
                     description: $"Standard roles and policies could not be applied: {exp.Message}. Assigned roles and API access tokens may be missing permissions granted by this version.",
                     hasError: true
                 );
+
+                return null;
             }
         }
 
