@@ -146,22 +146,6 @@
                                                 SelectedValuePath="Key"
                                                 SelectionChanged="SettingsUpdated" />
                                         </StackPanel>
-
-                                        <Label Content="Windows Private Key Storage Provider" />
-                                        <StackPanel Margin="8,0,0,0">
-                                            <ComboBox
-                                                x:Name="WindowsKeyStorageProviderSelectorControl"
-                                                DisplayMemberPath="Value"
-                                                SelectedValuePath="Key"
-                                                SelectionChanged="SettingsUpdated" />
-                                            <TextBlock
-                                                Margin="0,4,0,0"
-                                                MaxWidth="420"
-                                                HorizontalAlignment="Left"
-                                                Opacity="0.7"
-                                                Text="Legacy CSP options are required by consumers which cannot read CNG keys (VMware Horizon, some Exchange versions, certain vendor certificate utilities) and by tools which need a plain text exportable key. ECDSA keys always require CNG."
-                                                TextWrapping="Wrap" />
-                                        </StackPanel>
                                     </StackPanel>
 
                                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
@@ -220,8 +204,8 @@
                                                     IsChecked="{Binding Prefs.EnableStatusReporting}" />
                                                 <Label Content="Status Notification Email" />
                                                 <TextBox
-                                                    Margin="0,0,0,0"
                                                     MinWidth="260"
+                                                    Margin="0,0,0,0"
                                                     Text="{Binding Prefs.NotificationEmail, UpdateSourceTrigger=PropertyChanged}" />
                                             </StackPanel>
                                         </StackPanel>
@@ -239,7 +223,8 @@
                                 Margin="8"
                                 DockPanel.Dock="Top"
                                 Orientation="Vertical">
-                                <TextBlock Style="{StaticResource Subheading}">Advanced Settings
+                                <TextBlock Style="{StaticResource Subheading}">
+                                    Advanced Settings
                                 </TextBlock>
 
                                 <DockPanel Margin="0,8,0,0" LastChildFill="False">
@@ -319,6 +304,22 @@
                                             Maximum="100"
                                             Minimum="0"
                                             Value="{Binding Prefs.MaxRenewalRequests}" />
+
+                                        <Label Content="Windows Private Key Storage Provider" />
+                                        <StackPanel Margin="4,0,0,0">
+                                            <ComboBox
+                                                x:Name="WindowsKeyStorageProviderSelectorControl"
+                                                DisplayMemberPath="Value"
+                                                SelectedValuePath="Key"
+                                                SelectionChanged="SettingsUpdated" />
+                                            <TextBlock
+                                                MaxWidth="420"
+                                                Margin="0,4,0,0"
+                                                HorizontalAlignment="Left"
+                                                Opacity="0.7"
+                                                Text="Legacy CSP options are required by consumers which cannot read CNG keys. ECDSA keys always require CNG."
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </DockPanel>
 
