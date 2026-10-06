@@ -399,6 +399,12 @@ namespace Certify.Server.Hub.Api.Services.Activity
                 return null;
             }
 
+            // changes the hub makes itself (e.g. for managed ACME orders) have no stored principal to name
+            if (string.Equals(principalId, StandardSecurityPrincipals.System, StringComparison.OrdinalIgnoreCase))
+            {
+                return "System";
+            }
+
             if (_principalNames.TryGetValue(principalId, out var name))
             {
                 return name;
@@ -417,7 +423,8 @@ namespace Certify.Server.Hub.Api.Services.Activity
                     {
                         if (!string.IsNullOrWhiteSpace(p.Id))
                         {
-                            _principalNames[p.Id] = p.Title ?? p.Username ?? p.Id;
+                            // a principal's title defaults to empty rather than null
+                            _principalNames[p.Id] = new[] { p.Title, p.Username, p.Id }.First(n => !string.IsNullOrWhiteSpace(n))!;
                         }
                     }
                 }

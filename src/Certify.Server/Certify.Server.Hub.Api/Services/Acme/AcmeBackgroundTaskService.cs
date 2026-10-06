@@ -9,6 +9,9 @@ namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// Background service for processing ACME order tasks and sweeping stale orders.
+    ///
+    /// ACME clients are not hub principals, so the hub makes (and records) every change to an order's temporary
+    /// managed certificate as the system principal.
     /// </summary>
     public class AcmeBackgroundTaskService : BackgroundService
     {
@@ -45,14 +48,13 @@ namespace Certify.Server.Hub.Api.Services.Acme
         /// <summary>
         /// Enqueue a new ACME order task for background processing
         /// </summary>
-        public Task<bool> EnqueueOrderProcessingTask(string orderId, string managedCertificateId, AuthContext authContext, string hubInstanceId)
+        public Task<bool> EnqueueOrderProcessingTask(string orderId, string managedCertificateId, string hubInstanceId)
         {
             var task = new AcmeOrderTask
             {
                 Type = AcmeTaskType.ProcessOrder,
                 OrderId = orderId,
                 ManagedCertificateId = managedCertificateId,
-                AuthContext = authContext,
                 HubInstanceId = hubInstanceId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -63,7 +65,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
         /// <summary>
         /// Enqueue a new ACME order finalization task for background processing
         /// </summary>
-        public Task<bool> EnqueueOrderFinalizationTask(string orderId, string csr, string baseUrl, AuthContext authContext, string hubInstanceId)
+        public Task<bool> EnqueueOrderFinalizationTask(string orderId, string csr, string baseUrl, string hubInstanceId)
         {
             var task = new AcmeOrderTask
             {
@@ -71,7 +73,6 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 OrderId = orderId,
                 Csr = csr,
                 BaseUrl = baseUrl,
-                AuthContext = authContext,
                 HubInstanceId = hubInstanceId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -86,7 +87,6 @@ namespace Certify.Server.Hub.Api.Services.Acme
             AcmeServerConfig configService,
             ManagementAPI mgmtApi,
             AcmeOrder order,
-            AuthContext? authContext,
             ILogger logger,
             string? hubInstanceIdFallback = null)
         {
@@ -103,7 +103,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
             {
                 try
                 {
-                    var result = await mgmtApi.RemoveManagedCertificate(hubInstanceId, order.ManagedCertificateId, authContext);
+                    var result = await mgmtApi.RemoveManagedCertificate(hubInstanceId, order.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
                     if (!result.IsSuccess)
                     {
                         logger.LogWarning("Failed to remove temporary managed certificate {ManagedCertificateId} for ACME order {OrderId}: {Message}", order.ManagedCertificateId, order.Id, result.Message);
@@ -193,7 +193,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
                 try
                 {
-                    await CleanupOrderAsync(configService, mgmtApi, order, authContext: null, _logger, hubInstanceIdFallback);
+                    await CleanupOrderAsync(configService, mgmtApi, order, _logger, hubInstanceIdFallback);
                 }
                 catch (Exception ex)
                 {
@@ -255,7 +255,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
                     try
                     {
-                        var result = await mgmtApi.RemoveManagedCertificate(instanceItems.InstanceId, item.Id, authContext: null);
+                        var result = await mgmtApi.RemoveManagedCertificate(instanceItems.InstanceId, item.Id, PrincipalAccess.SystemAuthContext);
 
                         if (result.IsSuccess)
                         {
@@ -297,9 +297,9 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
             try
             {
-                await mgmtApi.PerformManagedCertificateRequest(task.HubInstanceId, task.ManagedCertificateId, task.AuthContext);
+                await mgmtApi.PerformManagedCertificateRequest(task.HubInstanceId, task.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
 
-                var itemStatus = await mgmtApi.GetManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, task.AuthContext);
+                var itemStatus = await mgmtApi.GetManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
                 var orderDetails = await configService.GetAcmeOrder(task.OrderId);
 
                 if (orderDetails == null)
@@ -321,7 +321,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 }
 
                 _logger.LogWarning("ACME order {OrderId} failed during processing", task.OrderId);
-                await CleanupOrderAsync(configService, mgmtApi, orderDetails, task.AuthContext, _logger, task.HubInstanceId);
+                await CleanupOrderAsync(configService, mgmtApi, orderDetails, _logger, task.HubInstanceId);
             }
             catch (Exception ex)
             {
@@ -332,13 +332,13 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 {
                     orderDetails.ManagedCertificateId ??= task.ManagedCertificateId;
                     orderDetails.HubInstanceId ??= task.HubInstanceId;
-                    await CleanupOrderAsync(configService, mgmtApi, orderDetails, task.AuthContext, _logger, task.HubInstanceId);
+                    await CleanupOrderAsync(configService, mgmtApi, orderDetails, _logger, task.HubInstanceId);
                 }
                 else if (!string.IsNullOrWhiteSpace(task.ManagedCertificateId))
                 {
                     try
                     {
-                        await mgmtApi.RemoveManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, task.AuthContext);
+                        await mgmtApi.RemoveManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
                     }
                     catch (Exception cleanupEx)
                     {
@@ -387,7 +387,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 if (updatedOrder.Status != OrderStatus.ReadyForInternalFinalization)
                 {
                     _logger.LogError("Order {OrderId} not ready for finalization after timeout", task.OrderId);
-                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, task.AuthContext, _logger, task.HubInstanceId);
+                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, _logger, task.HubInstanceId);
                     return;
                 }
 
@@ -401,7 +401,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 if (string.IsNullOrWhiteSpace(managedCertId))
                 {
                     _logger.LogError("Order {OrderId} has no managed certificate id for finalization", task.OrderId);
-                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, task.AuthContext, _logger, task.HubInstanceId);
+                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, _logger, task.HubInstanceId);
                     return;
                 }
 
@@ -409,20 +409,20 @@ namespace Certify.Server.Hub.Api.Services.Acme
                     ? updatedOrder.HubInstanceId
                     : task.HubInstanceId;
 
-                var managedCert = await mgmtApi.GetManagedCertificate(hubInstanceId, managedCertId, task.AuthContext);
+                var managedCert = await mgmtApi.GetManagedCertificate(hubInstanceId, managedCertId, PrincipalAccess.SystemAuthContext);
                 if (managedCert == null)
                 {
                     _logger.LogError("Managed certificate {ManagedCertificateId} not found for order {OrderId}", managedCertId, task.OrderId);
-                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, task.AuthContext, _logger, hubInstanceId);
+                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, _logger, hubInstanceId);
                     return;
                 }
 
                 managedCert.RequestConfig.CustomCSR = FormatCsrPem(task.Csr);
-                await mgmtApi.UpdateManagedCertificate(hubInstanceId, managedCert, task.AuthContext);
+                await mgmtApi.UpdateManagedCertificate(hubInstanceId, managedCert, PrincipalAccess.SystemAuthContext);
 
-                await mgmtApi.PerformManagedCertificateRequest(hubInstanceId, managedCertId, task.AuthContext);
+                await mgmtApi.PerformManagedCertificateRequest(hubInstanceId, managedCertId, PrincipalAccess.SystemAuthContext);
 
-                managedCert = await mgmtApi.GetManagedCertificate(hubInstanceId, managedCertId, task.AuthContext);
+                managedCert = await mgmtApi.GetManagedCertificate(hubInstanceId, managedCertId, PrincipalAccess.SystemAuthContext);
 
                 if (managedCert?.LastRenewalStatus == RequestState.Success)
                 {
@@ -441,7 +441,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                     _logger.LogWarning("ACME order {OrderId} finalization failed.", task.OrderId);
                     updatedOrder.ManagedCertificateId = managedCertId;
                     updatedOrder.HubInstanceId = hubInstanceId;
-                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, task.AuthContext, _logger, hubInstanceId);
+                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, _logger, hubInstanceId);
                 }
             }
             catch (Exception ex)
@@ -453,13 +453,13 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 {
                     updatedOrder.ManagedCertificateId ??= task.ManagedCertificateId;
                     updatedOrder.HubInstanceId ??= task.HubInstanceId;
-                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, task.AuthContext, _logger, task.HubInstanceId);
+                    await CleanupOrderAsync(configService, mgmtApi, updatedOrder, _logger, task.HubInstanceId);
                 }
                 else if (!string.IsNullOrWhiteSpace(task.ManagedCertificateId))
                 {
                     try
                     {
-                        await mgmtApi.RemoveManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, task.AuthContext);
+                        await mgmtApi.RemoveManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
                     }
                     catch (Exception cleanupEx)
                     {
@@ -498,7 +498,6 @@ namespace Certify.Server.Hub.Api.Services.Acme
         public string ManagedCertificateId { get; set; } = string.Empty;
         public string Csr { get; set; } = string.Empty;
         public string BaseUrl { get; set; } = string.Empty;
-        public AuthContext AuthContext { get; set; } = default!;
         public string HubInstanceId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }

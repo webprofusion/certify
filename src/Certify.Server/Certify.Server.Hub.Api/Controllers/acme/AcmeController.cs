@@ -366,7 +366,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 account.SecurityPrincipalId,
                 account.ScopedAssignedRoles);
 
-            var tempCert = await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
+            var tempCert = await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, SystemAuthContext);
             if (tempCert == null)
             {
                 _logger.LogError("Failed to create temporary managed certificate for order {OrderId}", orderId);
@@ -381,13 +381,12 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             var taskEnqueued = await _backgroundTaskService.EnqueueOrderProcessingTask(
                 orderId,
                 tempCert.Id,
-                CurrentAuthContext,
                 _hubInstanceId);
 
             if (!taskEnqueued)
             {
                 _logger.LogError("Failed to enqueue background task for order {OrderId}", orderId);
-                await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, CurrentAuthContext, _logger, _hubInstanceId);
+                await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, _logger, _hubInstanceId);
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Failed to process order");
             }
 
@@ -465,7 +464,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                     orderId,
                     request.Csr,
                     baseUrl,
-                    CurrentAuthContext,
                     _hubInstanceId);
 
                 if (!taskEnqueued)
@@ -521,8 +519,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Invalid or unknown certId");
             }
 
-            var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-            var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, "pem_fullchain", strictExport: false, CurrentAuthContext);
+            var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, SystemAuthContext);
+            var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, "pem_fullchain", strictExport: false, SystemAuthContext);
 
             if (result?.Result == null)
             {
@@ -534,7 +532,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             // delete order and temp managed cert after successful export
             order.HubInstanceId ??= _hubInstanceId;
-            await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, CurrentAuthContext, _logger, _hubInstanceId);
+            await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, _logger, _hubInstanceId);
 
             // Return the certificate as plain text with proper content type
             return Content(certPEM, "application/pem-certificate-chain");

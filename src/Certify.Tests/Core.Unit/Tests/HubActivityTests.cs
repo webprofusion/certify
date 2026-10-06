@@ -9,7 +9,9 @@ using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.Services.Activity;
+using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -420,6 +422,47 @@ namespace Certify.Core.Tests.Unit
 
             Assert.AreEqual(ActivityEventTypes.InstanceDisconnected, latest.Single(e => e.InstanceId == "a").EventType);
             Assert.AreEqual(ActivityEventTypes.InstanceConnected, latest.Single(e => e.InstanceId == "b").EventType);
+        }
+    }
+
+    /// <summary>
+    /// Changes made through the hub are titled with who made them: the hub itself (e.g. for managed ACME orders) is
+    /// "System", and a principal without a display title is named by its username rather than by nothing.
+    /// </summary>
+    [TestClass]
+    public class ActivityRecorderActorTests
+    {
+        private static ActivityRecorder Recorder(params SecurityPrincipal[] principals)
+        {
+            var client = new Mock<ICertifyInternalApiClient>();
+            client.Setup(c => c.GetSecurityPrincipals(It.IsAny<AuthContext>())).ReturnsAsync(principals.ToList());
+
+            return new ActivityRecorder(new ActivityStore(":memory:"), new Mock<IInstanceManagementStateProvider>().Object, client: client.Object);
+        }
+
+        [TestMethod]
+        public async Task SystemPrincipal_IsNamedSystem()
+        {
+            var actor = await Recorder().ResolveActorAsync(new AuthContext { UserId = StandardSecurityPrincipals.System });
+
+            Assert.AreEqual("System", actor);
+        }
+
+        [TestMethod]
+        public async Task PrincipalWithoutTitle_IsNamedByUsername()
+        {
+            var recorder = Recorder(
+                new SecurityPrincipal { Id = "p1", Username = "admin" },
+                new SecurityPrincipal { Id = "p2", Title = "Jo Bloggs", Username = "jo" });
+
+            Assert.AreEqual("admin", await recorder.ResolveActorAsync(new AuthContext { UserId = "p1" }));
+            Assert.AreEqual("Jo Bloggs", await recorder.ResolveActorAsync(new AuthContext { UserId = "p2" }));
+        }
+
+        [TestMethod]
+        public async Task NoCaller_IsNotNamed()
+        {
+            Assert.IsNull(await Recorder().ResolveActorAsync(null));
         }
     }
 
