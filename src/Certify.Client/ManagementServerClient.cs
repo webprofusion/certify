@@ -72,7 +72,7 @@ namespace Certify.Client
                 // discard any previous connection (e.g. one closed by the hub) before replacing it
                 await DisposeCurrentConnection();
 
-                var allowUntrusted = true;
+                var allowUntrusted = !HubCertificateTrust.IsTrustedCertificateRequired;
 
                 var connection = new HubConnectionBuilder()
 
@@ -85,8 +85,12 @@ namespace Certify.Client
                             if (allowUntrusted)
                             {
                                 // allow invalid/untrusted tls cert
-                                clientHandler.ServerCertificateCustomValidationCallback +=
+#if NET9_0_OR_GREATER
+                                clientHandler.ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#else
+                                clientHandler.ServerCertificateCustomValidationCallback =
                                     (sender, certificate, chain, sslPolicyErrors) => true;
+#endif
                             }
                         }
 

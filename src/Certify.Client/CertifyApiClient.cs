@@ -140,8 +140,12 @@ namespace Certify.Client
             if (_connectionConfig.UseHTTPS && _connectionConfig.AllowUntrusted)
             {
                 // ignore all cert errors when validating URL response
+#if NET9_0_OR_GREATER
+                _httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#else
                 _httpClientHandler.ServerCertificateCustomValidationCallback =
                    (message, certificate, chain, sslPolicyErrors) => true;
+#endif
             }
 
             if (_connectionConfig.Authentication == "default")

@@ -27,8 +27,12 @@ namespace Certify.Shared.Core.Utils
             _enableValidationProxyAPI = enableProxyValidationAPI;
 
             _httpClientHandler = new HttpClientHandler();
+#if NET9_0_OR_GREATER
+            _httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#else
             _httpClientHandler.ServerCertificateCustomValidationCallback =
                  (message, certificate, chain, sslPolicyErrors) => true;
+#endif
 
             _httpClient = new HttpClient(_httpClientHandler);
             _httpClient.Timeout = new TimeSpan(0, 0, 5);

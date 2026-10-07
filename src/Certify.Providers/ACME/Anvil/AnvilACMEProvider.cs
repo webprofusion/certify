@@ -147,7 +147,11 @@ namespace Certify.Providers.ACME.Anvil
 
             if (_providerSettings.AllowUntrustedTls)
             {
+#if NET9_0_OR_GREATER
+                httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#else
                 httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
+#endif
             }
 
             // Apply proxy configuration from environment if configured

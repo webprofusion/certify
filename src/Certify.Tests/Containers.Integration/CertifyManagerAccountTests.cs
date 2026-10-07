@@ -309,7 +309,7 @@ namespace Certify.Tests.Integration.Containers
         {
             var httpHandler = new HttpClientHandler();
 
-            httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
+            httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
             var loggingHandler = new LoggingHandler(httpHandler, _log, maxRequestsPerSecond: 2);
             var stepCaHttp = new HttpClient(loggingHandler);

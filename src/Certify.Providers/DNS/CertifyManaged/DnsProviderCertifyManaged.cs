@@ -213,7 +213,9 @@ namespace Certify.Providers.DNS.CertifyManaged
 
         private ActionResult CreateTransportFailureResult(string action, HttpRequestException exp)
         {
-            return new ActionResult { IsSuccess = false, Message = $"{action} failed: {exp.Message}" };
+            // the cause, such as why a TLS certificate was rejected, is only on the inner exception
+            var cause = exp.InnerException != null ? $" {exp.InnerException.Message}" : string.Empty;
+            return new ActionResult { IsSuccess = false, Message = $"{action} failed: {exp.Message}{cause}" };
         }
 
         private async Task<ActionResult> SendManagedChallengeRequest(ManagedChallengeRequest update, Uri apiUri, string action, string successMessage)
@@ -361,11 +363,8 @@ namespace Certify.Providers.DNS.CertifyManaged
             _log = log;
             _parameters = parameters;
 
-#if DEBUG
-            _client = clientProvider.CreateClient($"Certify/{Definition.Id}", allowInvalidTls: true);
-#else
-            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
-#endif
+            // the managed challenge API is the hub's API, so the hub's certificate is trusted the same way as for the hub connection
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}", allowInvalidTls: !HubCertificateTrust.IsTrustedCertificateRequired);
 
             _client.Timeout = ManagedChallengeApiTimeout;
 

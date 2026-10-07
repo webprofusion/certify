@@ -116,8 +116,12 @@ namespace Certify.Client
                             if (_connectionConfig.AllowUntrusted)
                             {
                                 // allow invalid tls cert
-                                clientHandler.ServerCertificateCustomValidationCallback +=
+#if NET9_0_OR_GREATER
+                                clientHandler.ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#else
+                                clientHandler.ServerCertificateCustomValidationCallback =
                                     (sender, certificate, chain, sslPolicyErrors) => { return true; };
+#endif
                             }
                         }
 

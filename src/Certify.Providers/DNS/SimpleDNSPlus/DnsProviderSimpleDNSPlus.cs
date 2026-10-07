@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.Config;
@@ -126,7 +125,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         private HttpRequestMessage CreateRequest(HttpMethod method, string url)
         {
-            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             var request = new HttpRequestMessage(method, url);
             var basicAuthString = Base64Encode(_authKey + ":" + _authSecret);
             request.Headers.Add("Authorization", $"Basic {basicAuthString}");
@@ -270,7 +268,8 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
         {
             _log = log;
 
-            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
+            // the API host is commonly reached over a self signed certificate
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}", allowInvalidTls: true);
 
             _authKey = credentials["authkey"];
             _authSecret = credentials["authsecret"];
