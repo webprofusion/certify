@@ -10,8 +10,8 @@ $ErrorActionPreference = 'Stop'
 $packageArgs = @{
   packageName    = $env:ChocolateyPackageName
   fileType       = 'exe'
-  url64bit       = 'https://downloads.certifytheweb.com/release/7.2.1.0/certify-ccm-windows-x64-7.2.1.0.exe'
-  checksum64     = '2c787e4d21d68612e77579a9c1513319dcee4589db188fe87f1022fcaf5b9f35'
+  url64bit       = 'https://downloads.certifytheweb.com/release/7.3.0.0/certify-ccm-windows-x64-7.3.0.0.exe'
+  checksum64     = '657f9e4212409af0d59cf784109b31b83ceda9b5c97c9d3322eeba3e6b680699'
   checksumType64 = 'sha256'
   # matches the Add/Remove Programs display name written by the Inno Setup installer
   softwareName   = 'Certify Certificate Manager*'
