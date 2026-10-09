@@ -405,7 +405,31 @@ provider.Mappings[".image"] = "image/png";
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    ContentTypeProvider = provider
+    ContentTypeProvider = provider,
+    OnPrepareResponse = ctx =>
+    {
+        // index.html and the UI's own settings files are never fingerprinted, so they must always be
+        // revalidated. Otherwise, after a hub update replaces the fingerprinted /_framework assets,
+        // a browser serving a cached index.html keeps requesting deleted files and the UI breaks.
+        var fileName = ctx.File.Name;
+        if (fileName.Equals("index.html", StringComparison.OrdinalIgnoreCase)
+            || (fileName.StartsWith("appsettings", StringComparison.OrdinalIgnoreCase) && fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
+        {
+            ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+            ctx.Context.Response.Headers.Pragma = "no-cache";
+        }
+        else if (ctx.Context.Request.Path.StartsWithSegments("/_framework"))
+        {
+            // content-hash fingerprinted (OverrideHtmlAssetPlaceholders): a changed file is always a new URL.
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+        }
+        else
+        {
+            // everything else (css, js, images, _content/*) is not fingerprinted, so bound how long a
+            // browser can keep serving a stale copy after a hub update instead of caching indefinitely.
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=3600, must-revalidate";
+        }
+    }
 });
 
 // configure CORS
