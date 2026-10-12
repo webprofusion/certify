@@ -419,7 +419,7 @@ namespace Certify.Core.Management.Access
             var assignedTokens = await _store.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
 
             // check if a non-expired/non-revoked access token exists matching the given client ID
-            var knownAssignedToken = assignedTokens.SingleOrDefault(t => t.AccessTokens.Any(a => a.ClientId == accessToken.ClientId && a.Secret == accessToken.Secret && a.DateRevoked == null && (a.DateExpiry == null || a.DateExpiry >= DateTimeOffset.UtcNow)));
+            var knownAssignedToken = assignedTokens.SingleOrDefault(t => t.AccessTokens.Any(a => a.ClientId == accessToken.ClientId && IsMatchingSecret(a.Secret, accessToken.Secret) && a.DateRevoked == null && (a.DateExpiry == null || a.DateExpiry >= DateTimeOffset.UtcNow)));
 
             if (knownAssignedToken == null)
             {
@@ -878,7 +878,48 @@ namespace Certify.Core.Management.Access
             }
         }
 
-        public async Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId)
+        /// <summary>
+        /// Compare a stored access token secret with a presented one in constant time
+        /// </summary>
+        private static bool IsMatchingSecret(string? storedSecret, string? presentedSecret)
+        {
+            if (string.IsNullOrEmpty(storedSecret) || string.IsNullOrEmpty(presentedSecret))
+            {
+                return false;
+            }
+
+            // hashing first gives equal length inputs, so the comparison time does not depend on the secret length either
+            return CryptographicOperations.FixedTimeEquals(
+                SHA256.HashData(Encoding.UTF8.GetBytes(storedSecret)),
+                SHA256.HashData(Encoding.UTF8.GetBytes(presentedSecret)));
+        }
+
+        private static AccessToken WithoutSecret(AccessToken token) => new()
+        {
+            Id = token.Id,
+            Title = token.Title,
+            Description = token.Description,
+            ItemType = token.ItemType,
+            TokenType = token.TokenType,
+            ClientId = token.ClientId,
+            DateCreated = token.DateCreated,
+            DateExpiry = token.DateExpiry,
+            DateRevoked = token.DateRevoked,
+            Secret = null!
+        };
+
+        private static AssignedAccessToken WithoutSecrets(AssignedAccessToken assigned) => new()
+        {
+            Id = assigned.Id,
+            Title = assigned.Title,
+            Description = assigned.Description,
+            ItemType = assigned.ItemType,
+            SecurityPrincipalId = assigned.SecurityPrincipalId,
+            ScopedAssignedRoles = assigned.ScopedAssignedRoles?.ToList() ?? [],
+            AccessTokens = assigned.AccessTokens?.Select(WithoutSecret).ToList() ?? []
+        };
+
+        public async Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId, bool includeSecrets = false)
         {
             // if not system user, must be in administrator role to list assigned access tokens
             // this system user is a special case because our ACME endpoints do not use the standard security principal model and have no associated user in most cases
@@ -889,7 +930,37 @@ namespace Certify.Core.Management.Access
                 return null;
             }
 
-            return await _store.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
+            var assignedTokens = await _store.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
+
+            return includeSecrets ? assignedTokens : assignedTokens.Select(WithoutSecrets).ToList();
+        }
+
+        public async Task<AccessTokenUnlockResult> UnlockAccessToken(string contextUserId, string accessTokenId)
+        {
+            if (contextUserId != StandardSecurityPrincipals.System && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to unlock access token [{accessTokenId}] without being in required role.", contextUserId, accessTokenId);
+                return new AccessTokenUnlockResult { IsSuccess = false, Message = "Not authorized to unlock access tokens." };
+            }
+
+            var assignedTokens = await _store.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
+
+            var matches = assignedTokens
+                .SelectMany(t => t.AccessTokens ?? [])
+                .Where(a => !string.IsNullOrWhiteSpace(accessTokenId) && a.Id == accessTokenId)
+                .ToList();
+
+            if (matches.Count != 1)
+            {
+                return new AccessTokenUnlockResult { IsSuccess = false, Message = "Access token not found." };
+            }
+
+            if (contextUserId != StandardSecurityPrincipals.System)
+            {
+                await AuditInformation("User {contextUserId} unlocked the secret of access token [{accessTokenId}]", contextUserId, accessTokenId);
+            }
+
+            return new AccessTokenUnlockResult { IsSuccess = true, Message = "OK", Result = matches[0] };
         }
 
         public async Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken a, bool bypassIntegrityCheck = false)

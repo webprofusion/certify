@@ -273,7 +273,16 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 return null;
             }
 
-            return (match.Token, match.SecurityPrincipalId, match.ScopedAssignedRoles ?? []);
+            // the token list omits secrets, so fetch the secret for this one token
+            var unlocked = await _client.UnlockAccessToken(keyId, authContext);
+
+            if (unlocked?.IsSuccess != true || unlocked.Result == null || string.IsNullOrEmpty(unlocked.Result.Secret))
+            {
+                _logger.LogError("EAB Key ID {KeyId} secret could not be retrieved", keyId);
+                return null;
+            }
+
+            return (unlocked.Result, match.SecurityPrincipalId, match.ScopedAssignedRoles ?? []);
         }
 
         /// <summary>

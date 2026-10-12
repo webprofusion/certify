@@ -399,7 +399,7 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? StandardSecurityPrincipals.System);
+            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? StandardSecurityPrincipals.System, includeSecrets: true);
             var latestToken = assignedTokens
                 .Where(t => string.Equals(t.Title, "Managed Instance Hub Joining Key", StringComparison.OrdinalIgnoreCase))
                 .SelectMany(t => t.AccessTokens ?? [])

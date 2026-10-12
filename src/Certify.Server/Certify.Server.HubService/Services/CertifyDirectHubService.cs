@@ -114,7 +114,8 @@ namespace Certify.Server.HubService.Services
         public Task<ICollection<AssignedRole>> GetSecurityPrincipalAssignedRoles(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipalAssignedRoles(id);
         public Task<RoleStatus> GetSecurityPrincipalRoleStatus(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipalRoleStatus(id);
         public Task<ICollection<SecurityPrincipal>> GetSecurityPrincipals(AuthContext authContext) => _accessController(authContext).GetSecurityPrincipals();
-        public Task<ActionResult> AddAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).AddAssignedccessToken(token);
+        public Task<AssignedAccessTokenAddResult> AddAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).AddAssignedccessToken(token);
+        public Task<AccessTokenUnlockResult> UnlockAccessToken(string accessTokenId, AuthContext authContext) => _accessController(authContext).UnlockAccessToken(accessTokenId);
         public Task<ActionResult> UpdateAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).UpdateAssignedAccessToken(token);
         public Task<ActionResult> RemoveAssignedAccessToken(string id, AuthContext authContext) => _accessController(authContext).RemoveAssignedAccessToken(id);
         public Task<ActionResult<AccessTokenAuthorizationContext>> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckApiTokenHasAccess(new AccessTokenCheck { Check = check, Token = token });

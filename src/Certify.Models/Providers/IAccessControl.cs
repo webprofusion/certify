@@ -76,7 +76,16 @@ namespace Certify.Core.Management.Access
         Task<bool> AddAssignedRole(string contextUserId, AssignedRole assignedRole, bool bypassIntegrityCheck = false);
         Task<bool> AddResourceAction(string contextUserId, ResourceAction action, bool bypassIntegrityCheck = false);
 
-        Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId);
+        /// <summary>
+        /// List assigned access tokens. Access token secrets are omitted unless includeSecrets is set.
+        /// </summary>
+        Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId, bool includeSecrets = false);
+
+        /// <summary>
+        /// Get a single access token including its secret
+        /// </summary>
+        Task<AccessTokenUnlockResult> UnlockAccessToken(string contextUserId, string accessTokenId);
+
         Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken token, bool bypassIntegrityCheck = false);
 
         /// <summary>

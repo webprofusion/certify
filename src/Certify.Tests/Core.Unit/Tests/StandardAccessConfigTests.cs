@@ -328,7 +328,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
-            var tokenBefore = (await _access.GetAssignedAccessTokens(AdminId)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
+            var tokenBefore = (await _access.GetAssignedAccessTokens(AdminId, includeSecrets: true)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
             var assignmentsBefore = (await _access.GetAssignedRoles(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId)).Single();
 
             var secondRun = await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
@@ -336,7 +336,7 @@ namespace Certify.Tests.Core.Unit.Tests
             AssertNoProblems(secondRun);
             Assert.IsFalse(secondRun.IsFirstRun, "a store which already holds security principals is not a first run");
 
-            var tokenAfter = (await _access.GetAssignedAccessTokens(AdminId)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
+            var tokenAfter = (await _access.GetAssignedAccessTokens(AdminId, includeSecrets: true)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
             var assignmentsAfter = (await _access.GetAssignedRoles(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId)).Single();
 
             Assert.AreEqual(tokenBefore.AccessTokens.Single().Secret, tokenAfter.AccessTokens.Single().Secret, "an existing joining token must be kept, managed instances already hold its secret");
@@ -350,7 +350,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
-            var original = (await _access.GetAssignedAccessTokens(AdminId)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
+            var original = (await _access.GetAssignedAccessTokens(AdminId, includeSecrets: true)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
             Assert.IsTrue(await _access.DeleteAssignedAccessToken(AdminId, original.Id));
 
             // the stored credential is still present and now points at a token which is gone
@@ -358,7 +358,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             AssertNoProblems(result);
 
-            var reissued = (await _access.GetAssignedAccessTokens(AdminId)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
+            var reissued = (await _access.GetAssignedAccessTokens(AdminId, includeSecrets: true)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
             Assert.AreNotEqual(original.AccessTokens.Single().Secret, reissued.AccessTokens.Single().Secret, "a new joining token should be issued");
 
             var storedSecret = await creds.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
@@ -372,7 +372,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
-            var joiningToken = (await _access.GetAssignedAccessTokens(AdminId))
+            var joiningToken = (await _access.GetAssignedAccessTokens(AdminId, includeSecrets: true))
                 .Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle)
                 .AccessTokens.Single();
 

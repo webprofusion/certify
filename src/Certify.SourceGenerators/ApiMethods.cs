@@ -131,7 +131,7 @@ namespace Certify.SourceGenerators
                 {
                     OperationName = "GetAssignedAccessTokens",
                     OperationMethod = HttpGet,
-                    Comment = "Get list of API assigned access tokens",
+                    Comment = "Get list of API assigned access tokens, without their secrets",
                     PublicAPIController = "Access",
                     PublicAPIRoute = "assignedtoken",
                     ServiceAPIRoute = "access/assignedtoken/list",
@@ -140,13 +140,25 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "UnlockAccessToken",
+                    OperationMethod = HttpPost,
+                    Comment = "Get an access token including its secret",
+                    PublicAPIController = "Access",
+                    PublicAPIRoute = "assignedtoken/{accessTokenId}/unlock",
+                    ServiceAPIRoute = "access/assignedtoken/{accessTokenId}/unlock",
+                    ReturnType = nameof(AccessTokenUnlockResult),
+                    Params = new Dictionary<string, string> { { "accessTokenId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.AccessToken, StandardResourceActions.AccessTokenReadSecret)]
+                },
+                new()
+                {
                     OperationName = "AddAssignedAccessToken",
                     OperationMethod = HttpPost,
-                    Comment = "Add new assigned access token",
+                    Comment = "Add new assigned access token, the result includes the generated secrets",
                     PublicAPIController = "Access",
                     PublicAPIRoute = "assignedtoken",
                     ServiceAPIRoute = "access/assignedtoken",
-                    ReturnType = actionResultTypeName,
+                    ReturnType = nameof(AssignedAccessTokenAddResult),
                     Params = new Dictionary<string, string> { { "token", "Certify.Models.Hub.AssignedAccessToken" } },
                     RequiredPermissions = [new(ResourceTypes.AccessToken, StandardResourceActions.AccessTokenAdd)]
                 },

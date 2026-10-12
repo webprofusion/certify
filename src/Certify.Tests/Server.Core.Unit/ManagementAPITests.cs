@@ -241,7 +241,7 @@ namespace Certify.Tests.Server.Core.Unit
         {
             var accessControl = new Mock<IAccessControl>();
             accessControl
-                .Setup(x => x.GetAssignedAccessTokens(It.IsAny<string>()))
+                .Setup(x => x.GetAssignedAccessTokens(It.IsAny<string>(), true))
                 .ReturnsAsync([
                     new AssignedAccessToken
                     {

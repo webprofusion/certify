@@ -1152,6 +1152,49 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task TestAccessTokenSecretIsOnlyReturnedWhenUnlocked()
+        {
+            await access.AddAssignedRole(contextUserId, TestAssignedRoles.TestAdmin, bypassIntegrityCheck: true);
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            var apiToken = new AccessToken { ClientId = TestSecurityPrincipals.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = AccessTokenTypes.Simple };
+
+            await access.AddAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                AccessTokens = [apiToken],
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "test token"
+            });
+
+            var listed = (await access.GetAssignedAccessTokens(contextUserId)).SelectMany(t => t.AccessTokens).Single(a => a.Id == apiToken.Id);
+            Assert.IsNull(listed.Secret, "Listing should not include the secret");
+            Assert.AreEqual(apiToken.ClientId, listed.ClientId);
+
+            var unlocked = await access.UnlockAccessToken(contextUserId, apiToken.Id);
+            Assert.IsTrue(unlocked.IsSuccess, unlocked.Message);
+            Assert.AreEqual(apiToken.Secret, unlocked.Result?.Secret);
+
+            var listedAgain = (await access.GetAssignedAccessTokens(contextUserId)).SelectMany(t => t.AccessTokens).Single(a => a.Id == apiToken.Id);
+            Assert.IsNull(listedAgain.Secret, "Unlocking should not change what the listing returns");
+
+            var notAdmin = await access.UnlockAccessToken(TestSecurityPrincipals.DevopsUser.Id, apiToken.Id);
+            Assert.IsFalse(notAdmin.IsSuccess, "Only an administrator should be able to unlock a token");
+            Assert.IsNull(notAdmin.Result);
+
+            var unknown = await access.UnlockAccessToken(contextUserId, Guid.NewGuid().ToString());
+            Assert.IsFalse(unknown.IsSuccess);
+
+            var resolved = await access.ResolveAccessToken(new AccessToken { ClientId = apiToken.ClientId, Secret = apiToken.Secret });
+            Assert.IsTrue(resolved.IsSuccess, resolved.Message);
+
+            var wrongSecret = await access.ResolveAccessToken(new AccessToken { ClientId = apiToken.ClientId, Secret = apiToken.Secret.ToUpperInvariant() });
+            Assert.IsFalse(wrongSecret.IsSuccess, "A secret which differs only by case should not resolve");
+
+            var noSecret = await access.ResolveAccessToken(new AccessToken { ClientId = apiToken.ClientId, Secret = null! });
+            Assert.IsFalse(noSecret.IsSuccess, "A missing secret should not resolve");
+        }
+
+        [TestMethod]
         public void TestAllStandardResourceActionsAreAllowedByAtLeastOneRole()
         {
             var actions = Policies.GetStandardResourceActions();
@@ -2193,7 +2236,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var authorized = await access.IsAccessTokenAuthorised(apiToken, check);
             Assert.IsTrue(authorized.IsSuccess, authorized.Message);
 
-            var stored = (await access.GetAssignedAccessTokens(contextUserId)).Single(t => t.Id == assignedTokenId);
+            var stored = (await access.GetAssignedAccessTokens(contextUserId, includeSecrets: true)).Single(t => t.Id == assignedTokenId);
 
             Assert.AreEqual("Managed Challenge Token (rescoped)", stored.Title);
             CollectionAssert.AreEquivalent(new[] { currentAssignment.Id }, stored.ScopedAssignedRoles);

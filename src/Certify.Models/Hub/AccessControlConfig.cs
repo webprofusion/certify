@@ -182,6 +182,7 @@ namespace Certify.Models.Hub
         public const string AccessTokenAdd = "accesstoken_add_action";
         public const string AccessTokenUpdate = "accesstoken_update_action";
         public const string AccessTokenDelete = "accesstoken_delete_action";
+        public const string AccessTokenReadSecret = "accesstoken_readsecret_action";
 
         public const string SystemStatusList = "system_status_list_action";
         public const string SystemLogList = "system_log_list_action";
@@ -306,6 +307,7 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.AccessTokenDelete, "Delete Access Token", ResourceTypes.AccessToken),
                 new(StandardResourceActions.AccessTokenList, "List Access Tokens", ResourceTypes.AccessToken),
                 new(StandardResourceActions.AccessTokenUpdate, "Update Access Token", ResourceTypes.AccessToken),
+                new(StandardResourceActions.AccessTokenReadSecret, "View Access Token Secret", ResourceTypes.AccessToken),
 
                 new(StandardResourceActions.RoleList, "List Roles", ResourceTypes.Role),
 
@@ -522,6 +524,7 @@ namespace Certify.Models.Hub
                          StandardResourceActions.AccessTokenAdd,
                          StandardResourceActions.AccessTokenDelete,
                          StandardResourceActions.AccessTokenUpdate,
+                         StandardResourceActions.AccessTokenReadSecret,
                      ]
                  },
                 new() {
@@ -1159,7 +1162,7 @@ namespace Certify.Models.Hub
             string securityPrincipalId,
             AssignedRole? scopedAssignedRole)
         {
-            var assignedTokens = await access.GetAssignedAccessTokens(contextUserId) ?? [];
+            var assignedTokens = await access.GetAssignedAccessTokens(contextUserId, includeSecrets: true) ?? [];
 
             static bool IsUsable(AccessToken a) => a.DateRevoked == null && (a.DateExpiry == null || a.DateExpiry >= DateTimeOffset.UtcNow);
 

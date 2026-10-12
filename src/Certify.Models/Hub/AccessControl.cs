@@ -210,6 +210,20 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
+    /// Result of adding an assigned access token, including the secrets generated for its access tokens
+    /// </summary>
+    public class AssignedAccessTokenAddResult : Config.ActionResult<AssignedAccessToken>
+    {
+    }
+
+    /// <summary>
+    /// Result of unlocking an access token, including its secret
+    /// </summary>
+    public class AccessTokenUnlockResult : Config.ActionResult<AccessToken>
+    {
+    }
+
+    /// <summary>
     /// Defines a restricted resource
     /// </summary>
     public class Resource : ConfigurationStoreItem

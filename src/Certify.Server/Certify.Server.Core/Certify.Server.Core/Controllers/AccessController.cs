@@ -141,8 +141,16 @@ namespace Certify.Service.Controllers
             return await accessControl.GetAssignedAccessTokens(GetContextUserId());
         }
 
+        [HttpPost, Route("assignedtoken/{accessTokenId}/unlock")]
+        public async Task<AccessTokenUnlockResult> UnlockAccessToken(string accessTokenId)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            return await accessControl.UnlockAccessToken(GetContextUserId(), accessTokenId);
+        }
+
         [HttpPost, Route("assignedtoken/")]
-        public async Task<Models.Config.ActionResult> AddAssignedccessToken([FromBody] AssignedAccessToken token)
+        public async Task<AssignedAccessTokenAddResult> AddAssignedccessToken([FromBody] AssignedAccessToken token)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
@@ -155,10 +163,12 @@ namespace Certify.Service.Controllers
 
             var addResultOk = await accessControl.AddAssignedAccessToken(GetContextUserId(), token);
 
-            return new Models.Config.ActionResult
+            // the generated secrets are returned so the caller can pass them on without a separate unlock
+            return new AssignedAccessTokenAddResult
             {
                 IsSuccess = addResultOk,
-                Message = addResultOk ? "Added" : "Failed to add"
+                Message = addResultOk ? "Added" : "Failed to add",
+                Result = addResultOk ? token : null
             };
         }
 
