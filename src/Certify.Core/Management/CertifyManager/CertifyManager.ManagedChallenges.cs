@@ -489,26 +489,46 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Refuse a request whose TXT record name is not the one its identifier's dns-01 response is published at.
+        /// The identifier's own dns-01 TXT record name, which the matched challenge then writes (applying its own
+        /// CNAME delegation rule), or the refusal for a request naming any other record.
+        ///
         /// Authorization is decided on the identifier, so the record written must be derived from it; a caller
         /// supplied name would otherwise place a record anywhere the challenge's DNS credentials can write.
+        ///
+        /// CNAME delegation is the challenge's to decide, not the caller's. A caller which applied a delegation rule
+        /// of its own (as 7.2 and earlier instances configured with one do) sends the delegated name, and that is
+        /// accepted only where it is the record this challenge's rule delegates the identifier to.
         /// </summary>
-        private static ActionResult? CheckChallengeRecordName(ManagedChallengeRequest request)
+        private static (string? RecordName, ActionResult? Refusal) ResolveChallengeRecordName(ManagedChallengeRequest request, CertRequestChallengeConfig challengeConfig)
         {
-            if (ManagedChallengeAccess.IsResponseKeyForIdentifier(request?.Identifier, request?.ResponseKey))
+            var expected = ManagedChallengeAccess.GetDnsChallengeRecordName(request.Identifier);
+
+            if (expected == null)
             {
-                return null;
+                return (null, new ActionResult { IsSuccess = false, Message = "The challenge identifier is not a valid DNS name." });
             }
 
-            var expected = ManagedChallengeAccess.GetDnsChallengeRecordName(request?.Identifier);
+            if (ManagedChallengeAccess.IsSameDnsName(expected, request.ResponseKey))
+            {
+                return (expected, null);
+            }
 
-            return new ActionResult
+            if (!string.IsNullOrEmpty(challengeConfig.ChallengeDelegationRule))
+            {
+                var delegated = DnsChallengeHelper.ApplyChallengeDelegationRule(request.Identifier, expected, challengeConfig.ChallengeDelegationRule);
+
+                if (ManagedChallengeAccess.IsSameDnsName(delegated, request.ResponseKey))
+                {
+                    return (expected, null);
+                }
+            }
+
+            return (null, new ActionResult
             {
                 IsSuccess = false,
-                Message = expected == null
-                    ? "The challenge identifier is not a valid DNS name."
-                    : $"The challenge response record name must be {expected} for identifier {request?.Identifier}."
-            };
+                Message = $"The challenge response record name must be {expected} for identifier {request.Identifier}. " +
+                    "CNAME delegation for a managed challenge is applied by the hub: set the CNAME Delegation Rule on the hub's managed challenge rather than on the certificate's challenge configuration."
+            });
         }
 
         private async Task<ActionResult> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
@@ -516,12 +536,6 @@ namespace Certify.Management
             var log = _serviceLog;
             var request = authorized.Request;
             var caller = authorized.Caller;
-
-            var invalidRecordName = CheckChallengeRecordName(request);
-            if (invalidRecordName != null)
-            {
-                return invalidRecordName;
-            }
 
             var eligible = await ResolveEligibleChallenges(
                 caller,
@@ -550,6 +564,12 @@ namespace Certify.Management
             }
             else
             {
+                var recordName = ResolveChallengeRecordName(request, matchingChallenge.ChallengeConfig);
+                if (recordName.Refusal != null)
+                {
+                    return recordName.Refusal;
+                }
+
                 // perform challenge
                 var _dnsHelper = new DnsChallengeHelper(_credentialsManager);
 
@@ -567,7 +587,7 @@ namespace Certify.Management
 
                 var domain = new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = request.Identifier };
 
-                dnsResult = await _dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, request.ResponseKey, request.ResponseValue, isTestMode: false);
+                dnsResult = await _dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, recordName.RecordName, request.ResponseValue, isTestMode: false);
 
                 if (!dnsResult.Result.IsSuccess)
                 {
@@ -675,12 +695,6 @@ namespace Certify.Management
             var log = _serviceLog;
             var request = authorized.Request;
 
-            var invalidRecordName = CheckChallengeRecordName(request);
-            if (invalidRecordName != null)
-            {
-                return invalidRecordName;
-            }
-
             var eligible = await ResolveEligibleChallenges(
                 authorized.Caller,
                 request.Identifier,
@@ -708,6 +722,12 @@ namespace Certify.Management
             }
             else
             {
+                var recordName = ResolveChallengeRecordName(request, matchingChallenge.ChallengeConfig);
+                if (recordName.Refusal != null)
+                {
+                    return recordName.Refusal;
+                }
+
                 // perform challenge
                 var _dnsHelper = new DnsChallengeHelper(_credentialsManager);
 
@@ -725,7 +745,7 @@ namespace Certify.Management
 
                 var domain = new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = request.Identifier };
 
-                var dnsResult = await _dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, request.ResponseKey, request.ResponseValue);
+                var dnsResult = await _dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, recordName.RecordName, request.ResponseValue);
 
                 if (!dnsResult.Result.IsSuccess)
                 {

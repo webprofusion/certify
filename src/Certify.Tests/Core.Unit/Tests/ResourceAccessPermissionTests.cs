@@ -124,6 +124,10 @@ namespace Certify.Core.Tests.Unit
             Assert.IsFalse(ManagedChallengeAccess.IsResponseKeyForIdentifier("app.example.com", ""));
             Assert.IsFalse(ManagedChallengeAccess.IsResponseKeyForIdentifier("not a host", "_acme-challenge.not a host"));
             Assert.IsNull(ManagedChallengeAccess.GetDnsChallengeRecordName(null));
+
+            Assert.IsTrue(ManagedChallengeAccess.IsSameDnsName("_acme-challenge.acme.example.org", "_ACME-Challenge.acme.example.org."));
+            Assert.IsFalse(ManagedChallengeAccess.IsSameDnsName("_acme-challenge.acme.example.org", "_acme-challenge.other.example.org"));
+            Assert.IsFalse(ManagedChallengeAccess.IsSameDnsName(null, null));
         }
     }
 }

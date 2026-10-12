@@ -121,9 +121,17 @@ namespace Certify.Models.Hub
         /// </summary>
         public static bool IsResponseKeyForIdentifier(string? identifier, string? responseKey)
         {
-            var expected = GetDnsChallengeRecordName(identifier);
+            return IsSameDnsName(GetDnsChallengeRecordName(identifier), responseKey);
+        }
 
-            return expected != null && string.Equals(expected, NormaliseDnsName(responseKey), StringComparison.Ordinal);
+        /// <summary>
+        /// True when both are valid DNS names which differ only by case, trailing dot or IDN (unicode/punycode) form.
+        /// </summary>
+        public static bool IsSameDnsName(string? name, string? otherName)
+        {
+            var normalised = NormaliseDnsName(name);
+
+            return normalised != null && string.Equals(normalised, NormaliseDnsName(otherName), StringComparison.Ordinal);
         }
 
         private static string? NormaliseDnsName(string? name)

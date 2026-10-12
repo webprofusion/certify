@@ -896,14 +896,15 @@ namespace Certify.Tests.Core.Unit.Tests
         // own scope service used to answer separately, plus the domain restrictions which only it enforced.
 
         /// <summary>
-        /// Seed a principal holding one role which grants the action, optionally tag scoped and/or restricted to
+        /// Seed a principal holding one role which grants the action(s), optionally tag scoped and/or restricted to
         /// specific domains, so an authorization check against it resolves through the real access control chain.
         /// </summary>
         private async Task SeedPrincipalWithRole(
             string principalId,
             string actionId,
             List<TagScope> scopedTags = null,
-            string domainRestriction = null)
+            string domainRestriction = null,
+            string[] additionalActionIds = null)
         {
             const string policyId = "test_managedchallenge_policy";
             const string roleId = "test_managedchallenge_role";
@@ -920,7 +921,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 Id = policyId,
                 Title = "Test managed challenge policy",
                 SecurityPermissionType = SecurityPermissionType.ALLOW,
-                ResourceActions = [actionId]
+                ResourceActions = [actionId, .. additionalActionIds ?? []]
             });
 
             await _store.Add<Role>(nameof(Role), new Role(roleId, "Test managed challenge role", "", policies: [policyId]));
@@ -962,7 +963,8 @@ namespace Certify.Tests.Core.Unit.Tests
         public async Task PerformManagedChallenge_RecordNameForAnotherHost_IsRefused()
         {
             await CreateManagedChallenge("challenge-any", "*.example.com");
-            await SeedPrincipalWithRole("sp-consumer", StandardResourceActions.ManagedChallengeRequest);
+            await SeedPrincipalWithRole("sp-consumer", StandardResourceActions.ManagedChallengeRequest,
+                additionalActionIds: [StandardResourceActions.ManagedChallengeCleanup]);
 
             AuthorizedManagedChallengeRequest Request(string responseKey) => new()
             {
@@ -989,6 +991,65 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsFalse(cleanup.IsSuccess);
             StringAssert.Contains(cleanup.Message, "_acme-challenge.app.example.com");
             Assert.IsFalse(apex.IsSuccess);
+        }
+
+        /// <summary>
+        /// CNAME delegation is the challenge's own rule to apply. A caller may send either the identifier's record
+        /// name or the name the challenge's rule delegates it to (as an instance configured with the same rule
+        /// does), and either way the hub writes the record its rule decides. A name delegated anywhere else is
+        /// refused, with a message pointing at where the rule belongs.
+        /// </summary>
+        [TestMethod]
+        [Description("A managed challenge's CNAME delegation rule decides the record written, and only its delegated name is accepted")]
+        public async Task PerformManagedChallenge_DelegatedRecordName_FollowsTheChallengeRule()
+        {
+            var challenge = await CreateManagedChallenge("challenge-delegated", "*.ad.example.com");
+            challenge.ChallengeConfig.ChallengeProvider = "DNS01.Manual";
+            challenge.ChallengeConfig.ChallengeDelegationRule = "*.ad.example.com:acme.example.org";
+            await _store.Update<ManagedChallenge>(nameof(ManagedChallenge), challenge);
+
+            await SeedPrincipalWithRole("sp-consumer", StandardResourceActions.ManagedChallengeRequest,
+                additionalActionIds: [StandardResourceActions.ManagedChallengeCleanup]);
+
+            // the hub writes through the challenge's DNS provider, which is resolved from the loaded plugins
+            new PluginManager().LoadPlugins([PluginManager.PLUGINS_DNS_PROVIDERS]);
+
+            var log = new MockLog();
+            typeof(CertifyManager)
+                .GetProperty("_serviceLog", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(_manager, log);
+
+            AuthorizedManagedChallengeRequest Request(string responseKey) => new()
+            {
+                Request = new ManagedChallengeRequest
+                {
+                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                    Identifier = "exch01.ad.example.com",
+                    ResponseKey = responseKey,
+                    ResponseValue = "token"
+                },
+                Caller = new ManagedChallengeCaller
+                {
+                    SecurityPrincipalId = "sp-consumer",
+                    Origin = ManagedChallengeRequestOrigins.ManagedChallengeApi
+                }
+            };
+
+            var undelegated = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge.exch01.ad.example.com"));
+            var delegated = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge.acme.example.org"));
+            var delegatedCleanup = await _manager.CleanupManagedChallengeRequest(Request("_acme-challenge.acme.example.org"));
+            var elsewhere = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge.other.example.org"));
+
+            Assert.IsTrue(undelegated.IsSuccess, undelegated.Message);
+            Assert.IsTrue(delegated.IsSuccess, delegated.Message);
+            Assert.IsTrue(delegatedCleanup.IsSuccess, delegatedCleanup.Message);
+
+            // both requests wrote the delegated record, and the delegated name was not delegated a second time
+            Assert.AreEqual(2, log.LogEntries.Count(e => e.Contains("Creating TXT Record '_acme-challenge.acme.example.org'")));
+
+            Assert.IsFalse(elsewhere.IsSuccess);
+            StringAssert.Contains(elsewhere.Message, "_acme-challenge.exch01.ad.example.com");
+            StringAssert.Contains(elsewhere.Message, "CNAME Delegation Rule");
         }
 
         /// <summary>
