@@ -538,9 +538,13 @@ namespace Certify.Core.Management.Access
         /// </summary>
         public const int MinimumPasswordLength = 8;
 
-        public async Task<bool> UpdateSecurityPrincipalPassword(string contextUserId, SecurityPrincipalPasswordUpdate passwordUpdate, bool requirePasswordConfirmation = true)
+        /// <param name="bypassIntegrityCheck">
+        /// Skips the self-or-administrator check. Only for callers which establish their authority some other way, such
+        /// as the hub's local admin channel acting for an operating system administrator on the hub machine.
+        /// </param>
+        public async Task<bool> UpdateSecurityPrincipalPassword(string contextUserId, SecurityPrincipalPasswordUpdate passwordUpdate, bool requirePasswordConfirmation = true, bool bypassIntegrityCheck = false)
         {
-            if (passwordUpdate.SecurityPrincipalId != contextUserId && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && passwordUpdate.SecurityPrincipalId != contextUserId && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, passwordUpdate.SecurityPrincipalId);
                 return false;
@@ -555,6 +559,12 @@ namespace Certify.Core.Management.Access
             var updated = false;
 
             var principal = await GetSecurityPrincipal(contextUserId, passwordUpdate.SecurityPrincipalId, includePassword: true);
+
+            if (principal == null)
+            {
+                await AuditWarning("User {contextUserId} attempted to update the password for [{id}], which does not exist.", contextUserId, passwordUpdate.SecurityPrincipalId);
+                return false;
+            }
 
             if (!requirePasswordConfirmation || (requirePasswordConfirmation && IsPasswordValid(passwordUpdate.Password, principal.Password)))
             {

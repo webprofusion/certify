@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Certify.Server.Hub.Api.Services
@@ -89,13 +88,7 @@ namespace Certify.Server.Hub.Api.Services
                     };
                 }
 
-                var documentOptions = new JsonDocumentOptions
-                {
-                    CommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true
-                };
-
-                if (JsonNode.Parse(content, documentOptions: documentOptions) is not JsonObject root)
+                if (HubSettingsFile.Parse(content) is not JsonObject root)
                 {
                     return new JwtSecretProvisioningResult
                     {
@@ -104,9 +97,7 @@ namespace Certify.Server.Hub.Api.Services
                     };
                 }
 
-                var jwtSettings = root[JwtSettingsSectionName] as JsonObject;
-
-                if (!string.IsNullOrWhiteSpace(GetSecretValue(jwtSettings)))
+                if (!string.IsNullOrWhiteSpace(GetSecretValue(root[JwtSettingsSectionName] as JsonObject)))
                 {
                     return new JwtSecretProvisioningResult
                     {
@@ -115,28 +106,9 @@ namespace Certify.Server.Hub.Api.Services
                     };
                 }
 
-                if (jwtSettings == null)
-                {
-                    jwtSettings = new JsonObject();
-                    root[JwtSettingsSectionName] = jwtSettings;
-                }
+                HubSettingsFile.EnsureSection(root, JwtSettingsSectionName)[SecretPropertyName] = GenerateSecret();
 
-                jwtSettings[SecretPropertyName] = GenerateSecret();
-
-                // Keep a copy of the previous file, because rewriting it does not preserve any comments it held.
-                var backupPath = configPath + ".bak";
-
-                try
-                {
-                    File.Copy(configPath, backupPath, overwrite: true);
-                }
-                catch (Exception)
-                {
-                    // best effort, losing the backup is not a reason to leave the service without a secret
-                    backupPath = null;
-                }
-
-                File.WriteAllText(configPath, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+                var backupPath = HubSettingsFile.WriteWithBackup(configPath, root);
 
                 var backupNote = backupPath != null ? $" The previous file was copied to {backupPath}." : string.Empty;
 

@@ -1115,7 +1115,7 @@ namespace Certify.Models.Hub
         /// An existing assignment is returned unchanged: access tokens are scoped by AssignedRole id rather than by
         /// role id, so replacing an assignment here would silently strip the scope from every token pointing at it.
         /// </summary>
-        private static async Task<AssignedRole?> EnsureAssignedRole(
+        public static async Task<AssignedRole?> EnsureAssignedRole(
             IAccessControl access,
             StandardAccessConfigResult result,
             string contextUserId,

@@ -329,6 +329,23 @@ namespace Certify.Server.Hub.Api.Services.Activity
         }
 
         /// <summary>
+        /// An operating system administrator on the hub machine used the local admin channel
+        /// </summary>
+        public Task LocalAdminActionAsync(string title, string actor, bool isSuccess, string? detail = null)
+        {
+            return RecordAsync(new ActivityEvent
+            {
+                InstanceId = _stateProvider.GetManagementHubInstanceId(),
+                Category = ActivityCategory.Hub,
+                EventType = ActivityEventTypes.HubLocalAdminAction,
+                Status = isSuccess ? RequestState.Success : RequestState.Error,
+                Title = title,
+                Actor = actor,
+                Detail = detail
+            });
+        }
+
+        /// <summary>
         /// The hub told the instances using a shared (subscription) certificate that a new version is available
         /// </summary>
         public Task SubscriptionPushedAsync(string instanceId, ManagedCertificate sourceItem, int subscriberCount)

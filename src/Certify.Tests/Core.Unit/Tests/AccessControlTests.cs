@@ -652,6 +652,35 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task TestUpdateSecurityPrincipalPasswordBypass()
+        {
+            var principal = TestSecurityPrincipals.TestAdmin;
+            var firstPassword = principal.Password;
+            Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, principal, bypassIntegrityCheck: true), "test setup should succeed");
+
+            var system = StandardSecurityPrincipals.System;
+            var newPassword = "break-glass-password";
+
+            // the system holds no role, so without the bypass it may not change someone else's password
+            var withoutBypass = await access.UpdateSecurityPrincipalPassword(system, new SecurityPrincipalPasswordUpdate { SecurityPrincipalId = principal.Id, NewPassword = newPassword }, requirePasswordConfirmation: false);
+            Assert.IsFalse(withoutBypass, "System must not update another principal's password without the bypass.");
+
+            // the bypass still applies the minimum length
+            var tooShort = await access.UpdateSecurityPrincipalPassword(system, new SecurityPrincipalPasswordUpdate { SecurityPrincipalId = principal.Id, NewPassword = "short" }, requirePasswordConfirmation: false, bypassIntegrityCheck: true);
+            Assert.IsFalse(tooShort, "The bypass must not skip the minimum password length.");
+
+            var unknown = await access.UpdateSecurityPrincipalPassword(system, new SecurityPrincipalPasswordUpdate { SecurityPrincipalId = "no-such-principal", NewPassword = newPassword }, requirePasswordConfirmation: false, bypassIntegrityCheck: true);
+            Assert.IsFalse(unknown, "Updating a principal which does not exist should fail rather than throw.");
+
+            var updated = await access.UpdateSecurityPrincipalPassword(system, new SecurityPrincipalPasswordUpdate { SecurityPrincipalId = principal.Id, NewPassword = newPassword }, requirePasswordConfirmation: false, bypassIntegrityCheck: true);
+            Assert.IsTrue(updated, "The bypass should allow a reset without the previous password.");
+
+            var stored = await access.GetSecurityPrincipal(contextUserId, principal.Id, includePassword: true);
+            Assert.IsTrue(access.IsPasswordValid(newPassword, stored.Password), "The new password should be in effect.");
+            Assert.IsFalse(access.IsPasswordValid(firstPassword, stored.Password), "The previous password should no longer be valid.");
+        }
+
+        [TestMethod]
         public async Task TestUpdateSecurityPrincipalPasswordBadPassword()
         {
             // Add test security principals

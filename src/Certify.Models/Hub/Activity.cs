@@ -98,6 +98,11 @@ namespace Certify.Models.Hub
         public const string HubStopped = "hub.stopped";
 
         /// <summary>
+        /// An operating system administrator on the hub machine used the local admin channel, e.g. to reset a password
+        /// </summary>
+        public const string HubLocalAdminAction = "hub.localadmin";
+
+        /// <summary>
         /// The hub told the instances using a shared (subscription) certificate that a new version is available
         /// </summary>
         public const string SubscriptionPushed = "hub.subscription.pushed";
