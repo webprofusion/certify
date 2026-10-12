@@ -8,9 +8,11 @@ using Certify.Server.Hub.Api.Extensions;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.Services.Acme;
+using Certify.Server.Hub.Api.Services.LocalAdmin;
 using Certify.Server.Hub.Api.SignalR;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Certify.Server.HubService.Extensions;
+using Certify.Server.HubService.LocalAdmin;
 using Certify.Server.HubService.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
@@ -556,6 +558,41 @@ app.Lifetime.ApplicationStopping.Register(() =>
 {
     activityRecorder.HubLifecycleAsync(isStarting: false, hubVersion).Wait(TimeSpan.FromSeconds(5));
 });
+
+// break-glass administration for an operating system administrator on this machine, see LocalAdminHost
+if (LocalAdminHost.IsEnabled)
+{
+    try
+    {
+        var localAdminOperations = new LocalAdminOperations(
+            certifyManager,
+            app.Configuration,
+            hubSettings,
+            activityRecorder,
+            app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<LocalAdminOperations>());
+
+        var localAdminHost = await LocalAdminHost.StartAsync(localAdminOperations, app.Services.GetRequiredService<ILoggerFactory>());
+
+        app.Lifetime.ApplicationStopping.Register(() => localAdminHost.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(5)));
+
+        AddSystemStatusItem(
+            SystemStatusCategories.HUB_API,
+            SystemStatusKeys.HUB_API_STARTUP_LOCALADMIN,
+            title: "Local Admin Channel",
+            description: $"Local admin channel available to administrators on this machine via {localAdminHost.EndpointDescription}"
+        );
+    }
+    catch (Exception ex)
+    {
+        AddSystemStatusItem(
+            SystemStatusCategories.HUB_API,
+            SystemStatusKeys.HUB_API_STARTUP_LOCALADMIN,
+            title: "Local Admin Channel",
+            description: $"Local admin channel could not be started, break-glass administration with the hub CLI is unavailable - {ex.Message}",
+            hasWarning: true
+        );
+    }
+}
 
 AddSystemStatusItem(
     SystemStatusCategories.HUB_API,

@@ -11,7 +11,7 @@ namespace Certify.Server.Core
     /// Decides which endpoints the service listens on: the standard http endpoint and/or the optional
     /// local named pipe, offered as a secure alternative for clients on the same machine (desktop app, CLI).
     /// </summary>
-    internal static class ServiceEndpointHosting
+    public static class ServiceEndpointHosting
     {
         /// <summary>
         /// Access control for the service pipe. The pipe is the primary access boundary for this
@@ -53,12 +53,12 @@ namespace Certify.Server.Core
         }
 
         /// <summary>
-        /// Publish the local named pipe as the service's only endpoint
+        /// Publish a local named pipe as the host's only endpoint, by default the agent service pipe
         /// </summary>
         [SupportedOSPlatform("windows")]
-        public static string ConfigureNamedPipeEndpoint(WebApplicationBuilder builder)
+        public static string ConfigureNamedPipeEndpoint(WebApplicationBuilder builder, string pipeName = null)
         {
-            var pipeName = NamedPipeConnection.GetPipeName();
+            pipeName ??= NamedPipeConnection.GetPipeName();
 
             // touch the windows identity types once at startup. Resolving a pipe caller happens under
             // Identification level impersonation, where the thread token cannot open files, so any
