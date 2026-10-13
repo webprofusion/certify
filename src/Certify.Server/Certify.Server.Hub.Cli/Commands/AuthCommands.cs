@@ -13,11 +13,13 @@ namespace Certify.Server.Hub.Cli.Commands
         private static Command CreateLogin()
         {
             var username = new Option<string?>("--username", "-u") { Description = "Username to sign in as." };
+            var password = new Option<string?>("--password", "-p") { Description = "Password. Prefer --password-stdin or the prompt on shared machines, which keep it out of the process list." };
             var passwordStdin = new Option<bool>("--password-stdin") { Description = "Read the password from stdin." };
 
             var command = new Command("login", "Sign in to a hub with a username and password, saving the session in a profile. Hubs which only allow single sign on need an API token instead.")
             {
                 username,
+                password,
                 passwordStdin
             };
 
@@ -40,7 +42,16 @@ namespace Certify.Server.Hub.Cli.Commands
                     user = ConsoleIO.Prompt("Username");
                 }
 
-                var password = parseResult.GetValue(passwordStdin) ? ConsoleIO.ReadStdinLine("password") : ConsoleIO.PromptSecret("Password");
+                var givenPassword = parseResult.GetValue(password);
+
+                if (!string.IsNullOrEmpty(givenPassword) && parseResult.GetValue(passwordStdin))
+                {
+                    throw CliException.Usage("Use either --password or --password-stdin, not both.");
+                }
+
+                var secret = !string.IsNullOrEmpty(givenPassword) ? givenPassword
+                    : parseResult.GetValue(passwordStdin) ? ConsoleIO.ReadStdinLine("password")
+                    : ConsoleIO.PromptSecret("Password");
 
                 var settings = new HubSettings
                 {
@@ -53,7 +64,7 @@ namespace Certify.Server.Hub.Cli.Commands
 
                 using var connection = new HubConnection(settings, profiles);
 
-                var request = JsonSerializer.Serialize(new LoginRequest { Username = user, Password = password }, CliJsonContext.Default.LoginRequest);
+                var request = JsonSerializer.Serialize(new LoginRequest { Username = user, Password = secret }, CliJsonContext.Default.LoginRequest);
 
                 using var response = await connection.SendRawAsync(HttpMethod.Post, "api/v1/auth/login", request, authenticate: false, cancellationToken);
                 var body = await response.Content.ReadAsStringAsync(cancellationToken);
