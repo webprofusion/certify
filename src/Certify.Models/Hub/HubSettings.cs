@@ -113,6 +113,14 @@ namespace Certify.Models.Hub
         /// challenges which have no tags applied. Default is false (strict scoping).
         /// </summary>
         public bool AllowUnscopedForScopedPrincipals { get; set; }
+
+        /// <summary>
+        /// If true, a managed challenge only writes the identifier's own _acme-challenge TXT record, or the record the
+        /// managed challenge's own CNAME delegation rule points it to. If false, the hub writes whichever record name
+        /// the caller sends, so CNAME delegation rules configured on instances work as they did before 7.3.0, but any
+        /// authorized caller can write any TXT record the challenge's DNS credentials reach. Default is true.
+        /// </summary>
+        public bool EnforceStrictCnameDelegation { get; set; } = true;
     }
 
     /// <summary>

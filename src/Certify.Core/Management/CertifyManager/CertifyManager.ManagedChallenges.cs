@@ -496,10 +496,12 @@ namespace Certify.Management
         /// supplied name would otherwise place a record anywhere the challenge's DNS credentials can write.
         ///
         /// CNAME delegation is the challenge's to decide, not the caller's. A caller which applied a delegation rule
-        /// of its own (as 7.2 and earlier instances configured with one do) sends the delegated name, and that is
-        /// accepted only where it is the record this challenge's rule delegates the identifier to.
+        /// of its own (as instances configured with one do) sends the delegated name, and that is accepted only where
+        /// it is the record this challenge's rule delegates the identifier to - unless the hub administrator has
+        /// turned off <see cref="ManagedChallengeSettings.EnforceStrictCnameDelegation"/>, in which case the caller's
+        /// name is written as sent, as it was before 7.3.0.
         /// </summary>
-        private static (string? RecordName, ActionResult? Refusal) ResolveChallengeRecordName(ManagedChallengeRequest request, CertRequestChallengeConfig challengeConfig)
+        private async Task<(string? RecordName, ActionResult? Refusal)> ResolveChallengeRecordName(ManagedChallengeRequest request, CertRequestChallengeConfig challengeConfig)
         {
             var expected = ManagedChallengeAccess.GetDnsChallengeRecordName(request.Identifier);
 
@@ -523,11 +525,20 @@ namespace Certify.Management
                 }
             }
 
+            var hubSettings = await GetHubSettings();
+
+            if (!hubSettings.ManagedChallenge.EnforceStrictCnameDelegation && !string.IsNullOrWhiteSpace(request.ResponseKey))
+            {
+                _serviceLog?.Warning($"Managed challenge for {request.Identifier} is using the caller's record name {request.ResponseKey} in place of {expected}, as strict CNAME delegation is not enforced.");
+
+                return (request.ResponseKey, null);
+            }
+
             return (null, new ActionResult
             {
                 IsSuccess = false,
                 Message = $"The challenge response record name must be {expected} for identifier {request.Identifier}. " +
-                    "CNAME delegation for a managed challenge is applied by the hub: set the CNAME Delegation Rule on the hub's managed challenge rather than on the certificate's challenge configuration."
+                    "CNAME delegation for a managed challenge is applied by the hub: set the CNAME Delegation Rule on the hub's managed challenge rather than on the certificate's challenge configuration, or disable Enforce Strict CNAME Delegation in the hub settings."
             });
         }
 
@@ -564,7 +575,7 @@ namespace Certify.Management
             }
             else
             {
-                var recordName = ResolveChallengeRecordName(request, matchingChallenge.ChallengeConfig);
+                var recordName = await ResolveChallengeRecordName(request, matchingChallenge.ChallengeConfig);
                 if (recordName.Refusal != null)
                 {
                     return recordName.Refusal;
@@ -722,7 +733,7 @@ namespace Certify.Management
             }
             else
             {
-                var recordName = ResolveChallengeRecordName(request, matchingChallenge.ChallengeConfig);
+                var recordName = await ResolveChallengeRecordName(request, matchingChallenge.ChallengeConfig);
                 if (recordName.Refusal != null)
                 {
                     return recordName.Refusal;

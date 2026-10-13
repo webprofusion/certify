@@ -1052,6 +1052,70 @@ namespace Certify.Tests.Core.Unit.Tests
             StringAssert.Contains(elsewhere.Message, "CNAME Delegation Rule");
         }
 
+        [TestMethod]
+        [Description("Hub settings stored before strict CNAME delegation existed read back with it enforced")]
+        public void StrictCnameDelegation_IsEnforcedForSettingsStoredWithoutIt()
+        {
+            var stored = Newtonsoft.Json.JsonConvert.DeserializeObject<HubSettings>(
+                "{\"Id\":\"hub-settings\",\"ManagedChallenge\":{\"AllowUnscopedForScopedPrincipals\":false}}");
+
+            Assert.IsTrue(stored.ManagedChallenge.EnforceStrictCnameDelegation);
+            Assert.IsTrue(new HubSettings().ManagedChallenge.EnforceStrictCnameDelegation);
+        }
+
+        /// <summary>
+        /// With strict CNAME delegation turned off in hub settings, the record name the caller sends is written as
+        /// sent, so a delegation rule configured on an instance works as it did before 7.3.0.
+        /// </summary>
+        [TestMethod]
+        [Description("Without strict CNAME delegation, a caller's delegated record name is written as sent")]
+        public async Task PerformManagedChallenge_StrictCnameDelegationOff_WritesCallerRecordName()
+        {
+            var challenge = await CreateManagedChallenge("challenge-lenient", "*.ad.example.com");
+            challenge.ChallengeConfig.ChallengeProvider = "DNS01.Manual";
+            await _store.Update<ManagedChallenge>(nameof(ManagedChallenge), challenge);
+
+            await SeedPrincipalWithRole("sp-consumer", StandardResourceActions.ManagedChallengeRequest,
+                additionalActionIds: [StandardResourceActions.ManagedChallengeCleanup]);
+
+            new PluginManager().LoadPlugins([PluginManager.PLUGINS_DNS_PROVIDERS]);
+
+            var log = new MockLog();
+            typeof(CertifyManager)
+                .GetProperty("_serviceLog", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(_manager, log);
+
+            AuthorizedManagedChallengeRequest Request() => new()
+            {
+                Request = new ManagedChallengeRequest
+                {
+                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                    Identifier = "exch01.ad.example.com",
+                    ResponseKey = "_acme-challenge.tenant.acme.example.org",
+                    ResponseValue = "token"
+                },
+                Caller = new ManagedChallengeCaller
+                {
+                    SecurityPrincipalId = "sp-consumer",
+                    Origin = ManagedChallengeRequestOrigins.ManagedChallengeApi
+                }
+            };
+
+            var strict = await _manager.PerformManagedChallengeRequest(Request());
+
+            var settings = await _manager.GetHubSettings();
+            settings.ManagedChallenge.EnforceStrictCnameDelegation = false;
+            await _manager.UpdateHubSettings(settings);
+
+            var lenient = await _manager.PerformManagedChallengeRequest(Request());
+            var lenientCleanup = await _manager.CleanupManagedChallengeRequest(Request());
+
+            Assert.IsFalse(strict.IsSuccess);
+            Assert.IsTrue(lenient.IsSuccess, lenient.Message);
+            Assert.IsTrue(lenientCleanup.IsSuccess, lenientCleanup.Message);
+            Assert.AreEqual(1, log.LogEntries.Count(e => e.Contains("Creating TXT Record '_acme-challenge.tenant.acme.example.org'")));
+        }
+
         /// <summary>
         /// Each identifier must be answered by a challenge reached through a role assignment which also permits that
         /// identifier. Otherwise a principal holding two scoped assignments could use one assignment's challenge (and
