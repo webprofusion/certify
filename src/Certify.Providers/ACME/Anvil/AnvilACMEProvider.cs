@@ -1384,20 +1384,19 @@ namespace Certify.Providers.ACME.Anvil
         }
 
         /// <summary>
-        /// Get the requested DNS and IP identifiers which are missing from the order identifiers reported by the CA.
-        /// The CSR is built from the order identifiers, so a CA which alters the order (e.g. dropping a wildcard) would otherwise result in a certificate silently missing names.
+        /// Get the DNS and IP identifiers which are not present in the other set of identifiers, used to compare the requested identifiers with the order identifiers reported by the CA.
         /// </summary>
-        private static List<Identifier> GetIdentifiersMissingFromOrder(IEnumerable<Identifier> requested, IEnumerable<Identifier> orderIdentifiers)
+        private static List<Identifier> GetIdentifiersNotIn(IEnumerable<Identifier> identifiers, IEnumerable<Identifier> others)
         {
             string normalise(Identifier i) => i.Type == IdentifierType.Ip && System.Net.IPAddress.TryParse(i.Value, out var ip) ? ip.ToString() : i.Value?.ToLowerInvariant();
 
-            var ordered = new HashSet<(IdentifierType, string)>(
-                (orderIdentifiers ?? Enumerable.Empty<Identifier>()).Select(i => (i.Type, normalise(i)))
+            var otherSet = new HashSet<(IdentifierType, string)>(
+                (others ?? Enumerable.Empty<Identifier>()).Select(i => (i.Type, normalise(i)))
             );
 
-            return requested
+            return (identifiers ?? Enumerable.Empty<Identifier>())
                 .Where(i => i.Type == IdentifierType.Dns || i.Type == IdentifierType.Ip)
-                .Where(i => !ordered.Contains((i.Type, normalise(i))))
+                .Where(i => !otherSet.Contains((i.Type, normalise(i))))
                 .ToList();
         }
 
@@ -1588,13 +1587,17 @@ namespace Certify.Providers.ACME.Anvil
                 return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
             }
 
-            var missingIdentifiers = GetIdentifiersMissingFromOrder(GetOrderIdentifiers(managedCertificate.RequestConfig), order.Identifiers);
-            if (missingIdentifiers.Any())
-            {
-                var missing = string.Join(", ", missingIdentifiers.Select(i => i.Value));
-                var reported = string.Join(", ", order.Identifiers?.Select(i => i.Value) ?? Enumerable.Empty<string>());
+            // the CSR is built from our requested identifiers, if the CA has altered its order (e.g. dropping a wildcard) note the difference to help diagnose a finalize rejection
+            var requestedIdentifiers = GetOrderIdentifiers(managedCertificate.RequestConfig);
+            var missingFromOrder = GetIdentifiersNotIn(requestedIdentifiers, order.Identifiers);
+            var notRequested = GetIdentifiersNotIn(order.Identifiers, requestedIdentifiers);
 
-                return new ProcessStepResult { IsSuccess = false, ErrorMessage = $"Certificate Request did not complete. The Certificate Authority's order is missing requested identifiers: {missing} (order reports: {reported}). The CA has altered the order, so the certificate would not include all requested names.", Result = order };
+            string orderMismatchWarning = null;
+            if (missingFromOrder.Any() || notRequested.Any())
+            {
+                string list(IEnumerable<Identifier> ids) => string.Join(", ", ids?.Select(i => i.Value) ?? Enumerable.Empty<string>());
+
+                orderMismatchWarning = $"The Certificate Authority's order identifiers [{list(order.Identifiers)}] do not match the requested identifiers [{list(requestedIdentifiers)}] (missing from order: [{list(missingFromOrder)}], not requested: [{list(notRequested)}]). The CSR includes the requested identifiers, which may be why the CA rejected it.";
             }
 
             // generate temp keypair for signing CSR, default to RSA 256, 2048. Popular Microsoft products such as Exchange do not support ECDSA keys
@@ -1733,7 +1736,7 @@ namespace Certify.Providers.ACME.Anvil
                             csrInfo.CommonName = commonNameIsDns ? _idnMapping.GetAscii(config.PrimaryDomain) : config.PrimaryDomain;
                         }
 
-                        order = await orderContext.Finalize(csrInfo, csrKey);
+                        order = await orderContext.Finalize(csrInfo, csrKey, requestedIdentifiers);
                     }
                 }
 
@@ -1800,6 +1803,11 @@ namespace Certify.Providers.ACME.Anvil
             {
                 var msg = $"Failed to finalize certificate order:  {exp.Error?.Detail ?? exp.InnerException?.Message ?? exp.Message}";
                 log?.Error(msg);
+
+                if (orderMismatchWarning != null)
+                {
+                    log?.Warning(orderMismatchWarning);
+                }
 
                 var subproblems = "";
                 if (exp.Error?.Subproblems?.Any() == true)
