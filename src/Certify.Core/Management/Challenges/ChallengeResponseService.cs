@@ -175,7 +175,7 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
-                        var recordName = $"_acme-challenge-test.{domain.Value}".Replace("*.", "");
+                        var recordName = $"{Certify.Models.Hub.ManagedChallengeAccess.DnsChallengeTestRecordPrefix}{domain.Value}".Replace("*.", "");
 
                         if (performCleanupOnly)
                         {

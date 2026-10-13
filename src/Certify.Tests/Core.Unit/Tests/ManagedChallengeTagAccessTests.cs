@@ -1040,12 +1040,23 @@ namespace Certify.Tests.Core.Unit.Tests
             var delegatedCleanup = await _manager.CleanupManagedChallengeRequest(Request("_acme-challenge.acme.example.org"));
             var elsewhere = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge.other.example.org"));
 
+            // a challenge configuration test writes the _acme-challenge-test record, and cleans it up, the same way
+            var test = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge-test.exch01.ad.example.com"));
+            var delegatedTest = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge-test.acme.example.org"));
+            var delegatedTestCleanup = await _manager.CleanupManagedChallengeRequest(Request("_acme-challenge-test.acme.example.org"));
+            var testElsewhere = await _manager.PerformManagedChallengeRequest(Request("_acme-challenge-test.other.example.org"));
+
             Assert.IsTrue(undelegated.IsSuccess, undelegated.Message);
             Assert.IsTrue(delegated.IsSuccess, delegated.Message);
             Assert.IsTrue(delegatedCleanup.IsSuccess, delegatedCleanup.Message);
+            Assert.IsTrue(test.IsSuccess, test.Message);
+            Assert.IsTrue(delegatedTest.IsSuccess, delegatedTest.Message);
+            Assert.IsTrue(delegatedTestCleanup.IsSuccess, delegatedTestCleanup.Message);
+            Assert.IsFalse(testElsewhere.IsSuccess);
 
             // both requests wrote the delegated record, and the delegated name was not delegated a second time
             Assert.AreEqual(2, log.LogEntries.Count(e => e.Contains("Creating TXT Record '_acme-challenge.acme.example.org'")));
+            Assert.AreEqual(2, log.LogEntries.Count(e => e.Contains("Creating TXT Record '_acme-challenge-test.acme.example.org'")));
 
             Assert.IsFalse(elsewhere.IsSuccess);
             StringAssert.Contains(elsewhere.Message, "_acme-challenge.exch01.ad.example.com");

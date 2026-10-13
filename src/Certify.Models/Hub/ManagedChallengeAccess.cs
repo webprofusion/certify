@@ -95,7 +95,21 @@ namespace Certify.Models.Hub
         /// The TXT record name a dns-01 response for the identifier is published at, in ASCII (punycode) form and
         /// lower case. A wildcard identifier is validated at its base domain. Null when the identifier is not a DNS name.
         /// </summary>
-        public static string? GetDnsChallengeRecordName(string? identifier)
+        public static string? GetDnsChallengeRecordName(string? identifier) => GetDnsRecordName(DnsChallengeRecordPrefix, identifier);
+
+        /// <summary>
+        /// Prefix of the TXT record a test of a dns-01 challenge configuration writes in place of the real challenge
+        /// response. No CA validates a record at this name.
+        /// </summary>
+        public const string DnsChallengeTestRecordPrefix = "_acme-challenge-test.";
+
+        /// <summary>
+        /// The TXT record name a dns-01 challenge configuration test writes for the identifier, in the same form as
+        /// <see cref="GetDnsChallengeRecordName"/>. Null when the identifier is not a DNS name.
+        /// </summary>
+        public static string? GetDnsChallengeTestRecordName(string? identifier) => GetDnsRecordName(DnsChallengeTestRecordPrefix, identifier);
+
+        private static string? GetDnsRecordName(string prefix, string? identifier)
         {
             var domain = NormaliseDnsName(identifier);
 
@@ -109,7 +123,7 @@ namespace Certify.Models.Hub
                 domain = domain.Substring(2);
             }
 
-            return Uri.CheckHostName(domain) == UriHostNameType.Dns ? DnsChallengeRecordPrefix + domain : null;
+            return Uri.CheckHostName(domain) == UriHostNameType.Dns ? prefix + domain : null;
         }
 
         /// <summary>
