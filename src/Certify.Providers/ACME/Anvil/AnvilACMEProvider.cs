@@ -732,15 +732,7 @@ namespace Certify.Providers.ACME.Anvil
 
             var config = managedCertificate.RequestConfig;
 
-            var certificateIdentifiers = config.GetCertificateIdentifiers()
-                .Select(i => new Identifier
-                {
-                    Value = i.IdentifierType == CertIdentifierType.Dns ? _idnMapping.GetAscii(i.Value) : i.Value,
-                    Type = i.IdentifierType == CertIdentifierType.Dns ? IdentifierType.Dns :
-                        i.IdentifierType == CertIdentifierType.Ip ? IdentifierType.Ip :
-                        i.IdentifierType == CertIdentifierType.TnAuthList ? IdentifierType.TNAuthList :
-                        IdentifierType.Dns // default
-                }).ToList();
+            var certificateIdentifiers = GetOrderIdentifiers(config);
 
             try
             {
@@ -1376,6 +1368,40 @@ namespace Certify.Providers.ACME.Anvil
         }
 
         /// <summary>
+        /// Get the ACME order identifiers for the certificate identifiers in the request config
+        /// </summary>
+        private List<Identifier> GetOrderIdentifiers(CertRequestConfig config)
+        {
+            return config.GetCertificateIdentifiers()
+                .Select(i => new Identifier
+                {
+                    Value = i.IdentifierType == CertIdentifierType.Dns ? _idnMapping.GetAscii(i.Value) : i.Value,
+                    Type = i.IdentifierType == CertIdentifierType.Dns ? IdentifierType.Dns :
+                        i.IdentifierType == CertIdentifierType.Ip ? IdentifierType.Ip :
+                        i.IdentifierType == CertIdentifierType.TnAuthList ? IdentifierType.TNAuthList :
+                        IdentifierType.Dns // default
+                }).ToList();
+        }
+
+        /// <summary>
+        /// Get the requested DNS and IP identifiers which are missing from the order identifiers reported by the CA.
+        /// The CSR is built from the order identifiers, so a CA which alters the order (e.g. dropping a wildcard) would otherwise result in a certificate silently missing names.
+        /// </summary>
+        private static List<Identifier> GetIdentifiersMissingFromOrder(IEnumerable<Identifier> requested, IEnumerable<Identifier> orderIdentifiers)
+        {
+            string normalise(Identifier i) => i.Type == IdentifierType.Ip && System.Net.IPAddress.TryParse(i.Value, out var ip) ? ip.ToString() : i.Value?.ToLowerInvariant();
+
+            var ordered = new HashSet<(IdentifierType, string)>(
+                (orderIdentifiers ?? Enumerable.Empty<Identifier>()).Select(i => (i.Type, normalise(i)))
+            );
+
+            return requested
+                .Where(i => i.Type == IdentifierType.Dns || i.Type == IdentifierType.Ip)
+                .Where(i => !ordered.Contains((i.Type, normalise(i))))
+                .ToList();
+        }
+
+        /// <summary>
         /// if not already validate, ask ACME CA to check we have answered the nominated challenges correctly
         /// </summary>
         /// <param name="log">  </param>
@@ -1560,6 +1586,15 @@ namespace Certify.Providers.ACME.Anvil
             if (order?.Status != OrderStatus.Ready && order?.Status != OrderStatus.Valid)
             {
                 return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
+            }
+
+            var missingIdentifiers = GetIdentifiersMissingFromOrder(GetOrderIdentifiers(managedCertificate.RequestConfig), order.Identifiers);
+            if (missingIdentifiers.Any())
+            {
+                var missing = string.Join(", ", missingIdentifiers.Select(i => i.Value));
+                var reported = string.Join(", ", order.Identifiers?.Select(i => i.Value) ?? Enumerable.Empty<string>());
+
+                return new ProcessStepResult { IsSuccess = false, ErrorMessage = $"Certificate Request did not complete. The Certificate Authority's order is missing requested identifiers: {missing} (order reports: {reported}). The CA has altered the order, so the certificate would not include all requested names.", Result = order };
             }
 
             // generate temp keypair for signing CSR, default to RSA 256, 2048. Popular Microsoft products such as Exchange do not support ECDSA keys
