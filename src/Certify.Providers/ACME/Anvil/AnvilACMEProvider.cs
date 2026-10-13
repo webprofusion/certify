@@ -1737,6 +1737,19 @@ namespace Certify.Providers.ACME.Anvil
                     }
                 }
 
+                if (order == null)
+                {
+                    // the CA responded to finalize without an order, fetch the order to see whether finalization took place
+                    log?.Warning("The Certificate Authority did not return the order in response to finalization, checking the order status.");
+
+                    order = await orderContext.Resource();
+
+                    if (order == null)
+                    {
+                        return new ProcessStepResult { ErrorMessage = "Failed to finalize certificate order: the Certificate Authority did not return the order details.", IsSuccess = false };
+                    }
+                }
+
                 //Theoretically we can remove this as ACME lib now provides this functionality, so we shouldn't hit the Processing state, however we still do for some custom CAs
                 if (order.Status == OrderStatus.Processing)
                 {
@@ -1785,11 +1798,11 @@ namespace Certify.Providers.ACME.Anvil
             }
             catch (AcmeRequestException exp)
             {
-                var msg = $"Failed to finalize certificate order:  {exp.Error?.Detail}";
+                var msg = $"Failed to finalize certificate order:  {exp.Error?.Detail ?? exp.InnerException?.Message ?? exp.Message}";
                 log?.Error(msg);
 
                 var subproblems = "";
-                if (exp.Error.Subproblems?.Any() == true)
+                if (exp.Error?.Subproblems?.Any() == true)
                 {
                     foreach (var sub in exp.Error.Subproblems)
                     {
