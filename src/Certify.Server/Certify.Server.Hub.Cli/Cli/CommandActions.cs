@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text.Json;
 
 namespace Certify.Server.Hub.Cli.Cli
 {
@@ -23,6 +24,12 @@ namespace Certify.Server.Hub.Cli.Cli
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     ConsoleIO.Error("Cancelled.");
+                    return ExitCodes.Failed;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or JsonException or InvalidOperationException)
+                {
+                    // e.g. an output file which cannot be written, or a response which is not what was expected
+                    ConsoleIO.Error(ex.Message);
                     return ExitCodes.Failed;
                 }
             });

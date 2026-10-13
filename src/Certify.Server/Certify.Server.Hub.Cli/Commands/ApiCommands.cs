@@ -95,8 +95,9 @@ namespace Certify.Server.Hub.Cli.Commands
             var parameters = CreateParameterOption();
             var body = CreateBodyOption();
             var document = CreateDocumentOption();
+            var output = CreateOutOption();
 
-            var command = new Command("call", "Call a hub API operation by its operation id.") { operationId, parameters, body, document };
+            var command = new Command("call", "Call a hub API operation by its operation id.") { operationId, parameters, body, document, output };
 
             return command.WithAction(async (parseResult, cancellationToken) =>
             {
@@ -112,17 +113,20 @@ namespace Certify.Server.Hub.Cli.Commands
                     ConsoleIO.Info($"Note: {operation.QualifiedId} takes a request body, supply one with --body.");
                 }
 
-                return await Send(connection, new HttpMethod(operation.Method), url, json, cancellationToken);
+                return await Send(connection, new HttpMethod(operation.Method), url, json, parseResult.GetValue(output), cancellationToken);
             });
         }
+
+        private static Option<string?> CreateOutOption() => OutputFile.CreateOption("Write the response to this file exactly as received, e.g. for binary downloads, instead of to stdout.");
 
         private static Command CreateRaw(HttpMethod method)
         {
             var path = new Argument<string>("path") { Description = "API path, e.g. /api/v1/system/version" };
             var parameters = CreateParameterOption();
             var body = CreateBodyOption();
+            var output = CreateOutOption();
 
-            var command = new Command(method.Method.ToLowerInvariant(), $"Send a {method.Method} request to an API path.") { path, parameters };
+            var command = new Command(method.Method.ToLowerInvariant(), $"Send a {method.Method} request to an API path.") { path, parameters, output };
 
             if (method != HttpMethod.Get && method != HttpMethod.Delete)
             {
@@ -133,17 +137,33 @@ namespace Certify.Server.Hub.Cli.Commands
             {
                 using var connection = GlobalOptions.Connect(parseResult);
 
-                var url = OpenApiCatalog.BuildRelativeUrl(parseResult.GetValue(path)!, OpenApiCatalog.ParseParameters(parseResult.GetValue(parameters)));
+                var apiPath = parseResult.GetValue(path)!;
+
+                if (Uri.TryCreate(apiPath, UriKind.Absolute, out var absolute) && absolute.Scheme != Uri.UriSchemeHttp && absolute.Scheme != Uri.UriSchemeHttps)
+                {
+                    // Git Bash on Windows rewrites arguments starting with / into Windows paths
+                    throw CliException.Usage($"'{apiPath}' is not a hub API path such as /api/v1/system/version. In Git Bash, set MSYS_NO_PATHCONV=1 or start the path with //.");
+                }
+
+                var url = OpenApiCatalog.BuildRelativeUrl(apiPath, OpenApiCatalog.ParseParameters(parseResult.GetValue(parameters)));
                 var json = command.Options.Contains(body) ? GlobalOptions.ReadBody(parseResult.GetValue(body)) : null;
 
-                return await Send(connection, method, url, json, cancellationToken);
+                return await Send(connection, method, url, json, parseResult.GetValue(output), cancellationToken);
             });
         }
 
-        private static async Task<int> Send(HubConnection connection, HttpMethod method, string url, string? json, CancellationToken cancellationToken)
+        private static async Task<int> Send(HubConnection connection, HttpMethod method, string url, string? json, string? outPath, CancellationToken cancellationToken)
         {
             // sent with credentials when there are any, so that anonymous operations can still be called without them
             var authenticate = connection.Settings.AuthMode != HubAuthMode.None;
+
+            if (!string.IsNullOrWhiteSpace(outPath))
+            {
+                var content = await connection.SendForBytesAsync(method, url, json, authenticate, cancellationToken);
+                var written = OutputFile.Write(outPath, content);
+                ConsoleIO.Info(written == null ? $"Wrote {content.Length} bytes." : $"Saved {content.Length} bytes to {written}");
+                return ExitCodes.Success;
+            }
 
             var response = await connection.SendAsync(method, url, json, authenticate, cancellationToken);
 

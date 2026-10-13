@@ -177,5 +177,53 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(expiry, HubConnection.GetExpiry($"header.{payload}.signature")?.ToUnixTimeSeconds());
             Assert.IsNull(HubConnection.GetExpiry("not-a-jwt"));
         }
+
+        private static List<System.Text.Json.Nodes.JsonObject> HubItems() =>
+        [
+            Item("i1", "Server One", "c1", "Shop", "shop.example.com", "www.shop.example.com"),
+            Item("i2", "Server Two", "c2", "Shop", "shop.example.com"),
+            Item("i2", "Server Two", "c3", "Intranet", "intranet.example.com"),
+            Item("i1", "Server One", "Intranet", "Id named like a title", "other.example.com")
+        ];
+
+        private static System.Text.Json.Nodes.JsonObject Item(string instanceId, string instanceTitle, string id, string title, params string[] domains)
+        {
+            var identifiers = string.Join(",", domains.Select(d => $$"""{ "identifierType": "dns", "value": "{{d}}" }"""));
+
+            return (System.Text.Json.Nodes.JsonObject)System.Text.Json.Nodes.JsonNode.Parse(
+                $$"""{ "instanceId": "{{instanceId}}", "instanceTitle": "{{instanceTitle}}", "id": "{{id}}", "title": "{{title}}", "identifiers": [{{identifiers}}], "primaryIdentifier": { "value": "{{domains[0]}}" } }""")!;
+        }
+
+        [TestMethod]
+        public void CertificatesAreFoundByIdTitleOrDomain()
+        {
+            Assert.AreEqual("c1", CertificateLookup.Resolve(HubItems(), "C1", null).Id, "Ids match without regard to case.");
+            Assert.AreEqual("c1", CertificateLookup.Resolve(HubItems(), "WWW.shop.example.com", null).Id, "Any of a certificate's domains finds it.");
+
+            var byInstanceTitle = CertificateLookup.Resolve(HubItems(), "shop.example.com", "server two");
+            Assert.AreEqual("c2", byInstanceTitle.Id, "An instance can be given by title.");
+            Assert.AreEqual("i2", byInstanceTitle.InstanceId);
+
+            Assert.AreEqual("c2", CertificateLookup.Resolve(HubItems(), "Shop", "i2").Id, "An instance can be given by id.");
+        }
+
+        [TestMethod]
+        public void AnExactIdWinsOverATitle()
+        {
+            // "Intranet" is both one certificate's title and another's id
+            Assert.AreEqual("Intranet", CertificateLookup.Resolve(HubItems(), "Intranet", null).Id);
+        }
+
+        [TestMethod]
+        public void AmbiguousOrUnknownCertificatesAreReported()
+        {
+            var ambiguous = Assert.ThrowsExactly<CliException>(() => CertificateLookup.Resolve(HubItems(), "shop.example.com", null));
+            Assert.AreEqual(ExitCodes.Usage, ambiguous.ExitCode);
+            StringAssert.Contains(ambiguous.Message, "Server One");
+            StringAssert.Contains(ambiguous.Message, "Server Two");
+
+            var unknown = Assert.ThrowsExactly<CliException>(() => CertificateLookup.Resolve(HubItems(), "intranet.example.com", "i1"));
+            Assert.AreEqual(ExitCodes.Failed, unknown.ExitCode, "A certificate on another instance is not a match.");
+        }
     }
 }

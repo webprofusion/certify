@@ -54,13 +54,27 @@ namespace Certify.Server.Hub.Cli.Hub
         /// Send a request and return the response body, failing on any unsuccessful status.
         /// </summary>
         public async Task<string> SendAsync(HttpMethod method, string relativeUrl, string? jsonBody, bool authenticate, CancellationToken cancellationToken)
+            => Encoding.UTF8.GetString(await SendForBytesAsync(method, relativeUrl, jsonBody, authenticate, cancellationToken));
+
+        /// <summary>
+        /// Send a request and return the response body as bytes, for responses which may be binary such as a PFX file.
+        /// </summary>
+        public async Task<byte[]> SendForBytesAsync(HttpMethod method, string relativeUrl, string? jsonBody, bool authenticate, CancellationToken cancellationToken)
         {
             using var response = await SendRawAsync(method, relativeUrl, jsonBody, authenticate, cancellationToken);
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            return await ReadSuccessAsync(response, cancellationToken);
+        }
+
+        /// <summary>
+        /// Read a response body, failing on any unsuccessful status.
+        /// </summary>
+        public static async Task<byte[]> ReadSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+        {
+            var body = await response.Content.ReadAsByteArrayAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
-                throw ErrorFromResponse(response, body);
+                throw ErrorFromResponse(response, Encoding.UTF8.GetString(body));
             }
 
             return body;

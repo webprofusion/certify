@@ -19,4 +19,5 @@ foreach (var command in AuthCommands.Create().Append(ApiCommands.Create()).Conca
 
 root.Subcommands.Add(AdminCommands.Create());
 
-return await root.Parse(args).InvokeAsync();
+// response files are off, as they would expand the "@file" form of --body into arguments
+return await root.Parse(args, new ParserConfiguration { ResponseFileTokenReplacer = null }).InvokeAsync();
