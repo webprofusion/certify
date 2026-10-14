@@ -61,11 +61,11 @@
     <ItemGroup>
         <PackageReference Include="Moq" Version="4.21.0" />
         <PackageReference Include="NETStandard.Library" Version="2.0.3" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
         <PackageReference Include="MSTest.TestAdapter" Version="4.5.1" />
         <PackageReference Include="MSTest.TestFramework" Version="4.5.1" />
         <PackageReference Include="Polly" Version="8.8.0" />
-        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.12" />
+        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.13" />
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Properties\" />
