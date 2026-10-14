@@ -41,6 +41,27 @@ namespace Certify.Models
         Custom = 3
     }
 
+    /// <summary>
+    /// Restricts the changes which can be made locally on an instance (desktop app, CLI, local service API) rather than
+    /// through the management hub
+    /// </summary>
+    public enum LocalChangeRestriction
+    {
+        /// <summary>
+        /// No restriction, the instance can be configured locally
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Only the deployment tasks of existing managed certificates can be modified locally, other configuration is
+        /// not restricted
+        /// </summary>
+        DeploymentTasksOnly = 1,
+        /// <summary>
+        /// The instance configuration is read only locally and can only be changed through the management hub
+        /// </summary>
+        ReadOnly = 2
+    }
+
     public static class RenewalIntervalModes
     {
         /// <summary>
@@ -349,6 +370,12 @@ namespace Certify.Models
         /// If set, the ID of the default maintenance window to use for certificates that don't specify their own
         /// </summary>
         public string? DefaultMaintenanceWindowId { get; set; }
+
+        /// <summary>
+        /// Restricts changes made locally, for instances which are administered through the management hub. Only the
+        /// hub can change this setting.
+        /// </summary>
+        public LocalChangeRestriction LocalChangeRestriction { get; set; }
     }
 
     public static class FeatureFlags

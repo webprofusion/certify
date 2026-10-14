@@ -22,6 +22,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> AddAccount(ContactRegistration registration)
         {
             DebugLog();
@@ -30,6 +31,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("update/{storageKey}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateAccountContact(string storageKey, [FromBody] ContactRegistration registration)
         {
             DebugLog();
@@ -37,6 +39,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("remove/{storageKey}/{deactivate}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> RemoveAccount(string storageKey, bool deactivate)
         {
             DebugLog();
@@ -49,6 +52,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("changekey/{storageKey}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> ChangeKey(string storageKey, [FromBody] keyChange payload)
         {
             DebugLog();
@@ -62,6 +66,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("authorities")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
         {
             DebugLog();
@@ -69,6 +74,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("authorities/{id}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> RemoveCertificateAuthority(string id)
         {
             DebugLog();

@@ -49,7 +49,9 @@ namespace Certify.Client
             Policy
                 .Handle<HttpRequestException>()
                 .Or<TaskCanceledException>()
-                .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode && x.StatusCode != HttpStatusCode.BadRequest && x.StatusCode != HttpStatusCode.InternalServerError)
+                // a refused request is not retried: it would be refused again, and resending it under windows auth gets a 400 instead
+                .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode && x.StatusCode != HttpStatusCode.BadRequest && x.StatusCode != HttpStatusCode.InternalServerError
+                    && x.StatusCode != HttpStatusCode.Unauthorized && x.StatusCode != HttpStatusCode.Forbidden)
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))
                 .ExecuteAsync(() =>
                     base.SendAsync(request, cancellationToken)
@@ -231,6 +233,12 @@ namespace Certify.Client
             }
         }
 
+        /// <summary>
+        /// The service refused the request, e.g. a change only the management hub can make, the message is shown to the user
+        /// </summary>
+        private static ServiceCommsException ChangeRefused(string endpoint, string error)
+            => new ServiceCommsException(string.IsNullOrWhiteSpace(error) ? $"API Access Denied: {endpoint}" : error) { IsAccessDenied = true };
+
         public class ServerErrorMsg
         {
             public string Message;
@@ -263,6 +271,10 @@ namespace Certify.Client
                             if (response.StatusCode == HttpStatusCode.Unauthorized)
                             {
                                 throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
+                            }
+                            else if (response.StatusCode == HttpStatusCode.Forbidden)
+                            {
+                                throw ChangeRefused(endpoint, error);
                             }
                             else
                             {
@@ -315,6 +327,12 @@ namespace Certify.Client
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (response.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        throw ChangeRefused(endpoint, error);
+                    }
+
                     throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                 }
             }

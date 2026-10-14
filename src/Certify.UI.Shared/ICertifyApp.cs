@@ -118,6 +118,21 @@ namespace Certify.UI.Shared
             }
         }
 
+        /// <summary>
+        /// A change the service refused, e.g. on an instance which can only be changed through the management hub, is
+        /// shown as a message rather than reported as an error
+        /// </summary>
+        public static void Dispatcher_UnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            var refused = e.Exception as Certify.Client.ServiceCommsException ?? e.Exception.GetBaseException() as Certify.Client.ServiceCommsException;
+
+            if (refused?.IsAccessDenied == true)
+            {
+                MessageBox.Show(refused.Message, "Change Not Allowed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                e.Handled = true;
+            }
+        }
+
         public static void CurrentDomain_UnhandledException(ILog log, object sender, UnhandledExceptionEventArgs e)
         {
 

@@ -86,6 +86,11 @@ namespace Certify.Service.Controllers
 #endif
         }
 
+        /// <summary>
+        /// Refuse a local change the instance only allows through the management hub, the message is shown to the user
+        /// </summary>
+        internal static ContentResult LocalChangeRefused(string message) => new() { StatusCode = StatusCodes.Status403Forbidden, Content = message, ContentType = "text/plain" };
+
         Client.AuthContext _currentAuthContext = null;
 
         /// <summary>

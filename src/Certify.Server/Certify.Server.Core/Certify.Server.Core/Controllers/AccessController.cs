@@ -19,6 +19,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("securityprincipal")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> AddSecurityPrincipal([FromBody] SecurityPrincipal principal)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
@@ -32,6 +33,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("securityprincipal/update")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateSecurityPrincipal([FromBody] SecurityPrincipal principal)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
@@ -45,6 +47,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("securityprincipal/roles/update")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateSecurityPrincipalAssignedRoles([FromBody] SecurityPrincipalAssignedRoleUpdate update)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
@@ -58,6 +61,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("securityprincipal/{id}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> DeleteSecurityPrincipal(string id)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
@@ -150,6 +154,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("assignedtoken/")]
+        [RestrictedLocalChange]
         public async Task<AssignedAccessTokenAddResult> AddAssignedccessToken([FromBody] AssignedAccessToken token)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
@@ -173,6 +178,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("assignedtoken/update")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateAssignedAccessToken([FromBody] AssignedAccessToken token)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
@@ -183,6 +189,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("assignedtoken/{id}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> RemoveAssignedAccessToken(string id)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
@@ -216,6 +223,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("updatepassword")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdatePassword([FromBody] SecurityPrincipalPasswordUpdate passwordUpdate)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();

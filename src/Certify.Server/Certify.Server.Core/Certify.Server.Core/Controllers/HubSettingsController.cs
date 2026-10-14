@@ -24,6 +24,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> Update(HubSettings settings)
         {
             DebugLog();

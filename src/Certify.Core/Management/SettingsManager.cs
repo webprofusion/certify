@@ -224,6 +224,11 @@ namespace Certify.Management
         /// If set, the ID of the default maintenance window to use for certificates that don't specify their own
         /// </summary>
         public string? DefaultMaintenanceWindowId { get; set; }
+
+        /// <summary>
+        /// Restricts changes made locally, only the management hub can change this setting
+        /// </summary>
+        public LocalChangeRestriction LocalChangeRestriction { get; set; }
     }
 
     public class SettingsManager
@@ -288,6 +293,8 @@ namespace Certify.Management
             CoreAppSettings.Current.MaintenanceWindows = prefs.MaintenanceWindows;
             CoreAppSettings.Current.DefaultMaintenanceWindowId = prefs.DefaultMaintenanceWindowId;
 
+            CoreAppSettings.Current.LocalChangeRestriction = prefs.LocalChangeRestriction;
+
             return true;
         }
 
@@ -295,6 +302,11 @@ namespace Certify.Management
         {
             LoadAppSettings();
 
+            return GetCurrentPreferences();
+        }
+
+        internal static Models.Preferences GetCurrentPreferences()
+        {
             var prefs = new Models.Preferences
             {
                 EnableAppTelematics = CoreAppSettings.Current.EnableAppTelematics,
@@ -319,10 +331,10 @@ namespace Certify.Management
                 UseModernPFXAlgs = CoreAppSettings.Current.UseModernPFXAlgs,
                 WindowsKeyStorageProvider = CoreAppSettings.Current.WindowsKeyStorageProvider,
                 IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
-                FeatureFlags = CoreAppSettings.Current.FeatureFlags,
+                FeatureFlags = CoreAppSettings.Current.FeatureFlags ?? [],
                 NtpServer = CoreAppSettings.Current.NtpServer,
                 EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers,
-                ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId,
+                ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId ?? "(default)",
                 DefaultKeyType = CoreAppSettings.Current.DefaultKeyType,
                 CsrCommonNameMode = CoreAppSettings.Current.CsrCommonNameMode,
                 EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
@@ -331,7 +343,8 @@ namespace Certify.Management
                 StoreCertificateIntermediates = CoreAppSettings.Current.StoreCertificateIntermediates,
                 CertificateManagers = CoreAppSettings.Current.CertificateManagers,
                 MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows,
-                DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId
+                DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId,
+                LocalChangeRestriction = CoreAppSettings.Current.LocalChangeRestriction
             };
 
             return prefs;
@@ -373,6 +386,42 @@ namespace Certify.Management
 
             prefs.MaintenanceWindows = update.MaintenanceWindows;
             prefs.DefaultMaintenanceWindowId = update.DefaultMaintenanceWindowId;
+
+            prefs.LocalChangeRestriction = update.LocalChangeRestriction;
+        }
+
+        /// <summary>
+        /// Apply a preferences update made locally (desktop app, CLI, local service API). The local change restriction
+        /// can only be changed by the management hub. While local changes are restricted, only the maintenance windows
+        /// and the UI language are taken from the update, and an update which only changes other settings is refused.
+        /// </summary>
+        public static ActionResult FromLocalPreferences(Models.Preferences prefs)
+        {
+            var current = GetCurrentPreferences();
+
+            if (current.LocalChangeRestriction != LocalChangeRestriction.None)
+            {
+                var currentJson = Newtonsoft.Json.JsonConvert.SerializeObject(current);
+
+                var allowed = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Preferences>(currentJson);
+                allowed.MaintenanceWindows = prefs.MaintenanceWindows;
+                allowed.DefaultMaintenanceWindowId = prefs.DefaultMaintenanceWindowId;
+                allowed.Language = prefs.Language;
+
+                // other settings in an update which changes these may just be stale (the app loaded them before the hub changed them), so are not kept
+                if (Newtonsoft.Json.JsonConvert.SerializeObject(allowed) == currentJson && Newtonsoft.Json.JsonConvert.SerializeObject(prefs) != currentJson)
+                {
+                    return new ActionResult(LocalChangePolicy.GetRefusalMessage(current.LocalChangeRestriction), false);
+                }
+
+                prefs = allowed;
+            }
+
+            prefs.LocalChangeRestriction = current.LocalChangeRestriction;
+
+            FromPreferences(prefs);
+
+            return new ActionResult("Preferences updated", true);
         }
 
         /// <summary>

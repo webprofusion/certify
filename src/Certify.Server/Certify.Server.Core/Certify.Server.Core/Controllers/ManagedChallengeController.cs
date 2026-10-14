@@ -24,6 +24,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> Update(ManagedChallenge update)
         {
             DebugLog();
@@ -32,6 +33,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("{id}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> Delete(string id)
         {
             DebugLog();

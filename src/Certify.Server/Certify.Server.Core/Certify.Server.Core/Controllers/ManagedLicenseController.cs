@@ -21,6 +21,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("delete/{id}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> RemoveManagedLicense(string id)
         {
             return await _certifyManager.RemoveManagedLicenses(id);
@@ -33,12 +34,14 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("add")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> AddManagedLicense(ManagedLicense item)
         {
             return await _certifyManager.AddManagedLicense(item);
         }
 
         [HttpPost, Route("update")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateManagedLicense(ManagedLicense item)
         {
             return await _certifyManager.UpdateManagedLicense(item);

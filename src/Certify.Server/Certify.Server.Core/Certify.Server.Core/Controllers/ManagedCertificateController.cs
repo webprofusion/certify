@@ -57,14 +57,27 @@ namespace Certify.Service.Controllers
 
         //add or update managed site
         [HttpPost, Route("update")]
-        public async Task<ManagedCertificate> Update(ManagedCertificate site)
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult<ManagedCertificate>> Update(ManagedCertificate site)
         {
             DebugLog();
 
-            return await _certifyManager.UpdateManagedCertificate(site);
+            var restriction = CoreAppSettings.Current.LocalChangeRestriction;
+            var stored = restriction == LocalChangeRestriction.DeploymentTasksOnly && !string.IsNullOrEmpty(site.Id)
+                ? await _certifyManager.GetManagedCertificate(site.Id)
+                : null;
+
+            var resolved = LocalChangePolicy.ResolveManagedCertificateUpdate(restriction, stored, site);
+
+            if (!resolved.IsSuccess)
+            {
+                return LocalChangeRefused(resolved.Message);
+            }
+
+            return await _certifyManager.UpdateManagedCertificate(resolved.Result);
         }
 
         [HttpDelete, Route("delete/{managedItemId}")]
+        [RestrictedLocalChange]
         public async Task<bool> Delete(string managedItemId)
         {
             DebugLog();

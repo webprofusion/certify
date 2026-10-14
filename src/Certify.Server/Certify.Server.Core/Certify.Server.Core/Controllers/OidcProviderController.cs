@@ -21,6 +21,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("remove/{id}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> RemovOidcProvider(string id)
         {
             return await _certifyManager.RemovOidcProvider(id);
@@ -40,12 +41,14 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("add")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> AddOidcProvider(OidcProviderConfig item)
         {
             return await _certifyManager.AddOidcProvider(item);
         }
 
         [HttpPost, Route("update")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateOidcProvider(OidcProviderConfig item)
         {
             return await _certifyManager.UpdateOidcProvider(item);

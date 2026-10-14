@@ -29,6 +29,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost]
+        [RestrictedLocalChange]
         public async Task<Certify.Models.Config.ActionResult<ManagedInstanceInfo>> Add(ManagedInstanceInfo item)
         {
             return await _certifyManager.AddHubManagedInstance(item);
@@ -36,6 +37,7 @@ namespace Certify.Service.Controllers
 
         [HttpPost]
         [Route("update")]
+        [RestrictedLocalChange]
         public async Task<Certify.Models.Config.ActionResult> Update(ManagedInstanceInfo item)
         {
             return await _certifyManager.UpdateHubManagedInstance(item.Id, item, false);
@@ -50,6 +52,7 @@ namespace Certify.Service.Controllers
 
         [HttpDelete]
         [Route("delete/{id}")]
+        [RestrictedLocalChange]
         public async Task<Certify.Models.Config.ActionResult> Remove(string id)
         {
             return await _certifyManager.RemoveHubManagedInstance(id);

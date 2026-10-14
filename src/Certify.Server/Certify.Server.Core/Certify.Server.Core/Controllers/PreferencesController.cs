@@ -24,16 +24,22 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("")]
-        public bool SetPreferences(Preferences preferences)
+        public ActionResult<bool> SetPreferences(Preferences preferences)
         {
             DebugLog();
 
-            var updated = SettingsManager.FromPreferences(preferences);
+            var result = SettingsManager.FromLocalPreferences(preferences);
+
+            if (!result.IsSuccess)
+            {
+                return LocalChangeRefused(result.Message);
+            }
+
             SettingsManager.SaveAppSettings();
 
             _certifyManager.ApplyPreferences();
 
-            return updated;
+            return true;
         }
     }
 }

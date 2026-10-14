@@ -25,6 +25,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("")]
+        [RestrictedLocalChange]
         public async Task<StoredCredential> UpdateCredentials(StoredCredential credential)
         {
             DebugLog();
@@ -33,6 +34,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("{storageKey}")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> DeleteCredential(string storageKey)
         {
             DebugLog();

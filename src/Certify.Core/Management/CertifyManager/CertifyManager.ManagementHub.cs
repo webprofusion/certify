@@ -311,6 +311,21 @@ namespace Certify.Management
                 _hubConnectionCheckSync.Release();
             }
 
+            // without a hub the instance can only be administered locally, so lift any restriction on local changes
+            if (CoreAppSettings.Current.LocalChangeRestriction != LocalChangeRestriction.None)
+            {
+                CoreAppSettings.Current.LocalChangeRestriction = LocalChangeRestriction.None;
+
+                try
+                {
+                    SettingsManager.SaveAppSettings();
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog.Error(ex, "Failed to save settings after lifting the restriction on local managed certificate changes.");
+                }
+            }
+
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,

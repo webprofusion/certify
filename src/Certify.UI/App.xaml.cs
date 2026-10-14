@@ -24,6 +24,7 @@ namespace Certify.UI
 
             var currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            DispatcherUnhandledException += AppHelper.Dispatcher_UnhandledException;
 
             _notifier = AppHelper.Startup(Log, MainViewModel, e);
         }

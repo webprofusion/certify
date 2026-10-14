@@ -173,6 +173,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost("categories")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> AddOrUpdateTagCategory([FromBody] TagCategory category)
         {
             // Only TagAdmin can create/modify categories
@@ -185,6 +186,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete("categories/{categoryKey}")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> DeleteTagCategory(string categoryKey)
         {
             // Only TagAdmin can delete categories
@@ -212,6 +214,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost("values")]
+        [RestrictedLocalChange]
         public async Task<TagValue?> GetOrCreateTagValue([FromBody] TagValueRequest request)
         {
             // Only TagAdmin can create tag values directly
@@ -224,6 +227,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost("values/update")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> UpdateTagValue([FromBody] TagValueUpdateRequest request)
         {
             // Only TagAdmin can update tag values
@@ -236,6 +240,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete("values/{valueId}")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> DeleteTagValue(string valueId)
         {
             // Only TagAdmin can delete tag values
@@ -248,6 +253,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost("values/merge")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> MergeTagValues([FromBody] TagValueMergeRequest request)
         {
             // Only TagAdmin can merge tag values
@@ -264,6 +270,7 @@ namespace Certify.Service.Controllers
         #region Item Tags
 
         [HttpPost, Route("add")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> AddTag([FromBody] ItemTag tag)
         {
             // Check authorization for adding tags
@@ -277,6 +284,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("delete/{id}")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> DeleteTag(string id)
         {
             // Only TagAdmin can delete tags via this endpoint
@@ -334,6 +342,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost("items")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> AddItemTags([FromBody] ICollection<ItemTag> tags)
         {
             if (tags == null || !tags.Any())
@@ -356,6 +365,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete("items")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> RemoveItemTags([FromBody] ICollection<string> tagIds)
         {
             // Only TagAdmin can remove tags via this endpoint
@@ -368,6 +378,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete("items/{itemType}/{itemId}/{categoryKey}/{value}")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> RemoveItemTagByKey(string itemType, string itemId, string categoryKey, string value, [FromQuery] string? instanceId = null)
         {
             // Check authorization - need either TagAdmin or item update permission (and no scoped access)
@@ -381,6 +392,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost("items/bulk")]
+        [RestrictedLocalChange]
         public async Task<ActionResultConfig> BulkTagOperation([FromBody] BulkTagOperationRequest request)
         {
             // Only TagAdmin can perform bulk operations

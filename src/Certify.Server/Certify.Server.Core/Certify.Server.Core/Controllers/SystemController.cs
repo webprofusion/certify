@@ -56,6 +56,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("migration/import")]
+        [RestrictedLocalChange]
         public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
         {
             return await _certifyManager.PerformImport(importRequest);
@@ -74,18 +75,21 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("datastores/copy/{sourceId}/{destId}")]
+        [RestrictedLocalChange]
         public async Task<List<ActionStep>> CopyDataStoreToTarget(string sourceId, string destId)
         {
             return await _certifyManager.CopyDateStoreToTarget(sourceId, destId);
         }
 
         [HttpPost, Route("datastores/setdefault/{dataStoreId}")]
+        [RestrictedLocalChange]
         public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId)
         {
             return await _certifyManager.SetDefaultDataStore(dataStoreId);
         }
 
         [HttpPost, Route("datastores/update")]
+        [RestrictedLocalChange]
         public async Task<List<ActionStep>> UpdateDataStore(DataStoreConnection dataStore)
         {
             return await _certifyManager.UpdateDataStoreConnection(dataStore);
@@ -104,12 +108,14 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("datastores/schema/migrate")]
+        [RestrictedLocalChange]
         public async Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStore)
         {
             return await _certifyManager.ApplyDataStoreSchemaMigrations(dataStore);
         }
 
         [HttpPost, Route("datastores/delete")]
+        [RestrictedLocalChange]
         public async Task<List<ActionStep>> RemoveDataStore(string dataStoreId) => await _certifyManager.RemoveDataStoreConnection(dataStoreId);
 
         /// <summary>
@@ -127,6 +133,7 @@ namespace Certify.Service.Controllers
         public async Task<Models.Config.ActionResult> AttemptDataStoreReconnection() => await _certifyManager.AttemptDataStoreReconnection();
 
         [HttpPost, Route("hub/join")]
+        [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> JoinManagementHub(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.JoinManagementHub(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });
 
         [HttpPost, Route("hub/checkcreds")]
