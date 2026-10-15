@@ -886,7 +886,7 @@ namespace Certify.UI.ViewModel
                 else
                 {
                     // add/update site in our local cache
-                    await _appViewModel.UpdatedCachedManagedCertificate(SelectedItem, reload: true);
+                    await _appViewModel.UpdatedCachedManagedCertificate(SelectedItem, reload: true, discardUnsavedChanges: true);
                 }
             }
         }

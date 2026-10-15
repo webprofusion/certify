@@ -13,6 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
+    xmlns:viewmodel="clr-namespace:Certify.UI.ViewModel"
     d:DataContext="{d:DesignInstance Type=certifyui:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="600"
@@ -214,6 +215,22 @@
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Test}" /></TextBlock>
                 </StackPanel>
             </Button>
+        </DockPanel>
+
+        <!--  shown when the item is updated elsewhere while it has unsaved changes  -->
+        <DockPanel
+            Margin="16,8,16,0"
+            DockPanel.Dock="Top"
+            Visibility="{Binding Source={x:Static viewmodel:AppViewModel.Current}, Path=IsSelectedItemUpdatedElsewhere, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+            <fa:ImageAwesome
+                Width="16"
+                Height="16"
+                Margin="0,0,8,0"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                Icon="InfoCircle" />
+            <TextBlock Style="{StaticResource Instructions}" Text="This certificate was updated elsewhere while you were editing it. Your unsaved changes have been kept, discard them to load the latest version." />
         </DockPanel>
 
         <!--  managed cert detail tabs  -->

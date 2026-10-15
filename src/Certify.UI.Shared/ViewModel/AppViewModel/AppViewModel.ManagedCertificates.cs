@@ -10,6 +10,7 @@ using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Models.Shared.Validation;
 using Certify.UI.Shared;
 using PropertyChanged;
 
@@ -47,9 +48,25 @@ namespace Certify.UI.ViewModel
                     value = ManagedCertificates.FirstOrDefault(s => s.Id == value.Id);
                 }
 
+                if (!ReferenceEquals(_selectedItem, value))
+                {
+                    IsSelectedItemUpdatedElsewhere = false;
+                }
+
                 _selectedItem = value;
             }
         }
+
+        /// <summary>
+        /// True when the selected item was updated elsewhere (a renewal, a change made in another session or the
+        /// management hub etc) while it had unsaved changes. The changes are kept, discarding them loads the latest version.
+        /// </summary>
+        public bool IsSelectedItemUpdatedElsewhere { get; set; }
+
+        /// <summary>
+        /// Id of the item currently being saved, whose own update reported by the service is not a change made elsewhere
+        /// </summary>
+        private string _saveInProgressItemId;
 
         private object _managedCertificatesLock = new object();
         private ObservableCollection<ManagedCertificate> _managedCertificates;
@@ -72,12 +89,6 @@ namespace Certify.UI.ViewModel
                 _managedCertificates = value;
 
                 System.Windows.Data.BindingOperations.EnableCollectionSynchronization(_managedCertificates, _managedCertificatesLock);
-
-                if (SelectedItem != null)
-                {
-                    SelectedItem = SelectedItem;
-                    RaisePropertyChangedEvent(nameof(SelectedItem));
-                }
             }
         }
 
@@ -129,8 +140,17 @@ namespace Certify.UI.ViewModel
 
             var result = await client.GetManagedCertificateSearchResult(filter);
 
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
+            // the item being edited stays in the list in place of its refreshed copy while it has unsaved changes
+            ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results.Select(r => CertificateEditorService.KeepUnsavedChanges(r, SelectedItem)));
             TotalManagedCertificates = result.TotalResults;
+
+            // show the refreshed copy of the selected item. A selected item missing from these results (filtered out, or on
+            // another page) stays selected, a refresh does not change which item is being edited
+            var refreshedSelectedItem = SelectedItem?.Id != null ? ManagedCertificates.FirstOrDefault(i => i.Id == SelectedItem.Id) : null;
+            if (refreshedSelectedItem != null)
+            {
+                SelectedItem = refreshedSelectedItem;
+            }
         }
 
         /// <summary>
@@ -249,11 +269,22 @@ namespace Certify.UI.ViewModel
                 item.CurrentOrderUri = null;
             }
 
-            var updatedManagedCertificate = await _certifyClient.UpdateManagedCertificate(item);
-            updatedManagedCertificate.IsChanged = false;
+            ManagedCertificate updatedManagedCertificate;
 
-            // add/update site in our local cache
-            await UpdatedCachedManagedCertificate(updatedManagedCertificate);
+            // the service reports the saved item as updated, which can arrive before the save completes
+            _saveInProgressItemId = item.Id;
+            try
+            {
+                updatedManagedCertificate = await _certifyClient.UpdateManagedCertificate(item);
+                updatedManagedCertificate.IsChanged = false;
+
+                // add/update site in our local cache, replacing the changes which have now been saved
+                await UpdatedCachedManagedCertificate(updatedManagedCertificate, discardUnsavedChanges: true);
+            }
+            finally
+            {
+                _saveInProgressItemId = null;
+            }
 
             RaisePropertyChangedEvent(nameof(ManagedCertificates));
             return updatedManagedCertificate;
@@ -271,7 +302,8 @@ namespace Certify.UI.ViewModel
 
         public async Task<bool> DeleteManagedCertificate(ManagedCertificate selectedItem)
         {
-            var existing = ManagedCertificates.FirstOrDefault(s => s.Id == selectedItem.Id);
+            // the selected item stays selected when a refreshed or filtered list no longer includes it, so it may not be in the list
+            var existing = ManagedCertificates.FirstOrDefault(s => s.Id == selectedItem.Id) ?? selectedItem;
             if (existing != null)
             {
                 if (IsDeleteBlockedForManagedCertificate(existing))
@@ -293,6 +325,12 @@ namespace Certify.UI.ViewModel
                         {
                             ManagedCertificates.Remove(existing);
                             RaisePropertyChangedEvent(nameof(ManagedCertificates));
+
+                            // removing a selected item from the list selects its neighbour, one which was not in the list has no neighbour
+                            if (SelectedItem == existing)
+                            {
+                                SelectedItem = null;
+                            }
                         }
                         finally
                         {
@@ -372,18 +410,19 @@ namespace Certify.UI.ViewModel
         private static SemaphoreSlim _managedCertCacheSemaphore = new SemaphoreSlim(1, 1);
 
         /// <summary>
-        /// Update the memory cached version of a given managed certificate, replacing the current SelectedItem if it matches
+        /// Update the memory cached version of a given managed certificate, replacing the current SelectedItem if it matches.
+        /// If the SelectedItem has unsaved changes it is kept instead, and flagged as updated elsewhere.
         /// </summary>
         /// <param name="managedCertificate"></param>
         /// <param name="reload"></param>
-        /// <returns></returns>
-        public async Task<ManagedCertificate> UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false)
+        /// <param name="discardUnsavedChanges">replace the SelectedItem even if it has unsaved changes, as they have been saved or discarded</param>
+        /// <returns>the item now cached</returns>
+        public async Task<ManagedCertificate> UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false, bool discardUnsavedChanges = false)
         {
             await _managedCertCacheSemaphore.WaitAsync();
 
             try
             {
-                var existing = ManagedCertificates.FirstOrDefault(i => i.Id == managedCertificate.Id);
                 var newItem = managedCertificate;
 
                 // optional reload managed site details (for refresh)
@@ -392,38 +431,40 @@ namespace Certify.UI.ViewModel
                     newItem = await _certifyClient.GetManagedCertificate(managedCertificate.Id);
                 }
 
-                if (newItem != null)
+                if (newItem == null)
                 {
-                    newItem.IsChanged = false;
+                    return null;
+                }
 
-                    // update our cached copy of the managed site details
-                    if (existing != null)
-                    {
-                        var index = ManagedCertificates.IndexOf(existing);
-                        if (index > -1)
-                        {
-                            ManagedCertificates[index] = newItem;
-                        }
-                        else
-                        {
-                            ManagedCertificates.Add(newItem);
-                        }
-                    }
-                    else
-                    {
-                        ManagedCertificates.Add(newItem);
-                    }
+                newItem.IsChanged = false;
+
+                var cachedItem = discardUnsavedChanges ? newItem : CertificateEditorService.KeepUnsavedChanges(newItem, SelectedItem);
+
+                if (cachedItem != newItem && newItem.Id != _saveInProgressItemId)
+                {
+                    IsSelectedItemUpdatedElsewhere = true;
+                }
+
+                // update our cached copy of the managed site details
+                var existing = ManagedCertificates.FirstOrDefault(i => i.Id == newItem.Id);
+                if (existing == null)
+                {
+                    ManagedCertificates.Add(cachedItem);
+                }
+                else if (existing != cachedItem)
+                {
+                    ManagedCertificates[ManagedCertificates.IndexOf(existing)] = cachedItem;
                 }
 
                 // refresh SelectedItem value if it matches our updated item
-                if (SelectedItem != null && newItem != null && SelectedItem.Id == newItem.Id)
+                if (SelectedItem != null && SelectedItem.Id == cachedItem.Id)
                 {
-                    SelectedItem = newItem;
+                    SelectedItem = cachedItem;
                 }
 
                 RaisePropertyChangedEvent(nameof(ManagedCertificates));
 
-                return newItem;
+                return cachedItem;
             }
             finally
             {

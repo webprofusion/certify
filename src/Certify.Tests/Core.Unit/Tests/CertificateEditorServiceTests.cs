@@ -259,5 +259,55 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsFalse(validationResult.IsValid);
             Assert.AreEqual(ValidationErrorCodes.INVALID_IDENTIFIER_DNS.ToString(), validationResult.ErrorCode);
         }
+
+        private static ManagedCertificate CreateSavedItem(string id, string name)
+        {
+            var item = new ManagedCertificate { Id = id, Name = name };
+            item.IsChanged = false;
+            return item;
+        }
+
+        [TestMethod, Description("An update received for the item being edited does not replace its unsaved changes")]
+        public void KeepUnsavedChanges_KeepsEditedItemWithUnsavedChanges()
+        {
+            var edited = CreateSavedItem("item-1", "Original");
+            edited.RequestConfig.PreferredChain = "Edited Chain";
+
+            var received = CreateSavedItem("item-1", "Renewed elsewhere");
+
+            Assert.AreSame(edited, CertificateEditorService.KeepUnsavedChanges(received, edited));
+        }
+
+        [TestMethod, Description("An update received for the item being viewed replaces it when it has no unsaved changes")]
+        public void KeepUnsavedChanges_UsesReceivedCopyWithoutUnsavedChanges()
+        {
+            var edited = CreateSavedItem("item-1", "Original");
+            var received = CreateSavedItem("item-1", "Renewed elsewhere");
+
+            Assert.AreSame(received, CertificateEditorService.KeepUnsavedChanges(received, edited));
+        }
+
+        [TestMethod, Description("Unsaved changes to one item do not stop updates to other items")]
+        public void KeepUnsavedChanges_UsesReceivedCopyOfDifferentItem()
+        {
+            var edited = CreateSavedItem("item-1", "Original");
+            edited.Name = "Edited";
+
+            var received = CreateSavedItem("item-2", "Other item");
+
+            Assert.AreSame(received, CertificateEditorService.KeepUnsavedChanges(received, edited));
+            Assert.AreSame(received, CertificateEditorService.KeepUnsavedChanges(received, null));
+        }
+
+        [TestMethod, Description("A new item which has not been saved yet is never matched to a received item")]
+        public void KeepUnsavedChanges_UsesReceivedCopyForNewItem()
+        {
+            var edited = new ManagedCertificate { Name = "New item" };
+            var received = new ManagedCertificate { Name = "Received" };
+            received.IsChanged = false;
+
+            Assert.IsTrue(edited.IsChanged);
+            Assert.AreSame(received, CertificateEditorService.KeepUnsavedChanges(received, edited));
+        }
     }
 }

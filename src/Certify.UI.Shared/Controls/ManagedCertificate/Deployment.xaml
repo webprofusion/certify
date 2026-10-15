@@ -201,7 +201,7 @@
                         </StackPanel>
                         <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
                             <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindPort}" />
-                            <TextBox Width="225" Text="{Binding SelectedItem.RequestConfig.BindingPort}" />
+                            <TextBox Width="225" Text="{Binding SelectedItem.RequestConfig.BindingPort, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_UseSNI}" />

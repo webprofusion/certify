@@ -23,6 +23,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private string _lastSelectedItemId;
 
+        private Models.ManagedCertificate _lastSelectedItem;
+
         public ManagedCertificateSettings()
         {
             InitializeComponent();
@@ -59,8 +61,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                         EditName.Focus();
                     }
 
-                    AppViewModel.IsChanged = false;
-
+                    // an item newly shown for editing starts with no unsaved changes. The same item announced again (when the
+                    // list is refreshed, filtered etc) keeps the changes the user has made to it
+                    if (!ReferenceEquals(_lastSelectedItem, ItemViewModel.SelectedItem))
+                    {
+                        _lastSelectedItem = ItemViewModel.SelectedItem;
+                        _lastSelectedItem?.ResetIsChanged(false);
+                    }
                 }
             });
         }

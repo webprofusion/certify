@@ -97,7 +97,7 @@
                             HorizontalAlignment="left"
                             Controls:TextBoxHelper.Watermark="e.g. DST Root CA X3"
                             DockPanel.Dock="Top"
-                            Text="{Binding SelectedItem.RequestConfig.PreferredChain}" />
+                            Text="{Binding SelectedItem.RequestConfig.PreferredChain, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock
                             Margin="0,8"
                             DockPanel.Dock="Top"
@@ -112,7 +112,7 @@
                             HorizontalAlignment="left"
                             Controls:TextBoxHelper.Watermark="e.g. classic"
                             DockPanel.Dock="Top"
-                            Text="{Binding SelectedItem.RequestConfig.AcmeProfile}" />
+                            Text="{Binding SelectedItem.RequestConfig.AcmeProfile, UpdateSourceTrigger=PropertyChanged}" />
                     </DockPanel>
                 </TabItem>
 
@@ -269,7 +269,8 @@
                                     HorizontalAlignment="left"
                                     Controls:TextBoxHelper.Watermark="e.g. 0.5 or 30. Blank for none."
                                     InputScope="Number"
-                                    Text="{Binding SelectedItem.RequestConfig.PreferredExpiryDays, Converter={StaticResource NullValueConverter}}" />
+                                    Text="{Binding SelectedItem.RequestConfig.PreferredExpiryDays, Converter={StaticResource NullValueConverter}}"
+                                    TextChanged="PreferredExpiryDays_TextChanged" />
                             </StackPanel>
 
                         </StackPanel>

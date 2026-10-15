@@ -135,7 +135,7 @@
                 <TextBox
                     Width="225"
                     mah:TextBoxHelper.Watermark="(optional, leave blank to auto discover)"
-                    Text="{Binding SelectedItem.ChallengeRootPath}" />
+                    Text="{Binding SelectedItem.ChallengeRootPath, UpdateSourceTrigger=PropertyChanged}" />
                 <Button
                     x:Name="Button_WebRoot"
                     Margin="4,0,0,0"
@@ -283,7 +283,7 @@
                         x:Name="ChallengeDelegationRule"
                         Width="270"
                         mah:TextBoxHelper.Watermark="(optional) *.example.com:*.auth.example.org"
-                        Text="{Binding SelectedItem.ChallengeDelegationRule}" />
+                        Text="{Binding SelectedItem.ChallengeDelegationRule, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <StackPanel Margin="160,0,0,0">
                     <TextBlock Style="{StaticResource Instructions}"><Run Text="Only required if you intend to delegate _acme-challenge TXT records to another domain via CNAME." /></TextBlock>
@@ -390,7 +390,7 @@
                     x:Name="DomainMatchText"
                     Width="270"
                     mah:TextBoxHelper.Watermark="(optional) *.example.com; www.sub.example.com"
-                    Text="{Binding SelectedItem.DomainMatch}" />
+                    Text="{Binding SelectedItem.DomainMatch, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
             <StackPanel Margin="160,0,0,0">
                 <TextBlock Style="{StaticResource Instructions}"><Run Text="A domain match rule is only required when validating multiple domains using different methods in one certificate." /></TextBlock>

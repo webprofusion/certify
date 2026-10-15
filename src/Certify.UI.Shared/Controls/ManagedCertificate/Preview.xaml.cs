@@ -38,9 +38,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         private async Task<string> UpdatePreview()
         {
             // generate preview
-            if (ItemViewModel.SelectedItem != null)
+            var item = ItemViewModel.SelectedItem;
+
+            if (item != null)
             {
-                var savedIsChangedState = ItemViewModel.SelectedItem.IsChanged;
                 try
                 {
                     var cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "markdown.css");
@@ -61,16 +62,23 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 try
                 {
-                    // save and restore changed flag as validation may autoconfigure defaults.
+                    // save and restore changed flag as validation may autoconfigure defaults. It is restored before the
+                    // preview is requested, so edits the user makes while it is generated are kept
+                    var savedIsChangedState = item.IsChanged;
 
                     var validationResult = ItemViewModel.Validate(applyAutoConfiguration: true);
+
+                    if (savedIsChangedState != item.IsChanged)
+                    {
+                        item.ResetIsChanged(savedIsChangedState);
+                    }
 
                     if (!validationResult.IsValid)
                     {
                         throw new Exception("Validation Error: " + validationResult.Message);
                     }
 
-                    steps = await AppViewModel.GetPreviewActions(ItemViewModel.SelectedItem);
+                    steps = await AppViewModel.GetPreviewActions(item);
                 }
                 catch (Exception exp)
                 {
@@ -84,11 +92,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 var result = Markdown.ToHtml(markdown, _markdownPipeline);
                 result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
                         "<style>" + _css + "</style></head><body>" + result + "</body></html>";
-
-                if (savedIsChangedState != ItemViewModel.SelectedItem.IsChanged)
-                {
-                    ItemViewModel.SelectedItem.ResetIsChanged(savedIsChangedState);
-                }
 
                 return result;
 

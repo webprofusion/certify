@@ -251,13 +251,16 @@ namespace Certify.UI.ViewModel
 
         internal async Task RefreshAllOptions(ComboBox storedCredentialsList, bool preserveExistingParameterValues = true)
         {
-            // re-syncing parameters with the provider definition and refreshing credential options is not an edit in itself
+            // re-syncing parameters with the provider definition is not an edit in itself. The flag is restored before awaiting
+            // anything, so edits the user makes meanwhile are kept
             var currentIsChanged = ParentManagedCertificate.IsChanged;
 
             RefreshParameters(preserveExistingParameterValues);
-            await RefreshCredentialOptions(storedCredentialsList);
 
             ParentManagedCertificate.ResetIsChanged(currentIsChanged);
+
+            // refreshing credential options preserves the changed flag itself
+            await RefreshCredentialOptions(storedCredentialsList);
 
             // if we need to migrate WebsiteRootPath, apply it here
             if (ParentManagedCertificate != null)
@@ -289,14 +292,16 @@ namespace Certify.UI.ViewModel
 
         public async Task RefreshCredentialOptions(ComboBox storedCredentialsList)
         {
-            var currentIsChanged = _appViewModel.SelectedItem.IsChanged;
+            // fetch the latest credentials first. The changed flag is only saved and restored around the updates below, which
+            // run without awaiting anything, so edits the user makes while the list is fetched are kept
+            await _appViewModel.RefreshStoredCredentialsList();
+
+            var currentIsChanged = ParentManagedCertificate.IsChanged;
             PauseChangeEvents();
 
             var currentSelectedValue = SelectedItem.ChallengeCredentialKey;
 
             // filter list of matching credentials
-            await _appViewModel.RefreshStoredCredentialsList();
-
             var credentials = _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider).ToList();
 
             // updating item source also clears selected value, so this workaround sets it back

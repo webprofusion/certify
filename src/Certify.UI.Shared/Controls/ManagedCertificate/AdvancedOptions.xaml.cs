@@ -409,6 +409,16 @@ namespace Certify.UI.Controls.ManagedCertificate
             SetCustomRenewalPercentage(e.NewValue ?? GetDefaultCustomRenewalPercentage());
         }
 
+        private void PreferredExpiryDays_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // the number is applied when the field loses focus, so a partly typed value such as "0." is not reformatted while
+            // typing, but the item is marked as changed as soon as the user edits it so that Save is enabled
+            if (((TextBox)sender).IsKeyboardFocusWithin && ItemViewModel.SelectedItem != null)
+            {
+                ItemViewModel.SelectedItem.IsChanged = true;
+            }
+        }
+
         /// <summary>
         /// Apply a percentage of lifetime renewal target to the selected item. Percentage of lifetime is the only custom
         /// renewal mode offered per item, so applying it also replaces any deprecated day based mode the item had.

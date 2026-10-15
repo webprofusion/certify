@@ -169,6 +169,19 @@ namespace Certify.Models.Shared.Validation
             }
         }
 
+        /// <summary>
+        /// Choose which copy of a managed certificate an editor should hold when a copy is received from the service (a
+        /// refreshed list, or an update reported for a renewal or a change made elsewhere). The item being edited is kept in
+        /// place of the received copy while it has unsaved changes, so those changes are not lost.
+        /// </summary>
+        /// <param name="received">copy of the item received from the service</param>
+        /// <param name="edited">item currently being edited, if any</param>
+        /// <returns>the edited item if it is the same item and has unsaved changes, otherwise the received copy</returns>
+        public static ManagedCertificate KeepUnsavedChanges(ManagedCertificate received, ManagedCertificate? edited)
+        {
+            return edited?.Id != null && edited.Id == received.Id && edited.IsChanged ? edited : received;
+        }
+
         public static DomainOption? GetPrimarySubjectDomain(ManagedCertificate item)
         {
             return item?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);

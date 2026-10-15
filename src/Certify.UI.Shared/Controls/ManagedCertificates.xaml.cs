@@ -435,7 +435,9 @@ _appViewModel.ManagedCertificates != null))
 
         private void lvManagedCertificates_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_appViewModel.SelectedItem != null &&
+            // only a deleted item moves the selection on. A selected item missing from a refreshed or filtered list stays
+            // selected, so the item being edited (and any unsaved changes) is not swapped for a different one
+            if (_appViewModel.SelectedItem?.Deleted == true &&
          !_appViewModel.ManagedCertificates.Contains(_appViewModel.SelectedItem))
             {
                 if (lvManagedCertificates.Items.Count == 0)
