@@ -407,10 +407,7 @@ namespace Certify.Management
                         // update, so the hub and UI see it; the check dates alone are not worth reporting
                         if (previousScheduledRenewal != item.DateNextScheduledRenewalAttempt || wasRevoked != item.CertificateRevoked)
                         {
-                            lock (_lastUpdateIdLock)
-                            {
-                                _lastUpdateId++;
-                            }
+                            RecordManagedItemsChanged();
 
                             item.InstanceId = _serverConfig.HubAssignedInstanceId;
                             item.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, GetRenewalPrefs());

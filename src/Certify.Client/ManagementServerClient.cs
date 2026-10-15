@@ -108,7 +108,13 @@ namespace Certify.Client
                 .AddMessagePackProtocol()
                 .Build();
 
-                connection.On<InstanceCommandRequest>(ManagementHubMessages.SendCommandRequest, PerformRequestedCommand);
+                // the client handles one hub message at a time, so each command is run separately. Otherwise a long one,
+                // such as a certificate request, holds up every command after it, and a save from the hub times out.
+                connection.On<InstanceCommandRequest>(ManagementHubMessages.SendCommandRequest, cmd =>
+                {
+                    _ = Task.Run(() => PerformRequestedCommand(cmd));
+                    return Task.CompletedTask;
+                });
 
                 // Wire up connection lifecycle events
                 connection.Reconnecting += (error) =>
@@ -244,8 +250,7 @@ namespace Certify.Client
 
                 await connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
 
-                // the instance has forgotten its hub credentials, the connection is closed once the hub has its reply.
-                // Not awaited here, as stopping the connection waits for the receive loop this handler is running on.
+                // the instance has forgotten its hub credentials, the connection is closed once the hub has its reply
                 if (cmd.CommandType == ManagementHubCommands.LeaveManagementHub)
                 {
                     _ = Task.Run(Disconnect);

@@ -291,13 +291,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
                 _stateProvider.UpdateInstanceStatusSummary(instanceId, val!);
             }
+            else if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
+            {
+                // the instance's reply to the identify request issued when it connected, or its heartbeat
+                _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
+
+                await ProcessInstanceInfoResult(result);
+            }
             else if (result.IsCommandResponse)
             {
                 _stateProvider.AddAwaitedCommandResult(result);
-            }
-            else if (result.CommandType == ManagementHubCommands.GetInstanceInfo)
-            {
-                await ProcessInstanceInfoResult(result);
             }
             else
             {

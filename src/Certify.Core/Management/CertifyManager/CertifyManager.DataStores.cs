@@ -296,6 +296,9 @@ namespace Certify.Management
                     throw new DataStoreConnectionException(msg, _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
                 }
 
+                // a different store holds different items
+                RecordManagedItemsChanged();
+
                 // Data store connected successfully
                 _dataStoreStatus.IsConnected = true;
                 _dataStoreStatus.IsDegradedMode = false;

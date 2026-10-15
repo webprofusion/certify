@@ -257,6 +257,25 @@ namespace Certify.Core.Tests.Unit
                 It.IsAny<AuthContext>()), Times.Once);
         }
 
+        [TestMethod]
+        [Description("The reply to the identify request the hub issues when an instance connects registers the instance straight away, rather than at its next heartbeat")]
+        public async Task InstanceInfo_ReplyToIdentifyRequest_RegistersTheInstance()
+        {
+            var harness = new HubHarness();
+            var identifyRequest = new InstanceCommandRequest(ManagementHubCommands.GetInstanceInfo);
+            harness.StateProvider.Setup(s => s.GetAwaitedCommandRequest(identifyRequest.CommandId)).Returns(identifyRequest);
+
+            var reply = InstanceInfoResult(new ManagedInstanceInfo { Id = InstanceId, InstanceId = InstanceId, Title = "instance" });
+            reply.CommandId = identifyRequest.CommandId;
+            reply.IsCommandResponse = true;
+
+            await harness.Hub.ReceiveCommandResult(reply);
+
+            harness.StateProvider.Verify(s => s.UpdateInstanceConnectionInfo("connection-1", It.Is<ManagedInstanceInfo>(i => i.InstanceId == InstanceId)), Times.Once);
+            harness.StateProvider.Verify(s => s.RemoveAwaitedCommandRequest(identifyRequest.CommandId), Times.Once);
+            harness.StateProvider.Verify(s => s.AddAwaitedCommandResult(It.IsAny<InstanceCommandResult>()), Times.Never, "no caller is waiting on the reply");
+        }
+
         private static InstanceCommandResult InstanceInfoResult(ManagedInstanceInfo reported)
             => new()
             {

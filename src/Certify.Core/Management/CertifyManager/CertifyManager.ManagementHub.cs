@@ -1685,9 +1685,11 @@ namespace Certify.Management
 
             try
             {
+                // a connection which is reconnecting counts as connected here, and the update is held until it has.
+                // Once the connection has closed the hub fetches all items again, as it sees they have changed.
                 if (_managementServerClient?.IsConnected() == true)
                 {
-                    _managementServerClient.SendNotificationToManagementHub(
+                    _managementServerClient.QueueNotificationToManagementHub(
                         ManagementHubCommands.NotificationUpdatedManagedItem, item);
 
                     _serviceLog.Debug("Reported managed item update to hub for {itemId}", item.Id);
@@ -1712,9 +1714,10 @@ namespace Certify.Management
 
             try
             {
+                // held while reconnecting, as for an update
                 if (_managementServerClient?.IsConnected() == true)
                 {
-                    _managementServerClient.SendNotificationToManagementHub(
+                    _managementServerClient.QueueNotificationToManagementHub(
                         ManagementHubCommands.NotificationRemovedManagedItem, id);
 
                     _serviceLog.Debug("Reported managed item deletion to hub for {itemId}", id);

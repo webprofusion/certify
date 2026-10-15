@@ -12,7 +12,18 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         string GetManagementHubInstanceId();
         void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo);
         void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary);
-        bool HasLastUpdateIdChanged(string instanceId, long newLastUpdateId);
+
+        /// <summary>
+        /// Note that an instance's cached item list may be missing changes and should be fetched again in full
+        /// </summary>
+        void MarkItemRefreshDue(string instanceId);
+
+        /// <summary>
+        /// True, and no longer due, if the instance's item list is due a full refresh and one was not taken within the
+        /// given interval
+        /// </summary>
+        bool TakeItemRefreshIfDue(string instanceId, TimeSpan minInterval);
+
         string GetConnectionIdForInstance(string instanceId);
         string? GetInstanceIdForConnection(string connectionId);
         List<ManagedInstanceInfo> GetConnectedInstances();
@@ -34,7 +45,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <returns></returns>
         Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd, TimeSpan? timeout = null);
         void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
-        IEnumerable<string> GetInstancesDueRefresh(int minutes);
         ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null);
         void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
         void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
@@ -74,6 +84,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
         private ConcurrentDictionary<string, ManagedInstanceItems> _managedInstanceItems = [];
         private ConcurrentDictionary<string, StatusSummary> _managedInstanceStatusSummary = [];
+        private ConcurrentDictionary<string, bool> _itemRefreshesDue = [];
+        private ConcurrentDictionary<string, DateTimeOffset> _itemRefreshesTaken = [];
         private ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> _instanceCertificateAuthorityTitles = new(StringComparer.OrdinalIgnoreCase);
 
         private List<ActionStep> _systemStatusItems = [];
@@ -157,6 +169,17 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             _managedInstanceStatusSummary.AddOrUpdate(instanceId, summary, (i, oldValue) => summary);
 
+            // the instance counts its item changes. The per item notifications it sends can be lost, for example while
+            // it is reconnecting, and some changes are not notified at all, so a change in the count means the cached
+            // list may be out of date. A restarted instance counts from zero again, which also differs.
+            if (previousSummary != null && previousSummary.LastUpdateId != summary.LastUpdateId)
+            {
+                _logger.LogDebug("Instance {instanceId} LastUpdateId changed from {oldId} to {newId}, its managed items are due a full refresh.",
+                    instanceId, previousSummary.LastUpdateId, summary.LastUpdateId);
+
+                MarkItemRefreshDue(instanceId);
+            }
+
             // Cleanup any mismatched entries where the key doesn't match the summary's InstanceId, these can appear if instance id was temporary while verifying connection
             var keysToRemove = _managedInstanceStatusSummary
                 .Where(kvp => kvp.Key != kvp.Value.InstanceId)
@@ -175,29 +198,44 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         }
 
         /// <summary>
-        /// Check if the LastUpdateId has changed for a given instance, indicating managed items have been added/updated/deleted
+        /// Note that an instance's cached item list may be missing changes and should be fetched again in full
         /// </summary>
-        /// <param name="instanceId">The instance to check</param>
-        /// <param name="newLastUpdateId">The new LastUpdateId from the status summary</param>
-        /// <returns>True if the LastUpdateId has changed (or if this is the first status summary), false otherwise</returns>
-        public bool HasLastUpdateIdChanged(string instanceId, long newLastUpdateId)
+        /// <param name="instanceId"></param>
+        public void MarkItemRefreshDue(string instanceId)
         {
-            if (!_managedInstanceStatusSummary.TryGetValue(instanceId, out var currentSummary))
+            _itemRefreshesDue[instanceId] = true;
+        }
+
+        /// <summary>
+        /// True, and no longer due, if the instance's item list is due a full refresh and one was not taken within the
+        /// given interval. The interval limits how often a busy instance with many items is asked for its whole list,
+        /// and how often an instance which did not respond is asked again.
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="minInterval"></param>
+        /// <returns></returns>
+        public bool TakeItemRefreshIfDue(string instanceId, TimeSpan minInterval)
+        {
+            if (!_itemRefreshesDue.ContainsKey(instanceId))
             {
-                // No existing summary, this is a new instance or first report
-                return true;
+                return false;
             }
 
-            // Check if the LastUpdateId has changed
-            var hasChanged = currentSummary.LastUpdateId != newLastUpdateId;
+            var now = DateTimeOffset.UtcNow;
 
-            if (hasChanged)
+            if (_itemRefreshesTaken.TryGetValue(instanceId, out var taken) && taken > now - minInterval)
             {
-                _logger.LogDebug("[HasLastUpdateIdChanged] Instance {instanceId} LastUpdateId changed from {oldId} to {newId}",
-                    instanceId, currentSummary.LastUpdateId, newLastUpdateId);
+                return false;
             }
 
-            return hasChanged;
+            if (!_itemRefreshesDue.TryRemove(instanceId, out _))
+            {
+                return false;
+            }
+
+            _itemRefreshesTaken[instanceId] = now;
+
+            return true;
         }
 
         /// <summary>
@@ -328,21 +366,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         }
 
         /// <summary>
-        /// Get a list of instance IDs which are due a refresh based on last refreshed time
-        /// </summary>
-        /// <param name="minutes"></param>
-        /// <returns></returns>
-        public IEnumerable<string> GetInstancesDueRefresh(int minutes)
-        {
-            // return list of instance IDs which are due a refresh based on last refreshed time
-            var dueInstances = _managedInstanceItems
-                .Where(kvp => kvp.Value.LastRefreshed == null || kvp.Value.LastRefreshed <= DateTimeOffset.UtcNow.AddMinutes(-minutes))
-                .Select(kvp => kvp.Key);
-
-            return dueInstances;
-        }
-
-        /// <summary>
         /// Get the current managed certificate items for a given instance
         /// </summary>
         /// <param name="instanceId"></param>
@@ -444,6 +467,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             var removedItems = _managedInstanceItems.TryRemove(instanceId, out var managedItems);
             var removedSummary = _managedInstanceStatusSummary.TryRemove(instanceId, out _);
+            _itemRefreshesDue.TryRemove(instanceId, out _);
+            _itemRefreshesTaken.TryRemove(instanceId, out _);
             _instanceCertificateAuthorityTitles.TryRemove(instanceId, out _);
 
             if (removedItems || removedSummary)

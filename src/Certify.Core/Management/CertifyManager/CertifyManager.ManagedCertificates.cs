@@ -28,6 +28,18 @@ namespace Certify.Management
         private readonly object _lastUpdateIdLock = new object();
 
         /// <summary>
+        /// Count a change to the managed items. The management hub compares the count between status summaries to tell
+        /// when its copy of the items may be missing a change, including one it is not notified of such as an import.
+        /// </summary>
+        private void RecordManagedItemsChanged()
+        {
+            lock (_lastUpdateIdLock)
+            {
+                _lastUpdateId++;
+            }
+        }
+
+        /// <summary>
         /// Get managed certificate details by ID
         /// </summary>
         /// <param name="id"></param>
@@ -364,11 +376,7 @@ namespace Certify.Management
             managedCert.InstanceId = _serverConfig.HubAssignedInstanceId;
             managedCert.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(managedCert, GetRenewalPrefs());
 
-            // Update the change tracking ID
-            lock (_lastUpdateIdLock)
-            {
-                _lastUpdateId++;
-            }
+            RecordManagedItemsChanged();
 
             // report request state to status hub clients
 
@@ -692,11 +700,7 @@ namespace Certify.Management
                 {
                     await _itemManager.Delete(item);
 
-                    // Update the change tracking ID
-                    lock (_lastUpdateIdLock)
-                    {
-                        _lastUpdateId++;
-                    }
+                    RecordManagedItemsChanged();
 
                     if (item.RequestConfig?.EnableFailureNotifications == true && CoreAppSettings.Current.EnableStatusReporting)
                     {

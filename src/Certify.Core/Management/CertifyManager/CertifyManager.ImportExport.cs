@@ -20,6 +20,12 @@ namespace Certify.Management
 
             var importResult = await migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
 
+            if (!importRequest.IsPreviewMode)
+            {
+                // imported items are written straight to the store, so the hub is not notified of each one
+                RecordManagedItemsChanged();
+            }
+
             // store and apply certs if we have no errors
 
             var hasError = false;

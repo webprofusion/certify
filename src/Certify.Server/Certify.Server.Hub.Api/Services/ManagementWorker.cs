@@ -18,6 +18,12 @@ namespace Certify.Server.Hub.Api.Services
         private readonly Activity.HubActivityService? _activityService;
 
         private const int StaleInstanceCacheExpiryMinutes = 30;
+
+        /// <summary>
+        /// The least time between full refreshes of an instance's items, as a busy instance changes items continuously
+        /// </summary>
+        private static readonly TimeSpan ManagedItemsMinRefreshInterval = TimeSpan.FromMinutes(2);
+
         private int _updateFrequency = 30;
         private string _serviceName = "[Management Worker]";
         private bool _isBatchRunning = false;
@@ -169,20 +175,13 @@ namespace Certify.Server.Hub.Api.Services
                             continue;
                         }
 
-                        // Check if LastUpdateId has changed, indicating managed items have been added/updated/deleted
-                        var currentSummary = _stateProvider.GetManagedInstanceStatusSummary(instance.InstanceId);
-
-                        // Refresh status summary for each instance
+                        // Refresh status summary for each instance. A summary showing the instance's items have changed
+                        // since the previous one marks its cached items as due a full refresh.
                         _ = _mgmtAPI.RefreshManagedCertificateSummary(instance.InstanceId, null);
 
-                        if (currentSummary != null)
+                        if (_stateProvider.TakeItemRefreshIfDue(instance.InstanceId, ManagedItemsMinRefreshInterval))
                         {
-                            var hasChanges = _stateProvider.HasLastUpdateIdChanged(instance.InstanceId, currentSummary.LastUpdateId);
-
-                            if (hasChanges)
-                            {
-                                instancesToRefresh.Add(instance.InstanceId);
-                            }
+                            instancesToRefresh.Add(instance.InstanceId);
                         }
                     }
 
@@ -190,8 +189,7 @@ namespace Certify.Server.Hub.Api.Services
                     {
                         _logger.LogInformation("{svc} Instance {instanceId} has updated items, scheduling full refresh of managed items", _serviceName, instanceId);
 
-                        // Schedule a full refresh of managed items since something has changed
-                        _ = _mgmtAPI.RefreshInstanceManagedItems(instanceId, null);
+                        _ = RefreshInstanceManagedItems(instanceId);
                     }
 
                     var now = DateTimeOffset.UtcNow;
@@ -212,6 +210,25 @@ namespace Certify.Server.Hub.Api.Services
             {
                 _logger.LogInformation("{svc} background worker is still running a previous batch", _serviceName);
             }
+        }
+
+        private async Task RefreshInstanceManagedItems(string instanceId)
+        {
+            try
+            {
+                if (await _mgmtAPI.RefreshInstanceManagedItems(instanceId, null))
+                {
+                    return;
+                }
+
+                _logger.LogWarning("{svc} Instance {instanceId} did not send its managed items, the refresh will be tried again", _serviceName, instanceId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "{svc} Instance {instanceId} managed items refresh failed, the refresh will be tried again", _serviceName, instanceId);
+            }
+
+            _stateProvider.MarkItemRefreshDue(instanceId);
         }
 
         /// <summary>

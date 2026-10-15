@@ -30,6 +30,12 @@ namespace Certify.Server.Hub.Api.Services
         ILogger<ManagementAPI> _log;
 
         /// <summary>
+        /// How long to wait for an instance to save or remove a managed certificate. A write the hub stops waiting for
+        /// may still be applied, so it is given longer than a read.
+        /// </summary>
+        private static readonly TimeSpan ManagedItemWriteTimeout = TimeSpan.FromSeconds(30);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ManagementAPI"/> class.
         /// </summary>
         /// <param name="mgmtStateProvider">The instance management state provider.</param>
@@ -500,10 +506,20 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         /// <param name="instanceId">The unique identifier of the instance whose managed items are to be refreshed. Cannot be null or empty.</param>
         /// <param name="currentAuthContext">The authentication context to use for the operation. If null, the default authentication context is applied.</param>
-        /// <returns>A task that represents the asynchronous refresh operation.</returns>
-        public async Task RefreshInstanceManagedItems(string instanceId, AuthContext? currentAuthContext)
+        /// <returns>True if the instance sent its items, false if it did not respond in time.</returns>
+        public async Task<bool> RefreshInstanceManagedItems(string instanceId, AuthContext? currentAuthContext)
         {
-            await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.GetManagedItems), isOptionallyAwaited: true);
+            // an instance with many items can take a while to send them all
+            var result = await PerformInstanceCommandTaskWithResult<ManagedInstanceItems>(instanceId, [], ManagementHubCommands.GetManagedItems, TimeSpan.FromSeconds(60));
+
+            if (result?.Items == null)
+            {
+                return false;
+            }
+
+            _mgmtStateProvider.UpdateInstanceItemInfo(instanceId, result.Items);
+
+            return true;
         }
 
         public ICollection<ManagedInstanceInfo> GetConnectedInstances()
@@ -567,7 +583,7 @@ namespace Certify.Server.Hub.Api.Services
 
             var isNewItem = string.IsNullOrWhiteSpace(managedCert.Id) || GetCachedManagedCertificate(instanceId, managedCert.Id) == null;
 
-            var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.UpdateManagedItem);
+            var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.UpdateManagedItem, ManagedItemWriteTimeout);
 
             if (result != null)
             {
@@ -600,7 +616,12 @@ namespace Certify.Server.Hub.Api.Services
 
             var removedTitle = GetCachedManagedCertificate(instanceId, managedCertId)?.Name;
 
-            var result = await PerformInstanceCommandTaskWithResult<ActionResult>(instanceId, args, ManagementHubCommands.RemoveManagedItem);
+            var result = await PerformInstanceCommandTaskWithResult<ActionResult>(instanceId, args, ManagementHubCommands.RemoveManagedItem, ManagedItemWriteTimeout);
+
+            if (result == null)
+            {
+                return new ActionResult("The instance did not respond in time. The managed certificate may still be removed.", false);
+            }
 
             if (result.IsSuccess)
             {
