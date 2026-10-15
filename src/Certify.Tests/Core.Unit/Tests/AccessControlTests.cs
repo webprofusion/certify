@@ -393,7 +393,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 Email = "new_test_email@test.com"
             };
 
-            var securityPrincipalUpdated = await access.UpdateSecurityPrincipal(contextUserId, updateSecurityPrincipal);
+            var securityPrincipalUpdated = (await access.UpdateSecurityPrincipal(contextUserId, updateSecurityPrincipal)).IsSuccess;
             Assert.IsTrue(securityPrincipalUpdated, $"Expected security principal update for {updateSecurityPrincipal.Id} to succeed");
 
             // Validate email of SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() after update
@@ -420,7 +420,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var newSecurityPrincipal = TestSecurityPrincipals.Admin;
             newSecurityPrincipal.Email = "new_test_email@test.com";
 
-            var securityPrincipalUpdated = await access.UpdateSecurityPrincipal(contextUserId, newSecurityPrincipal);
+            var securityPrincipalUpdated = (await access.UpdateSecurityPrincipal(contextUserId, newSecurityPrincipal)).IsSuccess;
             Assert.IsFalse(securityPrincipalUpdated, $"Expected security principal update for {newSecurityPrincipal.Id} to be unsuccessful without roles defined");
         }
 
@@ -464,7 +464,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var newSecurityPrincipal = TestSecurityPrincipals.Admin;
             newSecurityPrincipal.Email = "new_test_email@test.com";
             newSecurityPrincipal.Id = "missing_username";
-            var securityPrincipalUpdated = await access.UpdateSecurityPrincipal(contextUserId, newSecurityPrincipal);
+            var securityPrincipalUpdated = (await access.UpdateSecurityPrincipal(contextUserId, newSecurityPrincipal)).IsSuccess;
 
             Assert.IsFalse(securityPrincipalUpdated, $"Expected security principal update for {newSecurityPrincipal.Id} to be unsuccessful with bad update data (Id does not already exist in store)");
         }
@@ -2423,7 +2423,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var update = TestSecurityPrincipals.DevopsUser;
             update.Username = "devops_renamed";
 
-            Assert.IsTrue(await access.UpdateSecurityPrincipal(adminId, update));
+            Assert.IsTrue((await access.UpdateSecurityPrincipal(adminId, update)).IsSuccess);
             Assert.AreEqual("devops_renamed", (await access.GetSecurityPrincipal(adminId, update.Id)).Username);
         }
 
@@ -2440,7 +2440,10 @@ namespace Certify.Tests.Core.Unit.Tests
             var update = TestSecurityPrincipals.DevopsUser;
             update.Username = TestSecurityPrincipals.Admin.Username.ToUpperInvariant();
 
-            Assert.IsFalse(await access.UpdateSecurityPrincipal(adminId, update));
+            var result = await access.UpdateSecurityPrincipal(adminId, update);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.Contains("already in use", result.Message, "the reason should be reported to the caller");
             Assert.AreEqual(TestSecurityPrincipals.DevopsUser.Username, (await access.GetSecurityPrincipal(adminId, update.Id)).Username);
         }
 
@@ -2466,12 +2469,12 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(await access.AddSecurityPrincipal(system, oidcUser), "test setup should succeed");
 
             oidcUser.Username = "user@example.com";
-            Assert.IsTrue(await access.UpdateSecurityPrincipal(system, oidcUser));
+            Assert.IsTrue((await access.UpdateSecurityPrincipal(system, oidcUser)).IsSuccess);
             Assert.AreEqual("user@example.com", (await access.GetSecurityPrincipal(adminId, oidcUser.Id)).Username);
 
             var admin = TestSecurityPrincipals.Admin;
             admin.Username = "admin_renamed";
-            Assert.IsFalse(await access.UpdateSecurityPrincipal(system, admin));
+            Assert.IsFalse((await access.UpdateSecurityPrincipal(system, admin)).IsSuccess);
             Assert.AreEqual(TestSecurityPrincipals.Admin.Username, (await access.GetSecurityPrincipal(adminId, admin.Id)).Username);
         }
 

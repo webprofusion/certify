@@ -37,13 +37,7 @@ namespace Certify.Service.Controllers
         public async Task<Models.Config.ActionResult> UpdateSecurityPrincipal([FromBody] SecurityPrincipal principal)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var addResultOk = await accessControl.UpdateSecurityPrincipal(GetContextUserId(), principal);
-
-            return new Models.Config.ActionResult
-            {
-                IsSuccess = addResultOk,
-                Message = addResultOk ? "Updated" : "Failed to update"
-            };
+            return await accessControl.UpdateSecurityPrincipal(GetContextUserId(), principal);
         }
 
         [HttpPost, Route("securityprincipal/roles/update")]

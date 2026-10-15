@@ -139,7 +139,7 @@ namespace Certify.Core.Management.Access
             return string.IsNullOrWhiteSpace(principal.Email) ? "https://gravatar.com/avatar/00000000000000000000000000000000" : $"https://gravatar.com/avatar/{GetSHA256Hash(principal.Email.Trim().ToLower())}";
         }
 
-        public async Task<bool> UpdateSecurityPrincipal(string contextUserId, SecurityPrincipal principal)
+        public async Task<ActionResult> UpdateSecurityPrincipal(string contextUserId, SecurityPrincipal principal)
         {
             // special case for the hub refreshing the details of a user auto added via OIDC when they sign in
             var isExternalUserRefresh = contextUserId == StandardSecurityPrincipals.System
@@ -149,7 +149,7 @@ namespace Certify.Core.Management.Access
             if (!isExternalUserRefresh && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);
-                return false;
+                return new ActionResult("Not authorized to update security principals.", false);
             }
 
             try
@@ -164,7 +164,7 @@ namespace Certify.Core.Management.Access
                     if (principals.Any(p => p.Id != updateSp.Id && string.Equals(p.Username, username, StringComparison.OrdinalIgnoreCase)))
                     {
                         await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}] with username {username} which is already in use.", contextUserId, principal.Id, username);
-                        return false;
+                        return new ActionResult($"The username '{username}' is already in use.", false);
                     }
 
                     updateSp.Username = username;
@@ -181,11 +181,11 @@ namespace Certify.Core.Management.Access
             catch
             {
                 await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}], but was not successful", contextUserId, principal?.Id);
-                return false;
+                return new ActionResult("Failed to update security principal.", false);
             }
 
             await AuditInformation("User {contextUserId} updated security principal [{principalId}] {principalUsername}", contextUserId, principal?.Id, principal?.Username);
-            return true;
+            return new ActionResult("Updated", true);
         }
 
         /// <summary>
