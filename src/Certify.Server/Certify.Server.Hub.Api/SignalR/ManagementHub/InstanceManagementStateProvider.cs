@@ -83,6 +83,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         private ConcurrentDictionary<Guid, InstanceCommandResult> _awaitedCommandResults = [];
 
         private ConcurrentDictionary<string, ManagedInstanceItems> _managedInstanceItems = [];
+        private readonly object _managedInstanceItemsChangeLock = new();
         private ConcurrentDictionary<string, StatusSummary> _managedInstanceStatusSummary = [];
         private ConcurrentDictionary<string, bool> _itemRefreshesDue = [];
         private ConcurrentDictionary<string, DateTimeOffset> _itemRefreshesTaken = [];
@@ -401,22 +402,39 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="managedCertificate"></param>
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate)
         {
-            if (_managedInstanceItems.TryGetValue(instanceId, out var instance))
+            ReplaceCachedManagedInstanceItems(instanceId, items =>
             {
-                if (instance.Items != null)
-                {
-                    // replace item in the list at the same position
+                // replace item in the list at the same position
+                var updated = new List<ManagedCertificate>(items);
 
-                    var original = instance.Items.FirstOrDefault(i => i.Id == managedCertificate.Id);
-                    if (original != null)
-                    {
-                        var idx = instance.Items.IndexOf(original);
-                        instance.Items[idx] = managedCertificate;
-                    }
-                    else
-                    {
-                        instance.Items.Add(managedCertificate);
-                    }
+                var idx = updated.FindIndex(i => i.Id == managedCertificate.Id);
+                if (idx > -1)
+                {
+                    updated[idx] = managedCertificate;
+                }
+                else
+                {
+                    updated.Add(managedCertificate);
+                }
+
+                return updated;
+            });
+        }
+
+        /// <summary>
+        /// Change an instance's cached item list by replacing it with a changed copy. Requests read the list while item
+        /// notifications change it, so a list is never changed once it is cached and a reader carries on with the copy it
+        /// already has. Changes are made one at a time so none of them is lost.
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="change">returns the changed copy of the given list</param>
+        private void ReplaceCachedManagedInstanceItems(string instanceId, Func<List<ManagedCertificate>, List<ManagedCertificate>> change)
+        {
+            lock (_managedInstanceItemsChangeLock)
+            {
+                if (_managedInstanceItems.TryGetValue(instanceId, out var instance) && instance.Items != null)
+                {
+                    instance.Items = change(instance.Items);
                 }
             }
         }
@@ -448,10 +466,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="managedCertificateId"></param>
         public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId)
         {
-            if (_managedInstanceItems.TryGetValue(instanceId, out var instance))
-            {
-                instance.Items.RemoveAll(r => r.Id == managedCertificateId);
-            }
+            ReplaceCachedManagedInstanceItems(instanceId, items => items.Where(i => i.Id != managedCertificateId).ToList());
         }
 
         /// <summary>

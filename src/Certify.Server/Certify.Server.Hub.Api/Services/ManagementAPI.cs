@@ -527,6 +527,15 @@ namespace Certify.Server.Hub.Api.Services
             return _mgmtStateProvider.GetConnectedInstances();
         }
 
+        /// <summary>
+        /// True if commands can be sent to the instance, which is always the case for the hub's own instance
+        /// </summary>
+        public bool IsInstanceConnected(string instanceId)
+        {
+            return (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
+                || _mgmtStateProvider.GetConnectionIdForInstance(instanceId) != null;
+        }
+
         public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems()
         {
             return _mgmtStateProvider.GetManagedInstanceItems();
