@@ -225,5 +225,17 @@ namespace Certify.Core.Tests.Unit
             var unknown = Assert.ThrowsExactly<CliException>(() => CertificateLookup.Resolve(HubItems(), "intranet.example.com", "i1"));
             Assert.AreEqual(ExitCodes.Failed, unknown.ExitCode, "A certificate on another instance is not a match.");
         }
+
+        [TestMethod]
+        public void RawApiPathsAreAcceptedOnEveryPlatform()
+        {
+            // Linux and macOS parse a path starting with / as an absolute file URI
+            Assert.IsTrue(hubcli::Certify.Server.Hub.Cli.Commands.ApiCommands.IsApiPath("/api/v1/system/version"));
+            Assert.IsTrue(hubcli::Certify.Server.Hub.Cli.Commands.ApiCommands.IsApiPath("//api/v1/system/version"), "The Git Bash workaround should still be accepted.");
+            Assert.IsTrue(hubcli::Certify.Server.Hub.Cli.Commands.ApiCommands.IsApiPath("api/v1/system/version"));
+            Assert.IsTrue(hubcli::Certify.Server.Hub.Cli.Commands.ApiCommands.IsApiPath("https://hub.example.com:9696/api/v1/system/version"));
+
+            Assert.IsFalse(hubcli::Certify.Server.Hub.Cli.Commands.ApiCommands.IsApiPath("C:/Program Files/Git/api/v1/system/version"), "A path Git Bash rewrote into a Windows path is not an API path.");
+        }
     }
 }

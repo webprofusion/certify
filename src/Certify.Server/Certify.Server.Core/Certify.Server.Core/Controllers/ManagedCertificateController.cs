@@ -73,6 +73,11 @@ namespace Certify.Service.Controllers
                 return LocalChangeRefused(resolved.Message);
             }
 
+            if (_certifyManager.IsCertificateRequestInProgress(site.Id))
+            {
+                return ChangeRefused(StatusCodes.Status409Conflict, CertifyManager.RequestInProgressSaveRefusal);
+            }
+
             return await _certifyManager.UpdateManagedCertificate(resolved.Result);
         }
 

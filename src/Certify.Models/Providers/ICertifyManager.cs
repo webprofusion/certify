@@ -44,6 +44,13 @@ namespace Certify.Management
         Task<ManagedCertificateSearchResult> GetManagedCertificateResults(ManagedCertificateFilter? filter = null);
         Task<Certify.Models.Reporting.StatusSummary> GetManagedCertificateSummary(ManagedCertificateFilter? filter = null);
         Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
+
+        /// <summary>
+        /// True while a certificate request for the item is in progress, during which a user's save of the item is refused
+        /// as the request would overwrite it when it finishes
+        /// </summary>
+        bool IsCertificateRequestInProgress(string managedCertificateId);
+
         Task<ActionResult> DeleteManagedCertificate(string id);
         Task QueueAllManagedCertificateStatusReports();
         Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);

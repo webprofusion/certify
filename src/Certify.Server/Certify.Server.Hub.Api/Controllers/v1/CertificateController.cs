@@ -400,24 +400,14 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var result = await _mgmtAPI.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
 
-            if (result != null)
+            if (result.IsSuccess)
             {
-                return new OkObjectResult(result);
+                return new OkObjectResult(result.Result);
             }
             else
             {
-                return Problem(detail: GetManagedItemSaveFailure(instanceId), statusCode: StatusCodes.Status400BadRequest);
+                return Problem(detail: result.Message, statusCode: StatusCodes.Status400BadRequest);
             }
-        }
-
-        /// <summary>
-        /// Why an instance did not return the managed certificate it was asked to save
-        /// </summary>
-        private string GetManagedItemSaveFailure(string instanceId)
-        {
-            return _mgmtAPI.IsInstanceConnected(instanceId)
-                ? "The instance did not confirm the save in time. It may still be saved, so check the certificate before trying again."
-                : "The instance is not connected to the hub, so the changes were not saved.";
         }
 
         /// <summary>
@@ -515,17 +505,17 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             var updated = await _mgmtAPI.UpdateManagedCertificate(request.InstanceId, managedCertificate, CurrentAuthContext);
-            if (updated == null)
+            if (!updated.IsSuccess)
             {
-                return Problem(detail: GetManagedItemSaveFailure(request.InstanceId), statusCode: StatusCodes.Status400BadRequest);
+                return Problem(detail: updated.Message, statusCode: StatusCodes.Status400BadRequest);
             }
 
             if (request.PerformRequest)
             {
-                await _mgmtAPI.PerformManagedCertificateRequest(request.InstanceId, updated.Id, CurrentAuthContext);
+                await _mgmtAPI.PerformManagedCertificateRequest(request.InstanceId, updated.Result.Id, CurrentAuthContext);
             }
 
-            return new OkObjectResult(ToManagedCertificateSummary(updated, targetInstance));
+            return new OkObjectResult(ToManagedCertificateSummary(updated.Result, targetInstance));
         }
 
         [HttpPost]

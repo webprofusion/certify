@@ -509,6 +509,8 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>True if the instance sent its items, false if it did not respond in time.</returns>
         public async Task<bool> RefreshInstanceManagedItems(string instanceId, AuthContext? currentAuthContext)
         {
+            var changeSequence = _mgmtStateProvider.GetItemChangeSequence();
+
             // an instance with many items can take a while to send them all
             var result = await PerformInstanceCommandTaskWithResult<ManagedInstanceItems>(instanceId, [], ManagementHubCommands.GetManagedItems, TimeSpan.FromSeconds(60));
 
@@ -517,7 +519,15 @@ namespace Certify.Server.Hub.Api.Services
                 return false;
             }
 
-            _mgmtStateProvider.UpdateInstanceItemInfo(instanceId, result.Items);
+            _mgmtStateProvider.UpdateInstanceItemInfo(instanceId, result.Items, changeSequence);
+
+            // the items name their CA by id, and custom CAs are defined on the instance, so fetch its CA titles too
+            var certificateAuthorities = await PerformInstanceCommandTaskWithResult<List<CertificateAuthority>>(instanceId, [], ManagementHubCommands.GetCertificateAuthorities);
+
+            if (certificateAuthorities != null)
+            {
+                _mgmtStateProvider.UpdateInstanceCertificateAuthorities(instanceId, certificateAuthorities);
+            }
 
             return true;
         }
@@ -580,8 +590,8 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="managedCert">The managed certificate to add or update.</param>
         /// <param name="authContext">The authentication context.</param>
-        /// <returns>The updated <see cref="ManagedCertificate"/> if successful; otherwise, null.</returns>
-        public async Task<ManagedCertificate?> UpdateManagedCertificate(string instanceId, ManagedCertificate managedCert, AuthContext authContext)
+        /// <returns>The updated <see cref="ManagedCertificate"/>, or why it was not saved.</returns>
+        public async Task<ActionResult<ManagedCertificate>> UpdateManagedCertificate(string instanceId, ManagedCertificate managedCert, AuthContext authContext)
         {
             // update managed cert via management hub
 
@@ -592,19 +602,36 @@ namespace Certify.Server.Hub.Api.Services
 
             var isNewItem = string.IsNullOrWhiteSpace(managedCert.Id) || GetCachedManagedCertificate(instanceId, managedCert.Id) == null;
 
-            var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.UpdateManagedItem, ManagedItemWriteTimeout);
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.UpdateManagedItem, args) { IsResultAwaited = true };
+            var commandResult = await GetCommandResult(instanceId, cmd, ManagedItemWriteTimeout);
 
-            if (result != null)
+            var result = commandResult?.Value != null
+                ? JsonSerializer.Deserialize<ManagedCertificate?>(commandResult.Value, Certify.Shared.JsonOptions.DefaultJsonSerializerOptions)
+                : null;
+
+            if (result == null)
             {
-                _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result);
-
-                if (_activity != null && !string.IsNullOrWhiteSpace(result.Id))
-                {
-                    await _activity.ItemChangedAsync(instanceId, result.Id, result.Name, isNewItem ? ActivityEventTypes.ItemAdded : ActivityEventTypes.ItemUpdated, authContext);
-                }
+                return new ActionResult<ManagedCertificate>(commandResult?.Message ?? GetManagedItemSaveFailure(instanceId), false);
             }
 
-            return result;
+            _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result);
+
+            if (_activity != null && !string.IsNullOrWhiteSpace(result.Id))
+            {
+                await _activity.ItemChangedAsync(instanceId, result.Id, result.Name, isNewItem ? ActivityEventTypes.ItemAdded : ActivityEventTypes.ItemUpdated, authContext);
+            }
+
+            return new ActionResult<ManagedCertificate>("Saved", true, result);
+        }
+
+        /// <summary>
+        /// Why an instance which did not give a reason did not return the managed certificate it was asked to save
+        /// </summary>
+        private string GetManagedItemSaveFailure(string instanceId)
+        {
+            return IsInstanceConnected(instanceId)
+                ? "The instance did not confirm the save in time. It may still be saved, so check the certificate before trying again."
+                : "The instance is not connected to the hub, so the changes were not saved.";
         }
 
         /// <summary>

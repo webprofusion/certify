@@ -34,7 +34,8 @@ namespace Certify.Tests.Server.Core.Unit
 
             // apply the restriction themselves
             "ManagedCertificatesController.Update",
-            "PreferencesController.SetPreferences"
+            "PreferencesController.SetPreferences",
+            "SystemController.JoinManagementHub"
         ];
 
         [TestMethod, Description("Every local service endpoint which changes configuration is refused while local changes are restricted")]

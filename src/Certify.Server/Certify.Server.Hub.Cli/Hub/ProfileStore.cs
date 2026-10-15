@@ -122,37 +122,13 @@ namespace Certify.Server.Hub.Cli.Hub
 
         private void Write(ProfileFile file)
         {
-            var directory = Path.GetDirectoryName(_path)!;
-
-            if (OperatingSystem.IsWindows())
+            if (!OperatingSystem.IsWindows())
             {
-                Directory.CreateDirectory(directory);
-            }
-            else
-            {
-                Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+                Directory.CreateDirectory(Path.GetDirectoryName(_path)!, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             }
 
-            var json = JsonSerializer.Serialize(file, CliJsonContext.Default.ProfileFile);
-
-            if (OperatingSystem.IsWindows())
-            {
-                File.WriteAllText(_path, json);
-            }
-            else
-            {
-                // created owner-only from the start, rather than tightened after the tokens are already on disk
-                using var stream = new FileStream(_path, new FileStreamOptions
-                {
-                    Mode = FileMode.Create,
-                    Access = FileAccess.Write,
-                    UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite
-                });
-                using var writer = new StreamWriter(stream);
-                writer.Write(json);
-                writer.Flush();
-                File.SetUnixFileMode(_path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-            }
+            // made readable by its owner only before the tokens are written, including a file which already exists
+            OutputFile.Write(_path, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(file, CliJsonContext.Default.ProfileFile)));
         }
 
         public static string Protect(string value)

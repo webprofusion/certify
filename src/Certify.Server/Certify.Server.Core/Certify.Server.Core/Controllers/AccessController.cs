@@ -28,7 +28,7 @@ namespace Certify.Service.Controllers
             return new Models.Config.ActionResult
             {
                 IsSuccess = addResultOk,
-                Message = addResultOk ? "Added" : "Failed to add"
+                Message = addResultOk ? "Added" : "Failed to add. Check the username is not already in use and any password has at least 8 characters."
             };
         }
 

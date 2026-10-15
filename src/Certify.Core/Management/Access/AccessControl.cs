@@ -107,6 +107,13 @@ namespace Certify.Core.Management.Access
                 return false;
             }
 
+            var username = principal.Username?.Trim();
+            if (!string.IsNullOrEmpty(username) && await IsUsernameInUse(username, exceptPrincipalId: null))
+            {
+                await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] with username {username} which is already in use.", contextUserId, principal.Id, username);
+                return false;
+            }
+
             if (!string.IsNullOrWhiteSpace(principal.Password))
             {
                 // a caller supplied password has to meet the minimum length
@@ -159,9 +166,7 @@ namespace Certify.Core.Management.Access
                 var username = principal.Username?.Trim();
                 if (!string.IsNullOrEmpty(username) && username != updateSp.Username)
                 {
-                    // the username identifies the user at password sign in, so two principals cannot share one
-                    var principals = await _store.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
-                    if (principals.Any(p => p.Id != updateSp.Id && string.Equals(p.Username, username, StringComparison.OrdinalIgnoreCase)))
+                    if (await IsUsernameInUse(username, exceptPrincipalId: updateSp.Id))
                     {
                         await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}] with username {username} which is already in use.", contextUserId, principal.Id, username);
                         return new ActionResult($"The username '{username}' is already in use.", false);
@@ -895,6 +900,17 @@ namespace Certify.Core.Management.Access
                     return new SecurityPrincipalCheckResponse { IsSuccess = false, Message = "Invalid password" };
                 }
             }
+        }
+
+        /// <summary>
+        /// True if a principal other than the given one has the username, ignoring case. The username identifies a user at
+        /// password sign in, so two principals cannot share one.
+        /// </summary>
+        private async Task<bool> IsUsernameInUse(string username, string exceptPrincipalId)
+        {
+            var principals = await _store.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
+
+            return principals.Any(p => p.Id != exceptPrincipalId && string.Equals(p.Username?.Trim(), username, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

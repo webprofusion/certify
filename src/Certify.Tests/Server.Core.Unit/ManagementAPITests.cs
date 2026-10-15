@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Management;
+using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Services;
@@ -227,6 +229,30 @@ namespace Certify.Tests.Server.Core.Unit
 
             Assert.IsFalse(result.IsSuccess);
             Assert.IsTrue(result.IsWarning);
+        }
+
+        [TestMethod]
+        public async Task UpdateManagedCertificate_ReportsWhyTheInstanceRefusedTheSave()
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetManagedInstanceItems(It.IsAny<string?>())).Returns(new ConcurrentDictionary<string, ManagedInstanceItems>());
+
+            var manager = CreateManagerMock();
+            manager.Setup(x => x.PerformHubCommandWithResult(It.Is<InstanceCommandRequest>(c => c.CommandType == ManagementHubCommands.UpdateManagedItem)))
+                .ReturnsAsync(new InstanceCommandResult { Value = "null", Message = CertifyManager.RequestInProgressSaveRefusal });
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                Mock.Of<IHubContext<InstanceManagementHub, IInstanceManagementHub>>(),
+                manager.Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.UpdateManagedCertificate("hub-instance", new ManagedCertificate { Id = "item-1", Name = "Item 1" }, null!);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(CertifyManager.RequestInProgressSaveRefusal, result.Message, "The instance's reason should reach the caller, rather than a guess that it did not respond.");
+            stateProvider.Verify(x => x.UpdateCachedManagedInstanceItem(It.IsAny<string>(), It.IsAny<ManagedCertificate>()), Times.Never);
         }
 
         private static bool HasExpectedRejoinPayload(InstanceCommandRequest command, string clientId, string secret)

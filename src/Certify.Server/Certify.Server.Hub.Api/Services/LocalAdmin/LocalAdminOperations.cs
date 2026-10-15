@@ -167,13 +167,6 @@ namespace Certify.Server.Hub.Api.Services.LocalAdmin
             }
 
             var access = await _certifyManager.GetCurrentAccessControl();
-            var principals = await access.GetSecurityPrincipals(ContextUserId) ?? [];
-
-            // AddSecurityPrincipal only rejects a duplicate id, and two users sharing a username could not both sign in
-            if (principals.Any(p => string.Equals(p.Username, username, StringComparison.OrdinalIgnoreCase)))
-            {
-                return await Complete(Failed($"A security principal with the username '{username}' already exists. Use password-reset or grant-admin for it instead."), "Administrator creation", caller);
-            }
 
             var password = GeneratePassword();
 
@@ -190,7 +183,8 @@ namespace Certify.Server.Hub.Api.Services.LocalAdmin
 
             if (!await access.AddSecurityPrincipal(ContextUserId, principal, bypassIntegrityCheck: true))
             {
-                return await Complete(Failed($"The user '{username}' could not be added, see the hub log for details."), "Administrator creation", caller);
+                // most likely because the username is in use, as no two principals may share one
+                return await Complete(Failed($"The user '{username}' could not be added. If a user with this username already exists, use password-reset or grant-admin for it instead. See the hub log for details."), "Administrator creation", caller);
             }
 
             var result = new StandardAccessConfigResult();

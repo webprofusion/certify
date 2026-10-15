@@ -230,6 +230,11 @@ namespace Certify.Models.Hub
         public string? Value { get; set; }
 
         public object? ObjectValue { get; set; }
+
+        /// <summary>
+        /// Why the instance refused the command, for a command it can refuse. Not sent by instances before 7.3.1.
+        /// </summary>
+        public string? Message { get; set; }
     }
 
     /// <summary>

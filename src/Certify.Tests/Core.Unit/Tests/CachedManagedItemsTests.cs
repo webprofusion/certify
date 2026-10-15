@@ -42,5 +42,44 @@ namespace Certify.Tests.Core.Unit.Tests
             CollectionAssert.AreEqual(new[] { "a", "c" }, current.Select(i => i.Id).ToList(), "An updated item should keep its position, a new one is added and a deleted one removed.");
             Assert.AreEqual("A2", current[0].Name);
         }
+
+        [TestMethod]
+        public void FullListKeepsItemChangesReportedWhileItWasFetched()
+        {
+            var stateProvider = new InstanceManagementStateProvider(NullLogger<InstanceManagementStateProvider>.Instance);
+
+            stateProvider.UpdateInstanceItemInfo(InstanceId, [
+                new ManagedCertificate { Id = "a", Name = "A" },
+                new ManagedCertificate { Id = "b", Name = "B" }
+            ]);
+
+            // reported before the full list is requested, so the list includes it
+            stateProvider.UpdateCachedManagedInstanceItem(InstanceId, new ManagedCertificate { Id = "b", Name = "B2" });
+
+            var changeSequence = stateProvider.GetItemChangeSequence();
+
+            // reported while the instance puts the list together
+            stateProvider.UpdateCachedManagedInstanceItem(InstanceId, new ManagedCertificate { Id = "a", Name = "A2" });
+            stateProvider.UpdateCachedManagedInstanceItem(InstanceId, new ManagedCertificate { Id = "d", Name = "D" });
+            stateProvider.DeleteCachedManagedInstanceItem(InstanceId, "c");
+
+            // the list was put together before those changes
+            stateProvider.UpdateInstanceItemInfo(InstanceId, [
+                new ManagedCertificate { Id = "a", Name = "A" },
+                new ManagedCertificate { Id = "b", Name = "B3" },
+                new ManagedCertificate { Id = "c", Name = "C" }
+            ], changeSequence);
+
+            var current = stateProvider.GetManagedInstanceItems()[InstanceId].Items;
+
+            CollectionAssert.AreEqual(new[] { "a", "b", "d" }, current.Select(i => i.Id).ToList());
+            Assert.AreEqual("A2", current[0].Name, "A change reported while the list was fetched is newer than the listed copy.");
+            Assert.AreEqual("B3", current[1].Name, "A change reported before the list was requested is in the list.");
+
+            // a later list includes everything reported before it was requested
+            stateProvider.UpdateInstanceItemInfo(InstanceId, [new ManagedCertificate { Id = "a", Name = "A4" }], stateProvider.GetItemChangeSequence());
+
+            Assert.AreEqual("A4", stateProvider.GetManagedInstanceItems()[InstanceId].Items.Single().Name);
+        }
     }
 }

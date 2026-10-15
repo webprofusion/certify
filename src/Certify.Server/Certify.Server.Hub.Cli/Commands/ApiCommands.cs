@@ -139,9 +139,8 @@ namespace Certify.Server.Hub.Cli.Commands
 
                 var apiPath = parseResult.GetValue(path)!;
 
-                if (Uri.TryCreate(apiPath, UriKind.Absolute, out var absolute) && absolute.Scheme != Uri.UriSchemeHttp && absolute.Scheme != Uri.UriSchemeHttps)
+                if (!IsApiPath(apiPath))
                 {
-                    // Git Bash on Windows rewrites arguments starting with / into Windows paths
                     throw CliException.Usage($"'{apiPath}' is not a hub API path such as /api/v1/system/version. In Git Bash, set MSYS_NO_PATHCONV=1 or start the path with //.");
                 }
 
@@ -150,6 +149,19 @@ namespace Certify.Server.Hub.Cli.Commands
 
                 return await Send(connection, method, url, json, parseResult.GetValue(output), cancellationToken);
             });
+        }
+
+        /// <summary>
+        /// False for an argument which is not an API path or hub URL, such as a path Git Bash on Windows has rewritten into a
+        /// Windows path (C:/Program Files/Git/api/...). A path starting with / is always an API path, although Linux and
+        /// macOS parse it as an absolute file URI.
+        /// </summary>
+        internal static bool IsApiPath(string apiPath)
+        {
+            return apiPath.StartsWith('/')
+                || !Uri.TryCreate(apiPath, UriKind.Absolute, out var absolute)
+                || absolute.Scheme == Uri.UriSchemeHttp
+                || absolute.Scheme == Uri.UriSchemeHttps;
         }
 
         private static async Task<int> Send(HubConnection connection, HttpMethod method, string url, string? json, string? outPath, CancellationToken cancellationToken)

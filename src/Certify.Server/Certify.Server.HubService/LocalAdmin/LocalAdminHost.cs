@@ -112,7 +112,7 @@ namespace Certify.Server.HubService.LocalAdmin
 
             if (socketPath != null)
             {
-                // the directory already excludes everyone else, this covers a directory set by CERTIFY_HUB_ADMIN_SOCKET
+                // a standard directory already excludes everyone else, this covers a directory set by CERTIFY_HUB_ADMIN_SOCKET
                 File.SetUnixFileMode(socketPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
             }
 
@@ -160,7 +160,8 @@ namespace Certify.Server.HubService.LocalAdmin
         }
 
         /// <summary>
-        /// Make sure the socket's directory exists and is ours alone, and clear a socket left by a previous run.
+        /// Make sure the socket's directory exists, and is ours alone where it is one of the standard locations, and clear a
+        /// socket left by a previous run.
         /// </summary>
         private static string PrepareSocketPath()
         {
@@ -169,9 +170,14 @@ namespace Certify.Server.HubService.LocalAdmin
 
             Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 
-            // Fails unless this process owns the directory (or runs as root). A directory created by someone else, e.g.
-            // squatting on the shared /tmp fallback, is refused rather than trusted, since its owner could replace the socket.
-            File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            // A directory set by CERTIFY_HUB_ADMIN_SOCKET may be shared, e.g. /tmp, so its mode is left alone and the socket
+            // file's own mode protects it. A standard location is a directory for the socket alone: making it ours fails
+            // unless this process owns it (or runs as root), so one created by someone else, e.g. squatting on the shared
+            // /tmp fallback, is refused rather than trusted, since its owner could replace the socket.
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(LocalAdminChannel.SocketPathVariable)))
+            {
+                File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
 
             if (File.Exists(socketPath))
             {

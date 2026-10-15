@@ -66,6 +66,25 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Why a save of the item made by a user (through the hub or locally) is refused while a certificate request for it
+        /// is in progress
+        /// </summary>
+        public const string RequestInProgressSaveRefusal = "A certificate request is in progress for this managed certificate, so the changes were not saved. Save them again once the request has finished.";
+
+        /// <summary>
+        /// True while a certificate request for the item is in progress. The request stores the copy of the item it started
+        /// with when it finishes, so a change saved meanwhile would be overwritten. A request treated as stuck by
+        /// <see cref="TryBeginRequest"/> does not count.
+        /// </summary>
+        public bool IsCertificateRequestInProgress(string managedCertificateId)
+        {
+            return !string.IsNullOrEmpty(managedCertificateId)
+                && _renewalsInProgress.TryGetValue(managedCertificateId, out var started)
+                && started.HasValue
+                && DateTimeOffset.Now - started.Value <= _maxRequestInProgressAge;
+        }
+
+        /// <summary>
         /// How long a renewal batch is waited for before it is abandoned. Abandoning the batch only stops waiting for
         /// it: the requests it started are not interrupted and run to completion, recording their outcome as usual
         /// </summary>

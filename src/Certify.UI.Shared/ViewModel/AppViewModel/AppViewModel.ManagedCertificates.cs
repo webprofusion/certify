@@ -269,17 +269,35 @@ namespace Certify.UI.ViewModel
                 item.CurrentOrderUri = null;
             }
 
-            ManagedCertificate updatedManagedCertificate;
+            ManagedCertificate cachedManagedCertificate;
 
             // the service reports the saved item as updated, which can arrive before the save completes
             _saveInProgressItemId = item.Id;
             try
             {
-                updatedManagedCertificate = await _certifyClient.UpdateManagedCertificate(item);
+                // the item is sent as it is now, so an edit made while the save is in progress marks it as changed again
+                item.ResetIsChanged(false);
+
+                ManagedCertificate updatedManagedCertificate;
+
+                try
+                {
+                    updatedManagedCertificate = await _certifyClient.UpdateManagedCertificate(item);
+                }
+                catch
+                {
+                    // nothing was saved, so the changes are still unsaved
+                    item.ResetIsChanged(true);
+                    throw;
+                }
+
                 updatedManagedCertificate.IsChanged = false;
 
-                // add/update site in our local cache, replacing the changes which have now been saved
-                await UpdatedCachedManagedCertificate(updatedManagedCertificate, discardUnsavedChanges: true);
+                // add/update site in our local cache, replacing the changes which have now been saved. Edits made since the
+                // save was sent are kept, and saved next time.
+                var isEditedDuringSave = item.IsChanged && item.Id != null && item.Id == updatedManagedCertificate.Id;
+
+                cachedManagedCertificate = await UpdatedCachedManagedCertificate(updatedManagedCertificate, discardUnsavedChanges: !isEditedDuringSave);
             }
             finally
             {
@@ -287,7 +305,7 @@ namespace Certify.UI.ViewModel
             }
 
             RaisePropertyChangedEvent(nameof(ManagedCertificates));
-            return updatedManagedCertificate;
+            return cachedManagedCertificate;
         }
 
         /// <summary>
@@ -438,9 +456,15 @@ namespace Certify.UI.ViewModel
 
                 newItem.IsChanged = false;
 
-                var cachedItem = discardUnsavedChanges ? newItem : CertificateEditorService.KeepUnsavedChanges(newItem, SelectedItem);
+                // the service reports an item being saved as updated, which is the save itself. The copy being edited is kept
+                // until the save completes, as it may be edited meanwhile
+                var isBeingSaved = !discardUnsavedChanges && newItem.Id == _saveInProgressItemId && SelectedItem?.Id == newItem.Id;
 
-                if (cachedItem != newItem && newItem.Id != _saveInProgressItemId)
+                var cachedItem = discardUnsavedChanges ? newItem
+                    : isBeingSaved ? SelectedItem
+                    : CertificateEditorService.KeepUnsavedChanges(newItem, SelectedItem);
+
+                if (cachedItem != newItem && !isBeingSaved)
                 {
                     IsSelectedItemUpdatedElsewhere = true;
                 }

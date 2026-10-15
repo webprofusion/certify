@@ -51,7 +51,7 @@ namespace Certify.Client
                 .Or<TaskCanceledException>()
                 // a refused request is not retried: it would be refused again, and resending it under windows auth gets a 400 instead
                 .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode && x.StatusCode != HttpStatusCode.BadRequest && x.StatusCode != HttpStatusCode.InternalServerError
-                    && x.StatusCode != HttpStatusCode.Unauthorized && x.StatusCode != HttpStatusCode.Forbidden)
+                    && x.StatusCode != HttpStatusCode.Unauthorized && x.StatusCode != HttpStatusCode.Forbidden && x.StatusCode != HttpStatusCode.Conflict)
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))
                 .ExecuteAsync(() =>
                     base.SendAsync(request, cancellationToken)
@@ -234,7 +234,8 @@ namespace Certify.Client
         }
 
         /// <summary>
-        /// The service refused the request, e.g. a change only the management hub can make, the message is shown to the user
+        /// The service refused the request, e.g. a change only the management hub can make or a save while a certificate
+        /// request is in progress, the message is shown to the user
         /// </summary>
         private static ServiceCommsException ChangeRefused(string endpoint, string error)
             => new ServiceCommsException(string.IsNullOrWhiteSpace(error) ? $"API Access Denied: {endpoint}" : error) { IsAccessDenied = true };
@@ -272,7 +273,7 @@ namespace Certify.Client
                             {
                                 throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
                             }
-                            else if (response.StatusCode == HttpStatusCode.Forbidden)
+                            else if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Conflict)
                             {
                                 throw ChangeRefused(endpoint, error);
                             }

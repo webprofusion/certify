@@ -133,8 +133,20 @@ namespace Certify.Service.Controllers
         public async Task<Models.Config.ActionResult> AttemptDataStoreReconnection() => await _certifyManager.AttemptDataStoreReconnection();
 
         [HttpPost, Route("hub/join")]
-        [RestrictedLocalChange]
-        public async Task<Models.Config.ActionResult> JoinManagementHub(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.JoinManagementHub(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult<Models.Config.ActionResult>> JoinManagementHub(HubJoiningClientSecret joiningClientSecret)
+        {
+            // Only a hub can lift the restriction on local changes, so it only stops joining a hub while the instance is
+            // connected to the hub administering it. Otherwise an instance whose hub is gone (e.g. decommissioned without
+            // removing it first) could never be administered again.
+            var restriction = CoreAppSettings.Current.LocalChangeRestriction;
+
+            if (restriction != LocalChangeRestriction.None && (await _certifyManager.CheckManagementHubConnectionStatus()).IsSuccess)
+            {
+                return LocalChangeRefused(LocalChangePolicy.GetRefusalMessage(restriction));
+            }
+
+            return await _certifyManager.JoinManagementHub(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });
+        }
 
         [HttpPost, Route("hub/checkcreds")]
         public async Task<Models.Config.ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.CheckManagementHubCredentials(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });

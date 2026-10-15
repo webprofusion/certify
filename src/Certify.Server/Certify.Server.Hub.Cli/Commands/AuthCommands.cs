@@ -26,14 +26,18 @@ namespace Certify.Server.Hub.Cli.Commands
             return command.WithAction(async (parseResult, cancellationToken) =>
             {
                 var profiles = new ProfileStore();
-                var profileName = parseResult.GetValue(GlobalOptions.Profile) ?? ProfileStore.DefaultProfileName;
-                var existing = profiles.Get(profileName);
 
-                var url = new[] { parseResult.GetValue(GlobalOptions.Url), Environment.GetEnvironmentVariable(HubSettings.UrlVariable), existing?.Url }
-                    .FirstOrDefault(u => !string.IsNullOrWhiteSpace(u))
-                    ?? throw CliException.Usage("No hub URL given, use --url <hub url>.");
-
-                var baseUri = HubSettings.ParseHubUrl(url);
+                // the hub is found as for any other command, but signing in uses neither an API token nor the saved session
+                var resolved = HubSettings.Resolve(
+                    new HubCliInputs
+                    {
+                        Url = parseResult.GetValue(GlobalOptions.Url),
+                        ProfileName = parseResult.GetValue(GlobalOptions.Profile),
+                        Insecure = parseResult.GetValue(GlobalOptions.Insecure),
+                        CaCertPath = parseResult.GetValue(GlobalOptions.CaCert)
+                    },
+                    name => name is HubSettings.ClientIdVariable or HubSettings.ClientSecretVariable ? null : Environment.GetEnvironmentVariable(name),
+                    profiles.Get);
 
                 var user = parseResult.GetValue(username);
 
@@ -55,11 +59,11 @@ namespace Certify.Server.Hub.Cli.Commands
 
                 var settings = new HubSettings
                 {
-                    BaseUri = baseUri,
+                    BaseUri = resolved.BaseUri,
                     AuthMode = HubAuthMode.None,
-                    ProfileName = profileName,
-                    Insecure = parseResult.GetValue(GlobalOptions.Insecure) || string.Equals(Environment.GetEnvironmentVariable(HubSettings.InsecureVariable), "true", StringComparison.OrdinalIgnoreCase),
-                    CaCertPath = parseResult.GetValue(GlobalOptions.CaCert) ?? Environment.GetEnvironmentVariable(HubSettings.CaCertVariable)
+                    ProfileName = resolved.ProfileName,
+                    Insecure = resolved.Insecure,
+                    CaCertPath = resolved.CaCertPath
                 };
 
                 using var connection = new HubConnection(settings, profiles);
@@ -81,9 +85,9 @@ namespace Certify.Server.Hub.Cli.Commands
 
                 var session = HubConnection.ParseSession(body) ?? throw new CliException("The hub accepted the sign in but returned no session tokens.");
 
-                HubConnection.SaveSession(profiles, profileName, baseUri, user, session);
+                HubConnection.SaveSession(profiles, settings.ProfileName, settings.BaseUri, user, session);
 
-                ConsoleIO.Info($"Signed in to {baseUri} as {session.Username ?? user} (profile '{profileName}').");
+                ConsoleIO.Info($"Signed in to {settings.BaseUri} as {session.Username ?? user} (profile '{settings.ProfileName}').");
                 return ExitCodes.Success;
             });
         }

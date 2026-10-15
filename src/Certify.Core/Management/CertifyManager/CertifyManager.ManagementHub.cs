@@ -962,6 +962,9 @@ namespace Certify.Management
         {
             object val = null;
 
+            // why the command was not carried out, for a command which can be refused
+            string refusal = null;
+
             if (arg.CommandType == ManagementHubCommands.GetInstanceInfo)
             {
                 var update = GetManagedInstanceInfo();
@@ -1040,7 +1043,14 @@ namespace Certify.Management
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
                 var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
-                val = await UpdateManagedCertificate(managedCert);
+                if (IsCertificateRequestInProgress(managedCert.Id))
+                {
+                    refusal = RequestInProgressSaveRefusal;
+                }
+                else
+                {
+                    val = await UpdateManagedCertificate(managedCert);
+                }
             }
             else if (arg.CommandType == ManagementHubCommands.RemoveManagedItem)
             {
@@ -1554,7 +1564,7 @@ namespace Certify.Management
                 }
             }
 
-            return new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val), ObjectValue = val };
+            return new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val), ObjectValue = val, Message = refusal };
         }
 
         private StandardServerTypes MapStandardServerType(string type)

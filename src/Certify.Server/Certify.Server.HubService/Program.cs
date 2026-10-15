@@ -427,9 +427,10 @@ app.UseStaticFiles(new StaticFileOptions
         }
         else
         {
-            // everything else (css, js, images, _content/*) is not fingerprinted, so bound how long a
-            // browser can keep serving a stale copy after a hub update instead of caching indefinitely.
-            ctx.Context.Response.Headers.CacheControl = "public, max-age=3600, must-revalidate";
+            // everything else (css, js, images, _content/*) is not fingerprinted, so is revalidated each time
+            // (a 304 while unchanged). A stale copy kept after a hub update, such as MudBlazor's js beside a
+            // newer MudBlazor assembly from /_framework, breaks the UI.
+            ctx.Context.Response.Headers.CacheControl = "no-cache";
         }
     }
 });

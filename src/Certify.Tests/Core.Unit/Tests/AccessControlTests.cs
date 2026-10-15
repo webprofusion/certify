@@ -2448,6 +2448,23 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
+        /// Adding a principal is held to the same rule as updating one, so a second user cannot be given a username in use
+        /// </summary>
+        [TestMethod]
+        public async Task TestAddSecurityPrincipalRefusesAUsernameInUse()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            var duplicate = TestSecurityPrincipals.DevopsUser;
+            duplicate.Username = " " + TestSecurityPrincipals.Admin.Username.ToUpperInvariant();
+
+            Assert.IsFalse(await access.AddSecurityPrincipal(adminId, duplicate, bypassIntegrityCheck: true));
+            Assert.IsNull(await access.GetSecurityPrincipal(adminId, duplicate.Id));
+
+            Assert.IsTrue(await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true), "A username not in use is accepted.");
+        }
+
+        /// <summary>
         /// The hub refreshes the details of a user it added via OIDC when they sign in, using the system context.
         /// That does not extend to other principals.
         /// </summary>

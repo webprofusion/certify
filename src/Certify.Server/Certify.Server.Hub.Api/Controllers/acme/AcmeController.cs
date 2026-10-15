@@ -366,7 +366,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 account.SecurityPrincipalId,
                 account.ScopedAssignedRoles);
 
-            var tempCert = await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, SystemAuthContext);
+            var tempCert = (await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, SystemAuthContext)).Result;
             if (tempCert == null)
             {
                 _logger.LogError("Failed to create temporary managed certificate for order {OrderId}", orderId);
