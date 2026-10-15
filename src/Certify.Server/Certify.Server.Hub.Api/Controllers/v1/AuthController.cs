@@ -520,6 +520,11 @@ namespace Certify.Server.Hub.Api.Controllers
             var subject = claims.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                          claims.FindFirst("sub")?.Value;
 
+            // Entra only issues an email claim for users with a mail attribute, so fall back to their sign in name
+            var signInName = claims.FindFirst("preferred_username")?.Value ??
+                            claims.FindFirst(ClaimTypes.Upn)?.Value ??
+                            claims.FindFirst("upn")?.Value;
+
             if (string.IsNullOrEmpty(subject))
             {
                 throw new InvalidOperationException("No subject claim found in token");
@@ -533,14 +538,37 @@ namespace Certify.Server.Hub.Api.Controllers
             var spList = await _client.GetSecurityPrincipals(CurrentAuthContext);
             var sp = spList.SingleOrDefault(s => s.ExternalIdentifier == externalId && s.Provider == provider);
 
+            // the username identifies a user at password sign in, so skip one already used by another principal
+            var username = new[] { email, signInName }
+                .FirstOrDefault(u => !string.IsNullOrWhiteSpace(u) && !spList.Any(s => s.Id != sp?.Id && string.Equals(s.Username, u, StringComparison.OrdinalIgnoreCase)))
+                ?? externalId;
+
+            if (sp != null && sp.Username == externalId && username != externalId)
+            {
+                // users added before their token carried an email or sign in name were given the external identifier
+                if (sp.Title == externalId)
+                {
+                    sp.Title = name ?? username;
+                }
+
+                sp.Username = username;
+                sp.Email ??= email;
+
+                var updated = await _client.UpdateSecurityPrincipal(sp, SystemAuthContext);
+                if (!updated.IsSuccess)
+                {
+                    _logger.LogWarning("Failed to update username for OIDC user {PrincipalId}: {Message}", sp.Id, updated.Message);
+                }
+            }
+
             if (sp == null)
             {
                 sp = new SecurityPrincipal
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Username = email ?? externalId,
+                    Username = username,
                     Email = email,
-                    Title = name ?? email ?? externalId,
+                    Title = name ?? username,
                     ExternalIdentifier = externalId,
                     Provider = provider,
                     IsBuiltIn = false,

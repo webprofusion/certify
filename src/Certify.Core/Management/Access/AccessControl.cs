@@ -141,8 +141,12 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> UpdateSecurityPrincipal(string contextUserId, SecurityPrincipal principal)
         {
+            // special case for the hub refreshing the details of a user auto added via OIDC when they sign in
+            var isExternalUserRefresh = contextUserId == StandardSecurityPrincipals.System
+                && await GetSecurityPrincipal(contextUserId, principal.Id) is { PrincipalType: SecurityPrincipalType.User } existing
+                && !string.IsNullOrEmpty(existing.ExternalIdentifier);
 
-            if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
+            if (!isExternalUserRefresh && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);
                 return false;
@@ -151,6 +155,21 @@ namespace Certify.Core.Management.Access
             try
             {
                 var updateSp = await _store.Get<SecurityPrincipal>(nameof(SecurityPrincipal), principal.Id);
+
+                var username = principal.Username?.Trim();
+                if (!string.IsNullOrEmpty(username) && username != updateSp.Username)
+                {
+                    // the username identifies the user at password sign in, so two principals cannot share one
+                    var principals = await _store.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
+                    if (principals.Any(p => p.Id != updateSp.Id && string.Equals(p.Username, username, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}] with username {username} which is already in use.", contextUserId, principal.Id, username);
+                        return false;
+                    }
+
+                    updateSp.Username = username;
+                }
+
                 updateSp.Email = principal.Email;
                 updateSp.Description = principal.Description;
                 updateSp.Title = principal.Title;

@@ -2413,6 +2413,68 @@ namespace Certify.Tests.Core.Unit.Tests
                 "deleting a security principal which is not there should fail rather than throw");
         }
 
+        [TestMethod]
+        public async Task TestUpdateSecurityPrincipalChangesTheUsername()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            var update = TestSecurityPrincipals.DevopsUser;
+            update.Username = "devops_renamed";
+
+            Assert.IsTrue(await access.UpdateSecurityPrincipal(adminId, update));
+            Assert.AreEqual("devops_renamed", (await access.GetSecurityPrincipal(adminId, update.Id)).Username);
+        }
+
+        /// <summary>
+        /// Password sign in looks a user up by username, so a second principal with the same one would break it for both.
+        /// </summary>
+        [TestMethod]
+        public async Task TestUpdateSecurityPrincipalRefusesAUsernameInUse()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            var update = TestSecurityPrincipals.DevopsUser;
+            update.Username = TestSecurityPrincipals.Admin.Username.ToUpperInvariant();
+
+            Assert.IsFalse(await access.UpdateSecurityPrincipal(adminId, update));
+            Assert.AreEqual(TestSecurityPrincipals.DevopsUser.Username, (await access.GetSecurityPrincipal(adminId, update.Id)).Username);
+        }
+
+        /// <summary>
+        /// The hub refreshes the details of a user it added via OIDC when they sign in, using the system context.
+        /// That does not extend to other principals.
+        /// </summary>
+        [TestMethod]
+        public async Task TestUpdateSecurityPrincipalAsSystemIsLimitedToExternalUsers()
+        {
+            var adminId = await SetupAdminPrincipal();
+            var system = StandardSecurityPrincipals.System;
+
+            var oidcUser = new SecurityPrincipal
+            {
+                Id = "oidc_user_01",
+                Username = "provider_01:subject_01",
+                ExternalIdentifier = "provider_01:subject_01",
+                Provider = "provider_01",
+                PrincipalType = SecurityPrincipalType.User
+            };
+
+            Assert.IsTrue(await access.AddSecurityPrincipal(system, oidcUser), "test setup should succeed");
+
+            oidcUser.Username = "user@example.com";
+            Assert.IsTrue(await access.UpdateSecurityPrincipal(system, oidcUser));
+            Assert.AreEqual("user@example.com", (await access.GetSecurityPrincipal(adminId, oidcUser.Id)).Username);
+
+            var admin = TestSecurityPrincipals.Admin;
+            admin.Username = "admin_renamed";
+            Assert.IsFalse(await access.UpdateSecurityPrincipal(system, admin));
+            Assert.AreEqual(TestSecurityPrincipals.Admin.Username, (await access.GetSecurityPrincipal(adminId, admin.Id)).Username);
+        }
+
         /// <summary>
         /// Setting the scope of a role a principal already holds has to land on the existing assignment. The
         /// assignment id is what an access token is scoped by, so it must survive, and the change must not be
