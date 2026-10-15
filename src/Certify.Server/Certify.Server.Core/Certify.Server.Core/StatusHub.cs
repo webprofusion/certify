@@ -26,6 +26,12 @@ namespace Certify.Service
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, item);
         }
 
+        public async Task ReportManagedCertificateDeleted(ManagedCertificate item)
+        {
+            Debug.WriteLine($"Sending deleted managed cert message to UI: {item.Name}");
+            await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateDeleteMsg, item.Id);
+        }
+
         public async Task ReportDiagnosticActionRequired(Certify.Models.Reporting.DiagnosticActionRequired diagnostic)
         {
             Debug.WriteLine($"Sending diagnostic action required message to UI: {diagnostic.Title}");
@@ -42,6 +48,8 @@ namespace Certify.Service
         Task SendRequestProgressState(RequestProgressState state);
 
         Task SendManagedCertificateUpdate(ManagedCertificate item);
+
+        Task SendManagedCertificateDelete(string managedCertificateId);
 
         Task SendMessage(string notificationType, string payload);
     }

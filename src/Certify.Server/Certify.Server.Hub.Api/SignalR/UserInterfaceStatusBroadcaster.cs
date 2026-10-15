@@ -101,11 +101,11 @@ namespace Certify.Server.Hub.Api.SignalR
             => SendManagedItemChange(ManagementHubCommands.NotificationUpdatedManagedItem, item.InstanceId, item.Id, "updated", item);
 
         /// <summary>
-        /// Notify the clients which may see a managed item that it has been removed. Sent before the hub's cached
-        /// copy of the item is removed, as that is what the item's identifiers are read from.
+        /// Notify the clients which may see a managed item that it has been removed. Without the removed item, this is
+        /// sent before the hub's cached copy of the item is removed, as that is what the item's identifiers are read from.
         /// </summary>
-        public Task SendManagedItemRemoved(string instanceId, string managedItemId)
-            => SendManagedItemChange(ManagementHubCommands.NotificationRemovedManagedItem, instanceId, managedItemId, "deleted", item: null);
+        public Task SendManagedItemRemoved(string instanceId, string managedItemId, ManagedCertificate? item = null)
+            => SendManagedItemChange(ManagementHubCommands.NotificationRemovedManagedItem, instanceId, managedItemId, "deleted", item);
 
         /// <summary>
         /// Send a service level diagnostic which requires operator action to connected administrators

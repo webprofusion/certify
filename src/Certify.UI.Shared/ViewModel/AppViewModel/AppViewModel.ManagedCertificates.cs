@@ -337,23 +337,7 @@ namespace Certify.UI.ViewModel
                     var deletedOK = await _certifyClient.DeleteManagedCertificate(selectedItem.Id);
                     if (deletedOK)
                     {
-                        await _managedCertCacheSemaphore.WaitAsync();
-
-                        try
-                        {
-                            ManagedCertificates.Remove(existing);
-                            RaisePropertyChangedEvent(nameof(ManagedCertificates));
-
-                            // removing a selected item from the list selects its neighbour, one which was not in the list has no neighbour
-                            if (SelectedItem == existing)
-                            {
-                                SelectedItem = null;
-                            }
-                        }
-                        finally
-                        {
-                            _managedCertCacheSemaphore.Release();
-                        }
+                        await RemoveCachedManagedCertificate(selectedItem.Id);
                     }
 
                     return deletedOK;
@@ -424,6 +408,52 @@ namespace Certify.UI.ViewModel
             // a managed site has been updated, update it in our view
             await UpdatedCachedManagedCertificate(obj);
         });
+
+        /// <summary>
+        /// Action performed when the service reports a managed certificate deleted, by this app or elsewhere such as the management hub
+        /// </summary>
+        /// <param name="managedCertificateId"></param>
+        private async void CertifyClient_OnManagedCertificateDeleted(string managedCertificateId) => await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+        {
+            await RemoveCachedManagedCertificate(managedCertificateId);
+        });
+
+        /// <summary>
+        /// Remove a deleted managed certificate from the list, and from the editor if it is selected. Does nothing if it has
+        /// already been removed.
+        /// </summary>
+        /// <param name="managedCertificateId"></param>
+        private async Task RemoveCachedManagedCertificate(string managedCertificateId)
+        {
+            await _managedCertCacheSemaphore.WaitAsync();
+
+            try
+            {
+                // the selected item stays selected when a refreshed or filtered list no longer includes it, so it may not be in the list
+                var existing = ManagedCertificates.FirstOrDefault(s => s.Id == managedCertificateId)
+                    ?? (SelectedItem?.Id == managedCertificateId ? SelectedItem : null);
+
+                if (existing == null)
+                {
+                    return;
+                }
+
+                existing.Deleted = true;
+
+                ManagedCertificates.Remove(existing);
+                RaisePropertyChangedEvent(nameof(ManagedCertificates));
+
+                // removing a selected item from the list selects its neighbour, one which was not in the list has no neighbour
+                if (SelectedItem == existing)
+                {
+                    SelectedItem = null;
+                }
+            }
+            finally
+            {
+                _managedCertCacheSemaphore.Release();
+            }
+        }
 
         private static SemaphoreSlim _managedCertCacheSemaphore = new SemaphoreSlim(1, 1);
 

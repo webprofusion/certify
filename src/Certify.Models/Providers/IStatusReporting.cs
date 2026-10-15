@@ -8,6 +8,11 @@ namespace Certify.Providers
     {
         public const string SendProgressStateMsg = "SendProgressState";
         public const string SendManagedCertificateUpdateMsg = "SendManagedCertificateUpdate";
+
+        /// <summary>
+        /// Sent with the id of a managed certificate which has been deleted
+        /// </summary>
+        public const string SendManagedCertificateDeleteMsg = "SendManagedCertificateDelete";
         public const string SendMsg = "SendMessage";
 
         /// <summary>
@@ -27,6 +32,11 @@ namespace Certify.Providers
     {
         Task ReportRequestProgress(RequestProgressState status);
         Task ReportManagedCertificateUpdated(ManagedCertificate item);
+
+        /// <summary>
+        /// Report that a managed certificate has been deleted, for example through the management hub
+        /// </summary>
+        Task ReportManagedCertificateDeleted(ManagedCertificate item);
 
         /// <summary>
         /// Report a service level diagnostic which requires operator action, such as the data store being

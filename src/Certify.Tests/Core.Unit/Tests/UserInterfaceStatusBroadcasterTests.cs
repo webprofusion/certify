@@ -140,6 +140,24 @@ namespace Certify.Core.Tests.Unit
         }
 
         /// <summary>
+        /// The hub's own instance reports a deleted item itself, which can happen after the hub has removed its cached copy
+        /// </summary>
+        [TestMethod]
+        public async Task ManagedItemRemoved_IsFilteredByTheRemovedItemWhenGiven()
+        {
+            var harness = new Harness()
+                .WithPrincipal("sp-example", ViewerRole("ar-example", domainRules: ["*.example.com"]))
+                .WithPrincipal("sp-other", ViewerRole("ar-other", domainRules: ["*.example.org"]));
+
+            harness.Connect("conn-example", "sp-example");
+            harness.Connect("conn-other", "sp-other");
+
+            await harness.Broadcaster.SendManagedItemRemoved(InstanceId, "item-1", Item("item-1", "www.example.com"));
+
+            CollectionAssert.AreEqual(new[] { "conn-example" }, harness.Sends.Single().ConnectionIds.ToArray());
+        }
+
+        /// <summary>
         /// A caller connected with an API token scoped to specific role assignments is evaluated with that scope,
         /// not as the principal's full role set, and separately from the same principal connected without one.
         /// </summary>

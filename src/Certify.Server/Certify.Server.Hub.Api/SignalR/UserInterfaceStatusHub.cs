@@ -68,6 +68,18 @@ namespace Certify.Server.Hub.Api.SignalR
         }
 
         /// <summary>
+        /// Report a deleted managed certificate to subscribers
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public async Task ReportManagedCertificateDeleted(ManagedCertificate item)
+        {
+            Debug.WriteLine($"Sending deleted managed cert message to UI: {item.Name}");
+
+            await _broadcaster.SendManagedItemRemoved(item.InstanceId, item.Id, item);
+        }
+
+        /// <summary>
         /// Report a service level diagnostic which requires operator action to subscribers
         /// </summary>
         /// <param name="diagnostic"></param>

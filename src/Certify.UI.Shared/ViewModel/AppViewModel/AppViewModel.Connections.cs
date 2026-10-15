@@ -208,6 +208,7 @@ namespace Certify.UI.ViewModel
             clientConnection.OnMessageFromService += CertifyClient_SendMessage;
             clientConnection.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
             clientConnection.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
+            clientConnection.OnManagedCertificateDeleted += CertifyClient_OnManagedCertificateDeleted;
 
             // replace active connection
             _certifyClient = clientConnection;

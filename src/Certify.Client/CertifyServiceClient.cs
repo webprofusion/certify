@@ -18,6 +18,8 @@ namespace Certify.Client
 
         public event Action<ManagedCertificate> OnManagedCertificateUpdated;
 
+        public event Action<string> OnManagedCertificateDeleted;
+
         public event Action<string, string> OnMessageFromService;
 
         public event Action OnConnectionReconnecting;
@@ -63,6 +65,7 @@ namespace Certify.Client
                 var hubProxy = _legacyConnection.CreateHubProxy("StatusHub");
 
                 hubProxy.On<ManagedCertificate>(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, (u) => OnManagedCertificateUpdated?.Invoke(u));
+                hubProxy.On<string>(Providers.StatusHubMessages.SendManagedCertificateDeleteMsg, (id) => OnManagedCertificateDeleted?.Invoke(id));
                 hubProxy.On<RequestProgressState>(Providers.StatusHubMessages.SendProgressStateMsg, (s) => OnRequestProgressStateUpdated?.Invoke(s));
                 hubProxy.On<string, string>(Providers.StatusHubMessages.SendMsg, (a, b) => OnMessageFromService?.Invoke(a, b));
 
@@ -142,6 +145,11 @@ namespace Certify.Client
                 connection.On<ManagedCertificate>(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, (u) =>
                 {
                     OnManagedCertificateUpdated?.Invoke(u);
+                });
+
+                connection.On<string>(Providers.StatusHubMessages.SendManagedCertificateDeleteMsg, (id) =>
+                {
+                    OnManagedCertificateDeleted?.Invoke(id);
                 });
 
                 connection.On<string, string>(Providers.StatusHubMessages.SendMsg, (a, b) =>

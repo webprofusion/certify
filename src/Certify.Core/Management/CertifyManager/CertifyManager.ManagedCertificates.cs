@@ -702,6 +702,10 @@ namespace Certify.Management
 
                     RecordManagedItemsChanged();
 
+                    // report to status hub clients, such as the desktop app when the item was deleted through the hub
+                    item.InstanceId = _serverConfig.HubAssignedInstanceId;
+                    _statusReporting?.ReportManagedCertificateDeleted(item);
+
                     if (item.RequestConfig?.EnableFailureNotifications == true && CoreAppSettings.Current.EnableStatusReporting)
                     {
                         await ReportManagedCertificateStatus(item, removeReport: true);

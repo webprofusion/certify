@@ -122,6 +122,12 @@ namespace Certify.Client
         event Action<string, string> OnMessageFromService;
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
         event Action<ManagedCertificate> OnManagedCertificateUpdated;
+
+        /// <summary>
+        /// A managed certificate was deleted, given by id
+        /// </summary>
+        event Action<string> OnManagedCertificateDeleted;
+
         Task ConnectStatusStreamAsync();
         Shared.ServerConnection GetConnectionInfo();
         Task<bool> EnsureServiceHubConnected();
