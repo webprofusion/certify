@@ -391,6 +391,12 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
+            // no editor saves an item without a name, and saving one would add an empty certificate or blank an existing one
+            if (string.IsNullOrWhiteSpace(managedCertificate?.Name))
+            {
+                return Problem(detail: "A managed certificate name is required.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
             var outOfScope = await CheckSubmittedManagedItemInScope(_client, _mgmtAPI, StandardResourceActions.ManagedItemUpdate, instanceId, managedCertificate)
                 ?? await CheckSubmittedManagedItemProgramExecution(_client, _mgmtAPI, instanceId, managedCertificate);
             if (outOfScope != null)
