@@ -387,15 +387,27 @@ namespace Certify.UI.Windows
             _periodicCheckTimer.Elapsed += _periodicCheckTimer_Elapsed;
             _periodicCheckTimer.Start();
 
-            // the hub status indicator is always visible in the main UI so is refreshed more often
+            // the hub status indicator is always visible in the main UI so is refreshed often. This first check can run before
+            // the service has connected to the hub (e.g. when the app and service start together), which the next check corrects.
             await _appViewModel.RefreshManagementHubStatus();
 
-            _hubStatusCheckTimer = new System.Timers.Timer(60 * 1000); // every minute
+            // not auto reset, so a slow check can't overlap the next one and overwrite its newer result
+            _hubStatusCheckTimer = new System.Timers.Timer(10 * 1000) { AutoReset = false }; // every 10 seconds
             _hubStatusCheckTimer.Elapsed += _hubStatusCheckTimer_Elapsed;
             _hubStatusCheckTimer.Start();
         }
 
-        private async void _hubStatusCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) => await _appViewModel.RefreshManagementHubStatus();
+        private async void _hubStatusCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                await _appViewModel.RefreshManagementHubStatus();
+            }
+            finally
+            {
+                _hubStatusCheckTimer.Start();
+            }
+        }
 
         private async void _periodicCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
