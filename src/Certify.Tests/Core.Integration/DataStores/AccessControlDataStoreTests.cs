@@ -326,7 +326,7 @@ namespace Certify.Core.Tests.DataStores
                 await access.AddAssignedRole(adminSp.Id, new AssignedRole { Id = new Guid().ToString(), SecurityPrincipalId = adminSp.Id, RoleId = StandardRoles.Administrator.Id }, bypassIntegrityCheck: true);
 
                 // add second security principal, allow role check as admin user should now exist with required role
-                var added = await access.AddSecurityPrincipal(adminSp.Id, consumerSp);
+                var added = (await access.AddSecurityPrincipal(adminSp.Id, consumerSp)).IsSuccess;
 
                 Assert.IsTrue(added, "Should be able to add a security principal");
 

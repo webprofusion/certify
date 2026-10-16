@@ -245,7 +245,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 Provider = StandardIdentityProviders.INTERNAL
             };
 
-            Assert.IsTrue(await _access.AddSecurityPrincipal(AdminId, consumer, bypassIntegrityCheck: true));
+            Assert.IsTrue((await _access.AddSecurityPrincipal(AdminId, consumer, bypassIntegrityCheck: true)).IsSuccess);
 
             var assignedRole = new AssignedRole
             {
@@ -418,7 +418,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 Provider = StandardIdentityProviders.INTERNAL
             };
 
-            Assert.IsTrue(await _access.AddSecurityPrincipal(ownAdmin.Id, ownAdmin, bypassIntegrityCheck: true));
+            Assert.IsTrue((await _access.AddSecurityPrincipal(ownAdmin.Id, ownAdmin, bypassIntegrityCheck: true)).IsSuccess);
 
             var result = await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
@@ -480,7 +480,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 IsBuiltIn = true
             };
 
-            Assert.IsTrue(await _access.AddSecurityPrincipal(admin.Id, admin, bypassIntegrityCheck: true));
+            Assert.IsTrue((await _access.AddSecurityPrincipal(admin.Id, admin, bypassIntegrityCheck: true)).IsSuccess);
 
             Assert.IsTrue(await _access.AddAssignedRole(admin.Id, new AssignedRole
             {

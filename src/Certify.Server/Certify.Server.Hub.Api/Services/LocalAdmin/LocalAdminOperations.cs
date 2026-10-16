@@ -181,7 +181,7 @@ namespace Certify.Server.Hub.Api.Services.LocalAdmin
                 Provider = StandardIdentityProviders.INTERNAL
             };
 
-            if (!await access.AddSecurityPrincipal(ContextUserId, principal, bypassIntegrityCheck: true))
+            if (!(await access.AddSecurityPrincipal(ContextUserId, principal, bypassIntegrityCheck: true)).IsSuccess)
             {
                 // most likely because the username is in use, as no two principals may share one
                 return await Complete(Failed($"The user '{username}' could not be added. If a user with this username already exists, use password-reset or grant-admin for it instead. See the hub log for details."), "Administrator creation", caller);

@@ -86,7 +86,7 @@ namespace Certify.Core.Management.Access
             return results;
         }
 
-        public async Task<bool> AddSecurityPrincipal(string contextUserId, SecurityPrincipal principal, bool bypassIntegrityCheck = false)
+        public async Task<ActionResult> AddSecurityPrincipal(string contextUserId, SecurityPrincipal principal, bool bypassIntegrityCheck = false)
         {
             if (contextUserId == StandardSecurityPrincipals.System && !string.IsNullOrEmpty(principal.ExternalIdentifier))
             {
@@ -97,21 +97,21 @@ namespace Certify.Core.Management.Access
             if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);
-                return false;
+                return new ActionResult("Not authorized to add security principals.", false);
             }
 
             var existing = await GetSecurityPrincipal(contextUserId, principal.Id);
             if (existing != null)
             {
                 await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] which already exists.", contextUserId, principal?.Id);
-                return false;
+                return new ActionResult("A security principal with this id already exists.", false);
             }
 
             var username = principal.Username?.Trim();
             if (!string.IsNullOrEmpty(username) && await IsUsernameInUse(username, exceptPrincipalId: null))
             {
                 await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] with username {username} which is already in use.", contextUserId, principal.Id, username);
-                return false;
+                return new ActionResult($"The username '{username}' is already in use.", false);
             }
 
             if (!string.IsNullOrWhiteSpace(principal.Password))
@@ -120,7 +120,7 @@ namespace Certify.Core.Management.Access
                 if (principal.Password.Length < MinimumPasswordLength)
                 {
                     await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] with a password shorter than the minimum length.", contextUserId, principal?.Id);
-                    return false;
+                    return new ActionResult($"The password must be at least {MinimumPasswordLength} characters.", false);
                 }
 
                 principal.Password = HashPassword(principal.Password);
@@ -138,7 +138,7 @@ namespace Certify.Core.Management.Access
             await _store.Add<SecurityPrincipal>(nameof(SecurityPrincipal), principal);
 
             await AuditInformation("User {contextUserId} added security principal [{principalId}] {username}", contextUserId, principal?.Id, principal?.Username);
-            return true;
+            return new ActionResult("Added", true);
         }
 
         public string GetAvatarUrlForPrincipal(SecurityPrincipal principal)

@@ -44,20 +44,20 @@ namespace Certify.Core.Tests.Unit
             var standard = await AccessControlConfig.UpdateStandardAccessConfig(_access);
             Assert.IsEmpty(standard.Failures, "test setup should succeed");
 
-            Assert.IsTrue(await _access.AddSecurityPrincipal(StandardSecurityPrincipals.System, new SecurityPrincipal
+            Assert.IsTrue((await _access.AddSecurityPrincipal(StandardSecurityPrincipals.System, new SecurityPrincipal
             {
                 Id = ExistingUserId,
                 Username = ExistingUsername,
                 Password = "original-password",
                 PrincipalType = SecurityPrincipalType.User
-            }, bypassIntegrityCheck: true), "test setup should succeed");
+            }, bypassIntegrityCheck: true)).IsSuccess, "test setup should succeed");
 
-            Assert.IsTrue(await _access.AddSecurityPrincipal(StandardSecurityPrincipals.System, new SecurityPrincipal
+            Assert.IsTrue((await _access.AddSecurityPrincipal(StandardSecurityPrincipals.System, new SecurityPrincipal
             {
                 Id = AccessControlConfig.ManagedInstanceSecurityPrincipalId,
                 Title = "Managed Instances Service Principal",
                 PrincipalType = SecurityPrincipalType.Application
-            }, bypassIntegrityCheck: true), "test setup should succeed");
+            }, bypassIntegrityCheck: true)).IsSuccess, "test setup should succeed");
         }
 
         [TestCleanup]

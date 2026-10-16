@@ -23,13 +23,7 @@ namespace Certify.Service.Controllers
         public async Task<Models.Config.ActionResult> AddSecurityPrincipal([FromBody] SecurityPrincipal principal)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var addResultOk = await accessControl.AddSecurityPrincipal(GetContextUserId(), principal);
-
-            return new Models.Config.ActionResult
-            {
-                IsSuccess = addResultOk,
-                Message = addResultOk ? "Added" : "Failed to add. Check the username is not already in use and any password has at least 8 characters."
-            };
+            return await accessControl.AddSecurityPrincipal(GetContextUserId(), principal);
         }
 
         [HttpPost, Route("securityprincipal/update")]
@@ -187,12 +181,12 @@ namespace Certify.Service.Controllers
         public async Task<Models.Config.ActionResult> RemoveAssignedAccessToken(string id)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var addResultOk = await accessControl.DeleteAssignedAccessToken(GetContextUserId(), id);
+            var resultOk = await accessControl.DeleteAssignedAccessToken(GetContextUserId(), id);
 
             return new Models.Config.ActionResult
             {
-                IsSuccess = addResultOk,
-                Message = addResultOk ? "Added" : "Failed to add"
+                IsSuccess = resultOk,
+                Message = resultOk ? "Removed" : "Failed to remove"
             };
         }
 

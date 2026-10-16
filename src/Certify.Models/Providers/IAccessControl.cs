@@ -7,7 +7,7 @@ namespace Certify.Core.Management.Access
     public interface IAccessControl
     {
         Task<bool> AddResourcePolicy(string contextUserId, ResourcePolicy resourceProfile, bool bypassIntegrityCheck = false);
-        Task<bool> AddSecurityPrincipal(string contextUserId, SecurityPrincipal principal, bool bypassIntegrityCheck = false);
+        Task<Models.Config.ActionResult> AddSecurityPrincipal(string contextUserId, SecurityPrincipal principal, bool bypassIntegrityCheck = false);
         Task<bool> DeleteSecurityPrincipal(string contextUserId, string id, bool allowSelfDelete = false);
         Task<List<SecurityPrincipal>> GetSecurityPrincipals(string contextUserId, bool includePassword = false);
         Task<SecurityPrincipal> GetSecurityPrincipal(string contextUserId, string id, bool includePassword = false);

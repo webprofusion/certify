@@ -1050,7 +1050,7 @@ namespace Certify.Models.Hub
                     IsBuiltIn = true
                 };
 
-                if (!await access.AddSecurityPrincipal(contextUserId, adminSp, bypassIntegrityCheck: true))
+                if (!(await access.AddSecurityPrincipal(contextUserId, adminSp, bypassIntegrityCheck: true)).IsSuccess)
                 {
                     result.Failures.Add($"The default admin security principal [{adminSpId}] could not be created.");
                     return result;
@@ -1077,7 +1077,7 @@ namespace Certify.Models.Hub
                     IsBuiltIn = true
                 };
 
-                if (!await access.AddSecurityPrincipal(contextUserId, managedInstanceServicePrincipal, bypassIntegrityCheck: true))
+                if (!(await access.AddSecurityPrincipal(contextUserId, managedInstanceServicePrincipal, bypassIntegrityCheck: true)).IsSuccess)
                 {
                     result.Failures.Add($"The managed instance service principal [{managedInstanceSpId}] could not be created.");
                     return result;
