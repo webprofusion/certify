@@ -669,19 +669,13 @@ namespace Certify.Tests.Core.Unit.Tests
                 Assert.Contains("Error storing certificate. The system cannot find the file specified.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
                 Assert.AreEqual("Certificate Storage Failed", results[0].Title);
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                // on Linux a certificate store which cannot be written to is a warning rather than a failure
-                Assert.IsFalse(results[0].HasError);
-                Assert.IsTrue(results[0].HasWarning);
-                Assert.Contains("Unable to write the certificate to the X509 certificate store, continuing without it. The specified X509 certificate store does not exist.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
-                Assert.AreEqual("Certificate Storage Skipped", results[0].Title);
-            }
             else
             {
-                Assert.IsTrue(results[0].HasError);
-                Assert.Contains("Error storing certificate. The specified X509 certificate store does not exist.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
-                Assert.AreEqual("Certificate Storage Failed", results[0].Title);
+                // outside Windows a certificate store which cannot be written to is a warning rather than a failure
+                Assert.IsFalse(results[0].HasError);
+                Assert.IsTrue(results[0].HasWarning);
+                Assert.Contains("Unable to write the certificate to the X509 certificate store, continuing without it.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
+                Assert.AreEqual("Certificate Storage Skipped", results[0].Title);
             }
         }
 

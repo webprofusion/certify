@@ -96,15 +96,15 @@ namespace Certify.Core.Management
                         // the underlying cause (e.g. a file system error) is only given by the inner exception
                         var error = exp.InnerException != null ? $"{exp.Message} {exp.InnerException.Message}" : exp.Message;
 
-                        if (OperatingSystem.IsLinux())
+                        if (OperatingSystem.IsWindows())
                         {
-                            // on Linux the X509 store is the per user .NET store under $HOME, which nothing else uses, so the
-                            // certificate file is still deployable when the store cannot be written (e.g. a container user with no writable home)
-                            actions.Add(new ActionStep { HasWarning = true, Title = "Certificate Storage Skipped", Category = "CertificateStorage", Description = "Unable to write the certificate to the X509 certificate store, continuing without it. " + error });
+                            actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "CertificateStorage", Description = "Error storing certificate. " + error });
                         }
                         else
                         {
-                            actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "CertificateStorage", Description = "Error storing certificate. " + error });
+                            // outside Windows no binding deployment uses the X509 store (on Linux it is the per user .NET store under $HOME),
+                            // so the certificate file is still deployable when the store cannot be written (e.g. a container user with no writable home)
+                            actions.Add(new ActionStep { HasWarning = true, Title = "Certificate Storage Skipped", Category = "CertificateStorage", Description = "Unable to write the certificate to the X509 certificate store, continuing without it. " + error });
                         }
 
                         return actions;
