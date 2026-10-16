@@ -602,6 +602,9 @@ namespace Certify.Server.Hub.Api.Services
 
             var isNewItem = string.IsNullOrWhiteSpace(managedCert.Id) || GetCachedManagedCertificate(instanceId, managedCert.Id) == null;
 
+            // decided before sending, as an instance which disconnects while the save is awaited may still apply it
+            var isSent = IsInstanceConnected(instanceId);
+
             var cmd = new InstanceCommandRequest(ManagementHubCommands.UpdateManagedItem, args) { IsResultAwaited = true };
             var commandResult = await GetCommandResult(instanceId, cmd, ManagedItemWriteTimeout);
 
@@ -611,7 +614,7 @@ namespace Certify.Server.Hub.Api.Services
 
             if (result == null)
             {
-                return new ActionResult<ManagedCertificate>(commandResult?.Message ?? GetManagedItemSaveFailure(instanceId), false);
+                return new ActionResult<ManagedCertificate>(commandResult?.Message ?? GetManagedItemSaveFailure(isSent), false);
             }
 
             _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result);
@@ -627,9 +630,9 @@ namespace Certify.Server.Hub.Api.Services
         /// <summary>
         /// Why an instance which did not give a reason did not return the managed certificate it was asked to save
         /// </summary>
-        private string GetManagedItemSaveFailure(string instanceId)
+        private static string GetManagedItemSaveFailure(bool isSent)
         {
-            return IsInstanceConnected(instanceId)
+            return isSent
                 ? "The instance did not confirm the save in time. It may still be saved, so check the certificate before trying again."
                 : "The instance is not connected to the hub, so the changes were not saved.";
         }
@@ -652,11 +655,16 @@ namespace Certify.Server.Hub.Api.Services
 
             var removedTitle = GetCachedManagedCertificate(instanceId, managedCertId)?.Name;
 
+            // decided before sending, as an instance which disconnects while the removal is awaited may still apply it
+            var isSent = IsInstanceConnected(instanceId);
+
             var result = await PerformInstanceCommandTaskWithResult<ActionResult>(instanceId, args, ManagementHubCommands.RemoveManagedItem, ManagedItemWriteTimeout);
 
             if (result == null)
             {
-                return new ActionResult("The instance did not respond in time. The managed certificate may still be removed.", false);
+                return new ActionResult(isSent
+                    ? "The instance did not respond in time. The managed certificate may still be removed."
+                    : "The instance is not connected to the hub, so the managed certificate was not removed.", false);
             }
 
             if (result.IsSuccess)

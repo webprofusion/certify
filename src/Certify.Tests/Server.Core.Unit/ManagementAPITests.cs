@@ -255,6 +255,66 @@ namespace Certify.Tests.Server.Core.Unit
             stateProvider.Verify(x => x.UpdateCachedManagedInstanceItem(It.IsAny<string>(), It.IsAny<ManagedCertificate>()), Times.Never);
         }
 
+        [TestMethod]
+        public async Task UpdateManagedCertificate_SaysTheSaveMayHaveApplied_WhenTheInstanceDisconnectsWhileWaiting()
+        {
+            // the instance was connected when the save was sent, then dropped before replying
+            string? connectionId = "conn-1";
+
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetManagedInstanceItems(It.IsAny<string?>())).Returns(new ConcurrentDictionary<string, ManagedInstanceItems>());
+            stateProvider.Setup(x => x.GetConnectionIdForInstance("remote-1")).Returns(() => connectionId);
+            stateProvider
+                .Setup(x => x.ConsumeAwaitedCommandResult(It.IsAny<InstanceCommandRequest>(), It.IsAny<TimeSpan?>()))
+                .ReturnsAsync(() =>
+                {
+                    connectionId = null;
+                    return (InstanceCommandResult?)null;
+                });
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            hubClients.Setup(x => x.Client("conn-1")).Returns(Mock.Of<IInstanceManagementHub>());
+
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                CreateManagerMock().Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.UpdateManagedCertificate("remote-1", new ManagedCertificate { Id = "item-1", Name = "Item 1" }, null!);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("The instance did not confirm the save in time. It may still be saved, so check the certificate before trying again.", result.Message);
+        }
+
+        [TestMethod]
+        public async Task UpdateManagedCertificate_SaysTheSaveWasNotApplied_WhenTheInstanceIsNotConnected()
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetManagedInstanceItems(It.IsAny<string?>())).Returns(new ConcurrentDictionary<string, ManagedInstanceItems>());
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                CreateManagerMock().Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.UpdateManagedCertificate("remote-1", new ManagedCertificate { Id = "item-1", Name = "Item 1" }, null!);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("The instance is not connected to the hub, so the changes were not saved.", result.Message);
+            hubClients.Verify(x => x.Client(It.IsAny<string>()), Times.Never);
+        }
+
         private static bool HasExpectedRejoinPayload(InstanceCommandRequest command, string clientId, string secret)
         {
             var payload = JsonSerializer.Deserialize<ManagementHubRejoinRequest>(command.Value ?? "{}", Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);
