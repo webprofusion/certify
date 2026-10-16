@@ -787,7 +787,8 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
-        /// Retrieves ACME accounts from the target instance.
+        /// Retrieves ACME accounts from the target instance. The account private key and EAB key are only used by the
+        /// instance itself, so they are removed before the accounts are returned.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
@@ -798,7 +799,15 @@ namespace Certify.Server.Hub.Api.Services
                         new("instanceId", instanceId)
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ICollection<AccountDetails>>(instanceId, args, ManagementHubCommands.GetAcmeAccounts);
+            var accounts = await PerformInstanceCommandTaskWithResult<ICollection<AccountDetails>>(instanceId, args, ManagementHubCommands.GetAcmeAccounts);
+
+            foreach (var account in accounts ?? [])
+            {
+                account.AccountKey = string.Empty;
+                account.EabKey = null;
+            }
+
+            return accounts;
         }
 
         /// <summary>

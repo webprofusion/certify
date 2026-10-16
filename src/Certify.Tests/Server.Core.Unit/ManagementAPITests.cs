@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
@@ -313,6 +314,55 @@ namespace Certify.Tests.Server.Core.Unit
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual("The instance is not connected to the hub, so the changes were not saved.", result.Message);
             hubClients.Verify(x => x.Client(It.IsAny<string>()), Times.Never);
+        }
+
+        [TestMethod]
+        public async Task GetAcmeAccounts_RemovesAccountKeyAndEabKey()
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetConnectionIdForInstance("remote-1")).Returns("conn-1");
+            stateProvider
+                .Setup(x => x.ConsumeAwaitedCommandResult(It.IsAny<InstanceCommandRequest>(), It.IsAny<TimeSpan?>()))
+                .ReturnsAsync((InstanceCommandRequest cmd, TimeSpan? _) => new InstanceCommandResult
+                {
+                    CommandId = cmd.CommandId,
+                    Value = JsonSerializer.Serialize(new List<AccountDetails>
+                    {
+                        new()
+                        {
+                            ID = "acct-1",
+                            Email = "admin@example.com",
+                            AccountURI = "https://acme.example.com/acct/1",
+                            AccountFingerprint = "ab:cd",
+                            AccountKey = "-----BEGIN PRIVATE KEY-----",
+                            EabKeyId = "eab-1",
+                            EabKey = "eab-hmac"
+                        }
+                    })
+                });
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            hubClients.Setup(x => x.Client("conn-1")).Returns(Mock.Of<IInstanceManagementHub>());
+
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                CreateManagerMock().Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var accounts = await managementApi.GetAcmeAccounts("remote-1", null);
+
+            Assert.IsNotNull(accounts);
+            var account = accounts.Single();
+            Assert.AreEqual(string.Empty, account.AccountKey);
+            Assert.IsNull(account.EabKey);
+            Assert.AreEqual("https://acme.example.com/acct/1", account.AccountURI);
+            Assert.AreEqual("ab:cd", account.AccountFingerprint);
+            Assert.AreEqual("eab-1", account.EabKeyId);
         }
 
         private static bool HasExpectedRejoinPayload(InstanceCommandRequest command, string clientId, string secret)
