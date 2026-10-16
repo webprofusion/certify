@@ -788,7 +788,8 @@ namespace Certify.Server.Hub.Api.Services
 
         /// <summary>
         /// Retrieves ACME accounts from the target instance. The account private key and EAB key are only used by the
-        /// instance itself, so they are removed before the accounts are returned.
+        /// instance itself, so they are removed before the accounts are returned, including from instances which still
+        /// send them.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
@@ -803,8 +804,7 @@ namespace Certify.Server.Hub.Api.Services
 
             foreach (var account in accounts ?? [])
             {
-                account.AccountKey = string.Empty;
-                account.EabKey = null;
+                account.ClearSecrets();
             }
 
             return accounts;

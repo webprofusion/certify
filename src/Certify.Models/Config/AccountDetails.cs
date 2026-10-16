@@ -25,5 +25,14 @@ namespace Certify.Models
         /// </summary>
         [JsonIgnore]
         public bool IsFailoverSelection { get; set; }
+
+        /// <summary>
+        /// Clear the account private key and EAB key, which only the instance holding the account needs
+        /// </summary>
+        public void ClearSecrets()
+        {
+            AccountKey = string.Empty;
+            EabKey = null;
+        }
     }
 }
