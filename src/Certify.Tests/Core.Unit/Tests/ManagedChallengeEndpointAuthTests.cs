@@ -211,6 +211,28 @@ namespace Certify.Core.Tests.Unit
 
         #endregion
 
+        #region Fulfillment outcome
+
+        [TestMethod]
+        [Description("A request fulfillment refuses is forbidden, while a DNS update which fails is a bad gateway")]
+        public async Task Perform_RefusedByFulfillment_IsForbidden_ButAFailedUpdateIsABadGateway()
+        {
+            var refused = new Fixture { FulfillmentResult = new ManagedChallengeResult { IsSuccess = false, IsRefused = true, Message = "No matching challenge found" } };
+
+            var result = await refused.CreateController(CredentialTransport.Headers).PerformManagedChallenge(refused.Request(CredentialTransport.Headers));
+
+            AssertForbidden(result, refused);
+
+            var failed = new Fixture { FulfillmentResult = new ManagedChallengeResult { IsSuccess = false, Message = "DNS update failed" } };
+
+            result = await failed.CreateController(CredentialTransport.Headers).PerformManagedChallenge(failed.Request(CredentialTransport.Headers));
+
+            Assert.IsInstanceOfType<ObjectResult>(result, failed.Describe(result));
+            Assert.AreEqual(StatusCodes.Status502BadGateway, ((ObjectResult)result).StatusCode);
+        }
+
+        #endregion
+
         #region Fixture
 
         private enum CredentialTransport
@@ -233,6 +255,9 @@ namespace Certify.Core.Tests.Unit
 
             /// <summary>Whether the identifier is within the caller's role scope.</summary>
             public bool IdentifierAuthorized { get; init; } = true;
+
+            /// <summary>What fulfillment returns for a request which reaches it.</summary>
+            public ManagedChallengeResult FulfillmentResult { get; init; } = new() { IsSuccess = true, Message = "Challenge completed" };
 
             /// <summary>The resource actions the endpoint asked about, in order.</summary>
             public List<string> CheckedActions { get; } = [];
@@ -292,7 +317,7 @@ namespace Certify.Core.Tests.Unit
                     .ReturnsAsync((AuthorizedManagedChallengeRequest authorized, AuthContext _) =>
                     {
                         Forwarded = authorized;
-                        return new ActionResultConfig("Challenge completed", true);
+                        return FulfillmentResult;
                     });
 
                 client.Setup(c => c.CleanupManagedChallenge(It.IsAny<AuthorizedManagedChallengeRequest>(), It.IsAny<AuthContext>()))

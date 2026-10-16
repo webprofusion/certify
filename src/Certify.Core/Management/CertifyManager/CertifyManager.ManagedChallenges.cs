@@ -393,7 +393,7 @@ namespace Certify.Management
             return Task.FromResult(state?.Operation);
         }
 
-        public Task<ActionResult> PerformManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
+        public Task<ManagedChallengeResult> PerformManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
             return ExecuteManagedChallengeRequest(authorized);
         }
@@ -548,11 +548,14 @@ namespace Certify.Management
             });
         }
 
-        private async Task<ActionResult> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
+        private async Task<ManagedChallengeResult> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
             var log = _serviceLog;
             var request = authorized.Request;
             var caller = authorized.Caller;
+
+            // refused before any DNS update is attempted, which the hub reports differently from a failed update
+            static ManagedChallengeResult Refused(string message) => new() { IsSuccess = false, IsRefused = true, Message = message };
 
             var eligible = await ResolveEligibleChallenges(
                 caller,
@@ -561,30 +564,30 @@ namespace Certify.Management
 
             if (!eligible.IsAuthorized)
             {
-                return new ActionResult { IsSuccess = false, Message = eligible.FailureReason };
+                return Refused(eligible.FailureReason);
             }
 
             var matchingChallenge = ManagedChallengeFindBestMatch(request, eligible.Challenges);
 
             if (matchingChallenge == null)
             {
-                return new ActionResult { IsSuccess = false, Message = "No matching challenge found" };
+                return Refused("No matching challenge found");
             }
             else if (matchingChallenge.ChallengeConfig == null)
             {
-                return new ActionResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" };
+                return new ManagedChallengeResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" };
             }
             else if (!IsManagedChallengeTypeSupported(matchingChallenge.ChallengeConfig.ChallengeType)
                 || !IsManagedChallengeTypeSupported(request.ChallengeType))
             {
-                return new ActionResult { IsSuccess = false, Message = "Managed challenge only supports dns-01 requests" };
+                return Refused("Managed challenge only supports dns-01 requests");
             }
             else
             {
                 var recordName = await ResolveChallengeRecordName(request, matchingChallenge.ChallengeConfig);
                 if (recordName.Refusal != null)
                 {
-                    return recordName.Refusal;
+                    return Refused(recordName.Refusal.Message);
                 }
 
                 // perform challenge
@@ -617,7 +620,7 @@ namespace Certify.Management
                         log?.Error($"DNS update failed: {dnsResult.Result.Message}");
                     }
 
-                    return dnsResult.Result;
+                    return new ManagedChallengeResult { IsSuccess = false, IsWarning = dnsResult.Result.IsWarning, Message = dnsResult.Result.Message };
                 }
                 else
                 {
@@ -646,7 +649,7 @@ namespace Certify.Management
                 request.DateTimePerformed = DateTimeOffset.UtcNow;
                 _managedChallengesPendingCleanup[CreateManagedChallengeCleanupKey(request)] = CloneAuthorizedRequest(authorized);
 
-                return new ActionResult { IsSuccess = true, Message = $"Challenge response {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" };
+                return new ManagedChallengeResult { IsSuccess = true, Message = $"Challenge response {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" };
             }
         }
 

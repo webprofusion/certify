@@ -133,7 +133,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> CleanupManagedChallenge(AuthorizedManagedChallengeRequest authorized, AuthContext authContext) => _managedChallengeController(authContext).CleanupChallengeResponse(authorized);
         public Task<ActionResult> RemoveManagedChallenge(string id, AuthContext authContext) => _managedChallengeController(authContext).Delete(id);
         public Task<ActionResult> AuthorizeManagedChallengeIdentifiers(ManagedChallengeAuthorizationCheck check, AuthContext authContext) => _managedChallengeController(authContext).AuthorizeManagedChallengeIdentifiers(check);
-        public Task<ActionResult> PerformManagedChallenge(AuthorizedManagedChallengeRequest authorized, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(authorized);
+        public Task<ManagedChallengeResult> PerformManagedChallenge(AuthorizedManagedChallengeRequest authorized, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(authorized);
         public Task<ManagedChallengeOperation> BeginManagedChallenge(AuthorizedManagedChallengeRequest authorized, AuthContext authContext) => _certifyManager.BeginManagedChallengeRequest(authorized);
         public Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId, AuthContext authContext) => _certifyManager.GetManagedChallengeOperation(operationId);
         public Task<HubSettings> GetHubSettings(AuthContext authContext) => _hubSettingsController(authContext).Get();

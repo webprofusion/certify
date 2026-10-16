@@ -183,6 +183,18 @@ namespace Certify.Models.Hub
         public bool RequireSatisfiableChallenge { get; set; }
     }
 
+    /// <summary>
+    /// The outcome of performing a managed challenge
+    /// </summary>
+    public class ManagedChallengeResult : ActionResult
+    {
+        /// <summary>
+        /// True if the request was refused before any DNS update was attempted, such as when no challenge matches it
+        /// or it names a record the challenge does not allow, rather than the DNS update itself failing
+        /// </summary>
+        public bool IsRefused { get; set; }
+    }
+
     public static class ManagedChallengeOperationStates
     {
         public const string Pending = "pending";

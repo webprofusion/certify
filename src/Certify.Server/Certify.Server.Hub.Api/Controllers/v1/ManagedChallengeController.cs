@@ -67,9 +67,11 @@ namespace Certify.Server.Hub.Api.Controllers
                     request?.Identifier,
                     request?.ChallengeType,
                     result.Message);
+
+                // a refused request was never attempted, only a failed DNS update is the fault of a service behind the hub
                 return Problem(
                     detail: result.Message,
-                    statusCode: StatusCodes.Status502BadGateway
+                    statusCode: result.IsRefused ? StatusCodes.Status403Forbidden : StatusCodes.Status502BadGateway
                 );
             }
         }

@@ -55,7 +55,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("request")]
-        public async Task<Models.Config.ActionResult> PerformChallengeResponse(AuthorizedManagedChallengeRequest authorized)
+        public async Task<ManagedChallengeResult> PerformChallengeResponse(AuthorizedManagedChallengeRequest authorized)
         {
             DebugLog();
 

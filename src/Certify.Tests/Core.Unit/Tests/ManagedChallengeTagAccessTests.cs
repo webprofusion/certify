@@ -1059,6 +1059,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual(2, log.LogEntries.Count(e => e.Contains("Creating TXT Record '_acme-challenge-test.acme.example.org'")));
 
             Assert.IsFalse(elsewhere.IsSuccess);
+            Assert.IsTrue(elsewhere.IsRefused, "a record name the challenge does not allow is refused rather than failing a DNS update");
             StringAssert.Contains(elsewhere.Message, "_acme-challenge.exch01.ad.example.com");
             StringAssert.Contains(elsewhere.Message, "CNAME Delegation Rule");
         }

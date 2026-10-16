@@ -229,7 +229,7 @@ namespace Certify.Core.Tests.Unit
                     It.Is<AuthorizedManagedChallengeRequest>(a => a.Request.Identifier == request.Identifier && a.Request.ResponseKey == request.ResponseKey),
                     It.IsAny<AuthContext>()))
                 .Callback<AuthorizedManagedChallengeRequest, AuthContext>((a, _) => forwarded = a)
-                .ReturnsAsync(new Certify.Models.Config.ActionResult("Managed challenge completed", true));
+                .ReturnsAsync(new ManagedChallengeResult { IsSuccess = true, Message = "Managed challenge completed" });
 
             var services = new ServiceCollection();
             services.AddSingleton(new ManagedInstanceRequestAuthValidator(client.Object, NullLogger<ManagedInstanceRequestAuthValidator>.Instance));

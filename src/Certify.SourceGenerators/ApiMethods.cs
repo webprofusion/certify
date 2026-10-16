@@ -470,7 +470,7 @@ namespace Certify.SourceGenerators
                     Comment = "Perform a managed challenge (DNS challenge delegation etc)",
                     PublicAPIController = null, // skip public controller implementation
                     ServiceAPIRoute = "managedchallenge/request",
-                    ReturnType = actionResultTypeName,
+                    ReturnType = nameof(ManagedChallengeResult),
                     Params = new Dictionary<string, string>
                     {
                         { "authorized", "Certify.Models.Hub.AuthorizedManagedChallengeRequest" }
