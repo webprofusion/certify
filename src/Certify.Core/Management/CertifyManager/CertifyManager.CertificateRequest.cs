@@ -1496,9 +1496,11 @@ namespace Certify.Management
                         // depending on the deployment type the final result will vary
                         result.Message = "New certificate received and standard deployment performed OK.";
 
+                        LogSubsteps(log, actions);
+
                         if (managedCertificate.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
                         {
-                            result.Message = "New certificate received and stored OK.";
+                            result.Message = IsCertificateStored(actions) ? "New certificate received and stored OK." : "New certificate received OK.";
                         }
                         else if (managedCertificate.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
                         {
@@ -1506,8 +1508,6 @@ namespace Certify.Management
                         }
                         else
                         {
-                            LogSubsteps(log, actions);
-
                             // certificate deployment was completed, log success
                             log?.Information(CoreSR.CertifyManager_CompleteRequestAndUpdateBinding);
                         }
@@ -1627,27 +1627,43 @@ namespace Certify.Management
             {
                 foreach (var a in actions)
                 {
-                    log?.Information("{category}: {title} - {description}", a.Category, a.Title, a.Description);
+                    LogStep(log, a);
                     if (a.Substeps != null)
                     {
                         foreach (var b in a.Substeps)
                         {
-                            if (b.HasError)
-                            {
-                                log?.Error("{category}: {title} - {description}", b.Category, b.Title, b.Description);
-                            }
-                            else if (b.HasWarning)
-                            {
-                                log?.Warning("{category}: {title} - {description}", b.Category, b.Title, b.Description);
-                            }
-                            else
-                            {
-                                log?.Information("{category}: {title} - {description}", b.Category, b.Title, b.Description);
-                            }
+                            LogStep(log, b);
                         }
                     }
                 }
             }
+        }
+
+        private static void LogStep(ILog log, ActionStep step)
+        {
+            if (step.HasError)
+            {
+                log?.Error("{category}: {title} - {description}", step.Category, step.Title, step.Description);
+            }
+            else if (step.HasWarning)
+            {
+                log?.Warning("{category}: {title} - {description}", step.Category, step.Title, step.Description);
+            }
+            else
+            {
+                log?.Information("{category}: {title} - {description}", step.Category, step.Title, step.Description);
+            }
+        }
+
+        /// <summary>
+        /// True if the deployment actions stored the certificate (a storage step which was skipped has a warning)
+        /// </summary>
+        private static bool IsCertificateStored(List<ActionStep> actions)
+        {
+            return actions.Any(a =>
+                string.Equals(a.Category, "CertificateStorage", StringComparison.OrdinalIgnoreCase)
+                && !a.HasError
+                && !a.HasWarning);
         }
 
         public static bool ShouldUseDefaultPfxPasswordCredential(ManagedCertificate managedCertificate)
@@ -2006,15 +2022,11 @@ namespace Certify.Management
                     (!string.IsNullOrWhiteSpace(a.Category) && a.Category.StartsWith("Deployment.", StringComparison.OrdinalIgnoreCase))
                     || string.Equals(a.Category, "Deploy.AddOrUpdateBindings", StringComparison.OrdinalIgnoreCase));
 
-                var hasCertificateStorageAction = actions.Any(a =>
-                    string.Equals(a.Category, "CertificateStorage", StringComparison.OrdinalIgnoreCase)
-                    && !a.HasError);
-
                 if (hasBindingDeploymentActions)
                 {
                     result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
                 }
-                else if (hasCertificateStorageAction)
+                else if (IsCertificateStored(actions))
                 {
                     result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateStoredNoBindingUpdate, config.PrimaryDomain);
                 }
@@ -2101,8 +2113,9 @@ namespace Certify.Management
             }
             else
             {
-                // certificate install failed
-                result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
+                // certificate install failed, report what failed rather than assuming the certificate file is the problem
+                var errors = string.Join("\r\n", actions.Where(a => a.HasError).Select(a => a.Description).Where(d => !string.IsNullOrWhiteSpace(d)));
+                result.Message = logPrefix + (string.IsNullOrEmpty(errors) ? string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath) : errors);
                 if (!isPreviewOnly)
                 {
                     // recording the failed deployment stage is what allows the deployment retry pass to identify an item

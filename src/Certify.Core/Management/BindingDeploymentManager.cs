@@ -93,7 +93,20 @@ namespace Certify.Core.Management
                     }
                     catch (Exception exp)
                     {
-                        actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "CertificateStorage", Description = "Error storing certificate. " + exp.Message });
+                        // the underlying cause (e.g. a file system error) is only given by the inner exception
+                        var error = exp.InnerException != null ? $"{exp.Message} {exp.InnerException.Message}" : exp.Message;
+
+                        if (OperatingSystem.IsLinux())
+                        {
+                            // on Linux the X509 store is the per user .NET store under $HOME, which nothing else uses, so the
+                            // certificate file is still deployable when the store cannot be written (e.g. a container user with no writable home)
+                            actions.Add(new ActionStep { HasWarning = true, Title = "Certificate Storage Skipped", Category = "CertificateStorage", Description = "Unable to write the certificate to the X509 certificate store, continuing without it. " + error });
+                        }
+                        else
+                        {
+                            actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "CertificateStorage", Description = "Error storing certificate. " + error });
+                        }
+
                         return actions;
                     }
                 }

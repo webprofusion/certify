@@ -662,18 +662,27 @@ namespace Certify.Tests.Core.Unit.Tests
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
 
             Assert.HasCount(1, results);
-            Assert.IsTrue(results[0].HasError);
             Assert.AreEqual("CertificateStorage", results[0].Category);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                Assert.IsTrue(results[0].HasError);
                 Assert.Contains("Error storing certificate. The system cannot find the file specified.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
+                Assert.AreEqual("Certificate Storage Failed", results[0].Title);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // on Linux a certificate store which cannot be written to is a warning rather than a failure
+                Assert.IsFalse(results[0].HasError);
+                Assert.IsTrue(results[0].HasWarning);
+                Assert.Contains("Unable to write the certificate to the X509 certificate store, continuing without it. The specified X509 certificate store does not exist.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
+                Assert.AreEqual("Certificate Storage Skipped", results[0].Title);
             }
             else
             {
+                Assert.IsTrue(results[0].HasError);
                 Assert.Contains("Error storing certificate. The specified X509 certificate store does not exist.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
+                Assert.AreEqual("Certificate Storage Failed", results[0].Title);
             }
-
-            Assert.AreEqual("Certificate Storage Failed", results[0].Title);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when DeploymentBindingOption = DeploymentBindingOption.UpdateOnly")]
