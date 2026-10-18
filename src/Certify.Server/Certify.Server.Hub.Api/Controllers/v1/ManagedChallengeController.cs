@@ -95,7 +95,7 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             var operation = await _client.BeginManagedChallenge(authorization.Authorize(request), null);
-            return AcceptedAtAction(nameof(GetManagedChallengeOperationStatus), new { id = operation.Id }, operation);
+            return AcceptedAtAction(nameof(GetManagedChallengeOperationStatus), new { id = operation.Id }, WithoutCallerIdentity(operation));
         }
 
         /// <summary>

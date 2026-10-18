@@ -89,12 +89,8 @@ namespace Certify.Server.Hub.Api.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetValidationChallengesAnon(string? type = "http-01", string? key = null)
         {
-            if (type == null)
-            {
-                type = "http-01";
-            }
-
-            var list = await _client.GetCurrentChallenges(type, key);
+            // only http-01 challenges, whichever type is asked for, as the other types are not public
+            var list = await _client.GetCurrentChallenges("http-01", key);
             return new OkObjectResult(list);
         }
     }

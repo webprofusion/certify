@@ -599,7 +599,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 SecurityPrincipal = WithoutCredentials(sp),
-                RoleStatus = await _client.GetSecurityPrincipalRoleStatus(sp.Id, CurrentAuthContext)
+                RoleStatus = await _client.GetSecurityPrincipalRoleStatus(sp.Id, new AuthContext { UserId = sp.Id, Token = accessToken })
             };
         }
 

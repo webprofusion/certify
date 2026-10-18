@@ -780,7 +780,10 @@ namespace Certify.Management
             else if (!string.IsNullOrWhiteSpace(type))
             {
                 var candidatePath = Path.GetFullPath(Path.Combine(logsDir, type));
-                if (candidatePath.StartsWith(logsDir, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(candidatePath))
+                // with a trailing separator, so a sibling folder such as "logs-old" does not match
+                var logsDirPrefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(logsDir)) + Path.DirectorySeparatorChar;
+
+                if (candidatePath.StartsWith(logsDirPrefix, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(candidatePath))
                 {
                     logPath = candidatePath;
                 }

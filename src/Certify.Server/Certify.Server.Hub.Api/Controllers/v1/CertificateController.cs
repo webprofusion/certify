@@ -132,7 +132,7 @@ namespace Certify.Server.Hub.Api.Controllers
             var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, format, strictExport, CurrentAuthContext);
 
             //return the cert or cert component as a file
-            if (exportResult.IsSuccess && exportResult.Result != null)
+            if (exportResult?.IsSuccess == true && exportResult.Result != null)
             {
                 if (!string.IsNullOrEmpty(managedCert.CertificateThumbprintHash))
                 {
@@ -151,7 +151,7 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             else
             {
-                return Problem(detail: exportResult.Message, statusCode: (int)HttpStatusCode.BadRequest);
+                return Problem(detail: exportResult?.Message ?? "The instance did not return the certificate export.", statusCode: (int)HttpStatusCode.BadRequest);
             }
         }
 
@@ -458,7 +458,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 return outOfScope;
             }
 
-            if (!request.Identifiers?.Any() == true)
+            if (request.Identifiers == null || !request.Identifiers.Any())
             {
                 return Problem(detail: "At least one domain or IP identifier is required.", statusCode: StatusCodes.Status400BadRequest);
             }
@@ -516,7 +516,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: updated.Message, statusCode: StatusCodes.Status400BadRequest);
             }
 
-            if (request.PerformRequest)
+            // starting the order needs the same permission as beginning one separately, the item is saved either way
+            if (request.PerformRequest && await IsAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemRequest)))
             {
                 await _mgmtAPI.PerformManagedCertificateRequest(request.InstanceId, updated.Result.Id, CurrentAuthContext);
             }
