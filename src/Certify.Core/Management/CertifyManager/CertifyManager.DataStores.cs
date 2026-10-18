@@ -416,6 +416,19 @@ namespace Certify.Management
 
                 await InitDataStore();
 
+                if (_isSettingsUpgradePending && !IsInDegradedMode)
+                {
+                    // startup skipped these while the data store was unavailable (hub roles and policies, the hub's own instance etc.)
+                    try
+                    {
+                        await UpgradeSettings();
+                    }
+                    catch (Exception exp)
+                    {
+                        _serviceLog?.Error(exp, $"Failed to apply settings upgrades after the data store reconnected. {exp.Message}");
+                    }
+                }
+
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
                     SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,

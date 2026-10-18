@@ -17,6 +17,11 @@ namespace Certify.Management
     {
 
         /// <summary>
+        /// Set when startup skipped the settings upgrades because the data store was unavailable
+        /// </summary>
+        private bool _isSettingsUpgradePending;
+
+        /// <summary>
         /// Upgrade/migrate settings from previous version if applicable
         /// </summary>
         /// <returns></returns>
@@ -24,16 +29,7 @@ namespace Certify.Management
         {
             _serviceLog?.Information("Performing settings and db upgrades.");
 
-            // Skip data-dependent upgrades if in degraded mode
-            if (IsInDegradedMode)
-            {
-                _serviceLog?.Warning("Skipping settings upgrades - service is in degraded mode due to data store issues.");
-                return;
-            }
-
-            var systemVersion = Util.GetAppVersion().ToString();
-            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
-
+            // known without the data store
             if (
                 Environment.GetEnvironmentVariable("CERTIFY_ENABLE_MANAGEMENT_HUB")?.Equals("true", StringComparison.InvariantCultureIgnoreCase) == true
                 || _serverConfig.IsManagementHub
@@ -45,6 +41,19 @@ namespace Certify.Management
 
                 _serviceLog?.Information("Instance is a Management Hub.");
             }
+
+            // Skip data-dependent upgrades if in degraded mode, they run once the data store reconnects
+            if (IsInDegradedMode)
+            {
+                _isSettingsUpgradePending = true;
+                _serviceLog?.Warning("Skipping settings upgrades - service is in degraded mode due to data store issues.");
+                return;
+            }
+
+            _isSettingsUpgradePending = false;
+
+            var systemVersion = Util.GetAppVersion().ToString();
+            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
 
             if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion || Environment.GetEnvironmentVariable("CERTIFY_UPGRADE_SETTINGS") == "true")
             {
