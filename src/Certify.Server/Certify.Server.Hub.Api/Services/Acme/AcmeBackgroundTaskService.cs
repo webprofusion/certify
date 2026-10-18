@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Certify.Client;
+﻿using Certify.Client;
 using Certify.Models;
 using Certify.Server.Hub.Api.Models.Acme;
 using Certify.Server.Hub.Api.Services;
@@ -16,7 +15,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
     public class AcmeBackgroundTaskService : BackgroundService
     {
         /// <summary>
-        /// Orders older than this age are eligible for automatic cleanup.
+        /// Orders unchanged for this long, with no task queued or running, are eligible for automatic cleanup.
         /// </summary>
         public static readonly TimeSpan OrderMaxAge = TimeSpan.FromMinutes(10);
 
@@ -24,25 +23,13 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
         private readonly ILogger<AcmeBackgroundTaskService> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly Channel<AcmeOrderTask> _taskQueue;
-        private readonly ChannelWriter<AcmeOrderTask> _writer;
-        private readonly ChannelReader<AcmeOrderTask> _reader;
+        private readonly AcmeOrderTaskQueue _taskQueue;
 
         public AcmeBackgroundTaskService(ILogger<AcmeBackgroundTaskService> logger, IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
-
-            var options = new BoundedChannelOptions(100)
-            {
-                FullMode = BoundedChannelFullMode.Wait,
-                SingleReader = true,
-                SingleWriter = false
-            };
-
-            _taskQueue = Channel.CreateBounded<AcmeOrderTask>(options);
-            _writer = _taskQueue.Writer;
-            _reader = _taskQueue.Reader;
+            _taskQueue = new AcmeOrderTaskQueue(logger);
         }
 
         /// <summary>
@@ -59,7 +46,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 CreatedAt = DateTime.UtcNow
             };
 
-            return Task.FromResult(_writer.TryWrite(task));
+            return Task.FromResult(_taskQueue.TryEnqueue(task));
         }
 
         /// <summary>
@@ -77,7 +64,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 CreatedAt = DateTime.UtcNow
             };
 
-            return Task.FromResult(_writer.TryWrite(task));
+            return Task.FromResult(_taskQueue.TryEnqueue(task));
         }
 
         /// <summary>
@@ -128,25 +115,10 @@ namespace Certify.Server.Hub.Api.Services.Acme
         {
             _logger.LogInformation("ACME Background Task Service is starting");
 
-            var queueTask = ProcessQueueAsync(stoppingToken);
+            var queueTask = _taskQueue.RunAsync(ProcessTask, stoppingToken);
             var cleanupTask = RunCleanupLoopAsync(stoppingToken);
 
             await Task.WhenAll(queueTask, cleanupTask);
-        }
-
-        private async Task ProcessQueueAsync(CancellationToken stoppingToken)
-        {
-            await foreach (var task in _reader.ReadAllAsync(stoppingToken))
-            {
-                try
-                {
-                    await ProcessTask(task, stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing ACME task {TaskType} for order {OrderId}", task.Type, task.OrderId);
-                }
-            }
         }
 
         private async Task RunCleanupLoopAsync(CancellationToken stoppingToken)
@@ -175,14 +147,17 @@ namespace Certify.Server.Hub.Api.Services.Acme
             var stateProvider = scope.ServiceProvider.GetService<IInstanceManagementStateProvider>();
 
             var hubInstanceIdFallback = stateProvider?.GetManagementHubInstanceId();
-            var staleOrders = configService.GetStaleAcmeOrders(OrderMaxAge);
+            // an order with a task queued or running is still in progress, however long that takes
+            var staleOrders = configService.GetStaleAcmeOrders()
+                .Where(o => !_taskQueue.HasPendingTasks(o.Id))
+                .ToList();
 
             if (staleOrders.Count == 0)
             {
                 return;
             }
 
-            _logger.LogInformation("Cleaning up {Count} stale ACME order(s) older than {MaxAge}", staleOrders.Count, OrderMaxAge);
+            _logger.LogInformation("Cleaning up {Count} stale ACME order(s) unchanged for {MaxAge}", staleOrders.Count, OrderMaxAge);
 
             foreach (var order in staleOrders)
             {
@@ -356,9 +331,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
             try
             {
-                var maxWaitTime = TimeSpan.FromMinutes(5);
-                var startTime = DateTime.UtcNow;
-
+                // the queue runs this after the order's processing task, so a failed order has already been removed
                 updatedOrder = await configService.GetAcmeOrder(task.OrderId);
                 if (updatedOrder == null)
                 {
@@ -368,25 +341,9 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
                 updatedOrder.HubInstanceId ??= task.HubInstanceId;
 
-                // Wait for order to be ready for finalization
-                while (updatedOrder.Status != OrderStatus.ReadyForInternalFinalization &&
-                       DateTime.UtcNow - startTime < maxWaitTime &&
-                       !cancellationToken.IsCancellationRequested)
-                {
-                    await Task.Delay(1000, cancellationToken);
-                    updatedOrder = await configService.GetAcmeOrder(task.OrderId);
-                    if (updatedOrder == null)
-                    {
-                        _logger.LogError("Order {OrderId} disappeared while waiting for finalization", task.OrderId);
-                        return;
-                    }
-
-                    updatedOrder.HubInstanceId ??= task.HubInstanceId;
-                }
-
                 if (updatedOrder.Status != OrderStatus.ReadyForInternalFinalization)
                 {
-                    _logger.LogError("Order {OrderId} not ready for finalization after timeout", task.OrderId);
+                    _logger.LogError("Order {OrderId} was not ready for finalization once processed", task.OrderId);
                     await CleanupOrderAsync(configService, mgmtApi, updatedOrder, _logger, task.HubInstanceId);
                     return;
                 }
@@ -477,7 +434,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("ACME Background Task Service is stopping");
-            _writer.Complete();
+            _taskQueue.Complete();
             await base.StopAsync(cancellationToken);
         }
     }

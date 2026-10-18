@@ -145,6 +145,21 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "New account request payload is required");
             }
 
+            // RFC 8555 Section 7.3.1 - a key which already has an account gets that account back, so a client can
+            // recover its account url without a fresh external account binding
+            var existing = await _config.FindAccountByKey(newAccountKey);
+
+            if (existing != null)
+            {
+                AddLocationHeader(existing.Value.AccountKid);
+                return Ok(existing.Value.Account);
+            }
+
+            if (request.OnlyReturnExisting)
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.AccountDoesNotExist, "No account exists for this key");
+            }
+
             // Validate External Account Binding if required
             string validatedEabKeyInternalId;
             string owningSecurityPrincipalId;
@@ -349,7 +364,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 Id = orderId,
                 Status = OrderStatus.Ready,
                 CreatedAt = createdAt,
-                Expires = createdAt.Add(AcmeBackgroundTaskService.OrderMaxAge),
                 Identifiers = request.Identifiers,
                 NotBefore = request.NotBefore,
                 NotAfter = request.NotAfter,
@@ -537,9 +551,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             var certPEM = System.Text.Encoding.UTF8.GetString(result.Result);
 
-            // delete order and temp managed cert after successful export
-            order.HubInstanceId ??= _hubInstanceId;
-            await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, _logger, _hubInstanceId);
+            // the order is kept until the stale order sweep, so a client can retry a failed download
 
             // Return the certificate as plain text with proper content type
             return Content(certPEM, "application/pem-certificate-chain");

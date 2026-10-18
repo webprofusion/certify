@@ -114,8 +114,13 @@ namespace Certify.Server.Hub.Api.Services.Acme
                     return EabValidationResult.Failed("External account binding signature verification failed");
                 }
 
-                // 6. Mark the EAB key as used (prevent replay)
-                await MarkEabKeyAsUsed(eabHeader.Kid);
+                // 6. Claim the EAB key (prevent replay). The claim is atomic, so of two concurrent registrations
+                // with one key only the first succeeds.
+                if (!await _config.TryClaimEabKey(eabHeader.Kid))
+                {
+                    _logger.LogError("EAB Key {keyId} was claimed by a concurrent registration", eabHeader.Kid);
+                    return EabValidationResult.Failed("External account binding key has already been used to register an ACME account and cannot be re-used");
+                }
 
                 _logger.LogInformation("EAB validation successful for Key ID: {KeyId}", eabHeader.Kid);
                 return EabValidationResult.Success(eabMappedAccessToken.Id, securityPrincipalId, eabMapping.Value.ScopedAssignedRoles);
@@ -312,15 +317,6 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 _logger.LogError(ex, "Failed to check managed ACME access for security principal {PrincipalId}", securityPrincipalId);
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Mark EAB key as used to prevent replay attacks
-        /// </summary>
-        private async Task MarkEabKeyAsUsed(string keyId)
-        {
-            // Store used EAB keys with timestamp
-            await _config.StoreAcmeConsumedEabKey(keyId, DateTime.UtcNow.ToString());
         }
     }
 }

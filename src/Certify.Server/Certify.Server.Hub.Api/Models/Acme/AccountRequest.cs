@@ -31,5 +31,11 @@ namespace Certify.Server.Hub.Api.Models.Acme
         /// </summary>
         [JsonPropertyName("status")]
         public string Status { get; set; }
+
+        /// <summary>
+        /// When true the client only looks up the account for its key, no new account is created (RFC 8555 Section 7.3.1).
+        /// </summary>
+        [JsonPropertyName("onlyReturnExisting")]
+        public bool OnlyReturnExisting { get; set; }
     }
 }

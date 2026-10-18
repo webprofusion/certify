@@ -23,6 +23,17 @@ namespace Certify.Server.Hub.Api.Services.Acme
         private static readonly ConcurrentDictionary<string, DateTimeOffset> _lastUsedWrites = new();
 
         /// <summary>
+        /// Serialises EAB key claims, the hub is the single host for the ACME service so an in-process lock makes
+        /// the consumed check and the consumed write one step.
+        /// </summary>
+        private static readonly SemaphoreSlim _eabClaimLock = new(1, 1);
+
+        /// <summary>
+        /// Id prefix under which account keys are stored, followed by the account kid.
+        /// </summary>
+        private const string AccountKeyIdPrefix = "key_";
+
+        /// <summary>
         /// Id prefix under which account resources are stored, so accounts can be listed and their kid recovered.
         /// </summary>
         private const string AccountIdPrefix = "account_";
@@ -117,13 +128,36 @@ namespace Certify.Server.Hub.Api.Services.Acme
         /// <param name="v">The value associated with the consumed EAB key.</param>
         public async Task StoreAcmeConsumedEabKey(string keyId, string v)
         {
-            //_consumedEabKeys[keyId] = v;
             await AddTypedStoreItem($"consumed_{keyId}", v);
+        }
+
+        /// <summary>
+        /// Marks an EAB key as consumed unless it already was. Returns false if another registration claimed it first,
+        /// so two concurrent registrations with one key cannot both succeed.
+        /// </summary>
+        public async Task<bool> TryClaimEabKey(string keyId)
+        {
+            await _eabClaimLock.WaitAsync();
+
+            try
+            {
+                if (await IsEabKeyConsumed(keyId))
+                {
+                    return false;
+                }
+
+                await StoreAcmeConsumedEabKey(keyId, DateTime.UtcNow.ToString());
+                return true;
+            }
+            finally
+            {
+                _eabClaimLock.Release();
+            }
         }
 
         public async Task StoreAcmeAccountKey(string accountKid, JsonWebKey newAccountKey)
         {
-            await AddTypedStoreItem($"key_{accountKid}", newAccountKey);
+            await AddTypedStoreItem($"{AccountKeyIdPrefix}{accountKid}", newAccountKey);
         }
 
         public async Task StoreAcmeAccount(string accountKid, AcmeAccount account)
@@ -131,11 +165,22 @@ namespace Certify.Server.Hub.Api.Services.Acme
             await AddTypedStoreItem($"{AccountIdPrefix}{accountKid}", account);
         }
 
+        /// <summary>
+        /// Stores an order. Orders are stored on each status change, so an order expires
+        /// <see cref="AcmeBackgroundTaskService.OrderMaxAge"/> after its last change rather than after it was created.
+        /// </summary>
         public Task StoreAcmeOrder(string orderId, AcmeOrder orderDetails)
         {
-            if (orderDetails != null && orderDetails.CreatedAt == default)
+            if (orderDetails != null)
             {
-                orderDetails.CreatedAt = DateTime.UtcNow;
+                var now = DateTime.UtcNow;
+
+                if (orderDetails.CreatedAt == default)
+                {
+                    orderDetails.CreatedAt = now;
+                }
+
+                orderDetails.Expires = now.Add(AcmeBackgroundTaskService.OrderMaxAge);
             }
 
             _orders[orderId] = orderDetails;
@@ -157,18 +202,13 @@ namespace Certify.Server.Hub.Api.Services.Acme
         }
 
         /// <summary>
-        /// Returns orders that are past the supplied maximum age or past their Expires timestamp.
+        /// Returns orders past their Expires timestamp.
         /// </summary>
-        public IReadOnlyCollection<AcmeOrder> GetStaleAcmeOrders(TimeSpan maxAge)
+        public IReadOnlyCollection<AcmeOrder> GetStaleAcmeOrders()
         {
-            var cutoff = DateTime.UtcNow - maxAge;
+            var now = DateTime.UtcNow;
             return _orders.Values
-                .Where(o =>
-                    o.Status != OrderStatus.Processing &&
-                    o.Status != OrderStatus.InternalFinalizationInProgress &&
-                    ((o.CreatedAt != default && o.CreatedAt <= cutoff) ||
-                     (o.CreatedAt == default && o.Expires != default && o.Expires <= DateTime.UtcNow) ||
-                     (o.Expires != default && o.Expires <= DateTime.UtcNow)))
+                .Where(o => o.Expires <= now)
                 .ToList();
         }
 
@@ -210,7 +250,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
         public async Task RemoveAcmeAccountKey(string accountKid)
         {
-            await DeleteTypedStoreItem<JsonWebKey>($"key_{accountKid}");
+            await DeleteTypedStoreItem<JsonWebKey>($"{AccountKeyIdPrefix}{accountKid}");
         }
         public async Task RemoveAcmeAccount(string accountKid)
         {
@@ -281,7 +321,39 @@ namespace Certify.Server.Hub.Api.Services.Acme
         }
         internal async Task<JsonWebKey?> GetAccountKey(string kid)
         {
-            return await GetTypedStoreItem<JsonWebKey>($"key_{kid}");
+            return await GetTypedStoreItem<JsonWebKey>($"{AccountKeyIdPrefix}{kid}");
+        }
+
+        /// <summary>
+        /// The account registered with the given key, matched by RFC 7638 thumbprint, or null if there is none.
+        /// </summary>
+        public async Task<(string AccountKid, AcmeAccount Account)?> FindAccountByKey(JsonWebKey? accountKey)
+        {
+            var thumbprint = JsonWebKeyThumbprint.Compute(accountKey);
+
+            if (thumbprint == null)
+            {
+                return null;
+            }
+
+            foreach (var storedKey in await GetTypedStoreItems<JsonWebKey>())
+            {
+                if (storedKey.Id?.StartsWith(AccountKeyIdPrefix, StringComparison.Ordinal) != true
+                    || JsonWebKeyThumbprint.Compute(storedKey.GetItem()) != thumbprint)
+                {
+                    continue;
+                }
+
+                var accountKid = storedKey.Id[AccountKeyIdPrefix.Length..];
+                var account = await GetAccount(accountKid);
+
+                if (account != null)
+                {
+                    return (accountKid, account);
+                }
+            }
+
+            return null;
         }
 
         internal async Task<AcmeOrder?> GetAcmeOrder(string orderId)

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Certify.Server.Hub.Api.Models.Acme;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Hub.Api.Services.Acme
 {
@@ -8,12 +9,19 @@ namespace Certify.Server.Hub.Api.Services.Acme
     public class AcmeErrorResponseService
     {
         /// <summary>
+        /// RFC 8555 Section 6.7 - errors are problem documents (RFC 7807)
+        /// </summary>
+        public const string ProblemContentType = "application/problem+json";
+
+        /// <summary>
         /// ACME error types according to RFC 8555
         /// </summary>
         public static class AcmeErrorTypes
         {
             public const string Malformed = "urn:ietf:params:acme:error:malformed";
             public const string BadNonce = "urn:ietf:params:acme:error:badNonce";
+            public const string BadSignatureAlgorithm = "urn:ietf:params:acme:error:badSignatureAlgorithm";
+            public const string AccountDoesNotExist = "urn:ietf:params:acme:error:accountDoesNotExist";
             public const string ExternalAccountRequired = "urn:ietf:params:acme:error:externalAccountRequired";
             public const string OrderNotFound = "urn:ietf:params:acme:error:orderNotFound";
             public const string OrderNotReady = "urn:ietf:params:acme:error:orderNotReady";
@@ -34,17 +42,23 @@ namespace Certify.Server.Hub.Api.Services.Acme
         {
             var error = AcmeHelper.CreateAcmeErrorObject(errorType, detail);
 
-            return errorType switch
+            if (errorType == AcmeErrorTypes.BadSignatureAlgorithm)
             {
-                AcmeErrorTypes.OrderNotFound or AcmeErrorTypes.AuthorizationNotFound =>
-                    new NotFoundObjectResult(error),
-                AcmeErrorTypes.Unauthorized or AcmeErrorTypes.OrderNotReady =>
-                    new ObjectResult(error) { StatusCode = 403 },
-                AcmeErrorTypes.ServerInternal =>
-                    new ObjectResult(error) { StatusCode = 500 },
-                _ =>
-                    new BadRequestObjectResult(error)
+                error.Algorithms = AcmeKeyPolicy.SupportedSignatureAlgorithms;
+            }
+
+            var statusCode = errorType switch
+            {
+                AcmeErrorTypes.OrderNotFound or AcmeErrorTypes.AuthorizationNotFound => StatusCodes.Status404NotFound,
+                AcmeErrorTypes.Unauthorized or AcmeErrorTypes.OrderNotReady => StatusCodes.Status403Forbidden,
+                AcmeErrorTypes.ServerInternal => StatusCodes.Status500InternalServerError,
+                _ => StatusCodes.Status400BadRequest
             };
+
+            var result = new ObjectResult(error) { StatusCode = statusCode };
+            result.ContentTypes.Add(ProblemContentType);
+
+            return result;
         }
 
         /// <summary>

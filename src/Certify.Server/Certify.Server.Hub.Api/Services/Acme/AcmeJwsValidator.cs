@@ -62,8 +62,12 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 // Validate required fields in protected header
                 await ValidateProtectedHeader(protectedHeader, requestUrl, requireAccountKid);
 
+                // RFC 8555 Section 6.2 - a kid which is not a registered account is reported as accountDoesNotExist
+                var publicKey = await GetPublicKey(protectedHeader)
+                    ?? throw new AcmeRequestException(AcmeErrorResponseService.AcmeErrorTypes.AccountDoesNotExist, "No account is registered for the JWS kid");
+
                 // Verify the signature
-                if (!await VerifyJwsSignature(payload, protectedHeader))
+                if (!VerifyJwsSignature(payload, protectedHeader, publicKey))
                 {
                     throw Malformed("JWS signature verification failed. Ensure Account Key is valid and known to this CA");
                 }
@@ -179,7 +183,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
             // Validate supported algorithms
             if (!AcmeKeyPolicy.IsSupportedSignatureAlgorithm(header.Alg))
             {
-                throw Malformed($"Unsupported JWS algorithm: {header.Alg}");
+                throw new AcmeRequestException(AcmeErrorResponseService.AcmeErrorTypes.BadSignatureAlgorithm, $"Unsupported JWS algorithm: {header.Alg}");
             }
 
             // RFC 8555 Section 6.2 - Either 'jwk' or 'kid' must be present
@@ -245,8 +249,9 @@ namespace Certify.Server.Hub.Api.Services.Acme
         /// </summary>
         /// <param name="payload">JWS payload</param>
         /// <param name="header">Protected header</param>
+        /// <param name="publicKey">The key the request is signed with</param>
         /// <returns>True if signature is valid</returns>
-        private async Task<bool> VerifyJwsSignature(JwsPayload payload, JwsProtectedHeader header)
+        private bool VerifyJwsSignature(JwsPayload payload, JwsProtectedHeader header, JsonWebKey publicKey)
         {
             try
             {
@@ -256,14 +261,6 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
                 // Decode the signature
                 var signatureBytes = JwsConvert.FromBase64String(payload.Signature);
-
-                // Get the public key from JWK or KID
-                var publicKey = await GetPublicKey(header);
-
-                if (publicKey == null)
-                {
-                    return false;
-                }
 
                 // Verify signature based on algorithm
                 return VerifySignatureWithAlgorithm(signingInputBytes, signatureBytes, publicKey, header.Alg);
