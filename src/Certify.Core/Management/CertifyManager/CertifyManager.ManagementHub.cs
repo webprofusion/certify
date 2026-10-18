@@ -24,6 +24,12 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         private IManagementServerClient _managementServerClient;
+
+        /// <summary>
+        /// The hub url the current management server client connects to. A client stays with the url it was created
+        /// for, so connecting to a different hub needs a new client.
+        /// </summary>
+        private string? _managementServerClientHubUri;
         private bool _isDirectMgmtHubBackend = false;
         private bool _isMgtmHubBackend = false;
 
@@ -198,8 +204,9 @@ namespace Certify.Management
 
                 try
                 {
-                    // explicit join, wait for any in-progress connection check to complete rather than skipping
-                    await EnsureMgmtHubConnection(hubConnectionAuthToken, skipIfCheckInProgress: false);
+                    // explicit join, wait for any in-progress connection check to complete rather than skipping, and
+                    // replace any current connection, which may be to another hub or made with the previous credentials
+                    await EnsureMgmtHubConnection(hubConnectionAuthToken, skipIfCheckInProgress: false, replaceConnection: true);
                 }
                 catch
                 {
@@ -610,8 +617,9 @@ namespace Certify.Management
         /// </summary>
         /// <param name="hubConnectionAuthToken">Optional pre-acquired joining token to connect with.</param>
         /// <param name="skipIfCheckInProgress">If true (the default, used by the scheduled checks) this attempt is skipped when another check is already running, otherwise it waits for the in-progress check to complete first.</param>
+        /// <param name="replaceConnection">If true, a current connection is closed and a new one made, as for an explicit join.</param>
         /// <returns></returns>
-        private async Task EnsureMgmtHubConnection(string? hubConnectionAuthToken = null, bool skipIfCheckInProgress = true)
+        private async Task EnsureMgmtHubConnection(string? hubConnectionAuthToken = null, bool skipIfCheckInProgress = true, bool replaceConnection = false)
         {
             // only one connection check should run at a time, otherwise overlapping checks each perform their own hub join check and each report the same connection status
             if (skipIfCheckInProgress)
@@ -635,46 +643,34 @@ namespace Certify.Management
                     StoreHubConnectionToken(hubConnectionAuthToken);
                 }
 
+                var isConnected = _managementServerClient?.IsConnected() == true;
+
+                // a connected client stays on the hub it was created for, so it is replaced when the hub has changed
+                // (joined or rejoined with another url) or the connection must be made again with new credentials
+                if (isConnected && !_isDirectMgmtHubBackend)
+                {
+                    var currentHubUri = ResolveManagementHubUri().HubUri;
+
+                    if (replaceConnection || !string.Equals(currentHubUri, _managementServerClientHubUri, StringComparison.Ordinal))
+                    {
+                        _serviceLog.Information("Replacing the management hub connection. {hubUri}", currentHubUri);
+
+                        await DiscardManagementServerClient();
+                        isConnected = false;
+                    }
+                }
+
                 // connect/reconnect to management hub if enabled (either connection not established or our joining token is null/expired)
-                if (_managementServerClient?.IsConnected() != true)
+                if (!isConnected)
                 {
                     var mgmtHubUri = string.Empty;
-                    var api = string.Empty;
-                    var endpoint = string.Empty;
-                    var defaultEnpoint = "api/internal/managementhub";
 
                     if (!_isDirectMgmtHubBackend)
                     {
-                        // construct hub api url and status hub api endpoint
-                        if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB") != null)
-                        {
-                            api = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB");
-
-                            if (api.EndsWith(defaultEnpoint))
-                            {
-                                mgmtHubUri = api;
-
-                                endpoint = defaultEnpoint;
-                                api = api.Replace(defaultEnpoint, "");
-                            }
-                            else
-                            {
-                                endpoint = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ENDPOINT") ?? defaultEnpoint;
-                                mgmtHubUri = $"{api.Trim('/')}/{endpoint.Trim('/')}";
-                            }
-                        }
-                        else
-                        {
-                            api = _serverConfig.ManagementServerHubAPI.Trim('/');
-                            endpoint = _serverConfig.ManagementServerHubEndpoint.Trim('/');
-                            mgmtHubUri = $"{api}/{endpoint}";
-                        }
+                        (var api, mgmtHubUri) = ResolveManagementHubUri();
 
                         // remember the resolved API url so the token factory can re-acquire tokens for the same hub
                         _resolvedMgmtHubApi = api;
-
-                        // if hub url has resolved to "/", remove trailing slash and continue with empty string
-                        mgmtHubUri = mgmtHubUri?.TrimEnd('/');
 
                         if (!string.IsNullOrWhiteSpace(mgmtHubUri))
                         {
@@ -818,6 +814,74 @@ namespace Certify.Management
             }
         }
 
+        internal const string DefaultMgmtHubEndpoint = "api/internal/managementhub";
+
+        /// <summary>
+        /// The hub API url and hub connection url for this instance, from the environment if set, otherwise from service config
+        /// </summary>
+        private (string Api, string HubUri) ResolveManagementHubUri()
+        {
+            return ResolveManagementHubUri(
+                Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB"),
+                Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ENDPOINT"),
+                _serverConfig.ManagementServerHubAPI,
+                _serverConfig.ManagementServerHubEndpoint);
+        }
+
+        internal static (string Api, string HubUri) ResolveManagementHubUri(string? envHubApi, string? envHubEndpoint, string? configHubApi, string? configHubEndpoint)
+        {
+            string api;
+            string hubUri;
+
+            if (envHubApi != null)
+            {
+                api = envHubApi;
+
+                if (api.EndsWith(DefaultMgmtHubEndpoint))
+                {
+                    hubUri = api;
+                    api = api.Replace(DefaultMgmtHubEndpoint, "");
+                }
+                else
+                {
+                    var endpoint = envHubEndpoint ?? DefaultMgmtHubEndpoint;
+                    hubUri = $"{api.Trim('/')}/{endpoint.Trim('/')}";
+                }
+            }
+            else
+            {
+                api = (configHubApi ?? "").Trim('/');
+                hubUri = $"{api}/{(configHubEndpoint ?? "").Trim('/')}";
+            }
+
+            // if hub url has resolved to "/", remove trailing slash and continue with empty string
+            return (api, hubUri.TrimEnd('/'));
+        }
+
+        /// <summary>
+        /// Close and drop the current management server client, so the next connection creates one for the current hub url
+        /// </summary>
+        private async Task DiscardManagementServerClient()
+        {
+            var client = _managementServerClient;
+
+            if (client == null)
+            {
+                return;
+            }
+
+            // detached first, so closing the old connection is not reported as losing the hub
+            client.OnGetCommandResult -= PerformHubCommandWithResult;
+            client.OnConnectionReconnecting -= _managementServerClient_OnConnectionReconnecting;
+            client.OnConnectionReconnected -= _managementServerClient_OnConnectionReconnected;
+            client.OnConnectionClosed -= _managementServerClient_OnConnectionClosed;
+
+            _managementServerClient = null;
+            _managementServerClientHubUri = null;
+
+            await client.Disconnect();
+        }
+
         private void SendHeartbeatToManagementHub()
         {
             try
@@ -884,6 +948,12 @@ namespace Certify.Management
 
             var instanceInfo = GetManagedInstanceInfo();
 
+            if (_managementServerClient != null && !string.Equals(_managementServerClientHubUri, hubUri, StringComparison.Ordinal))
+            {
+                _serviceLog.Information("Management hub url has changed, replacing the hub client. {hubUri}", hubUri);
+                await DiscardManagementServerClient();
+            }
+
             if (_managementServerClient != null)
             {
                 // if not currently connected, attempt connection
@@ -912,6 +982,7 @@ namespace Certify.Management
                 try
                 {
                     _managementServerClient = new ManagementServerClient(hubUri, instanceInfo);
+                    _managementServerClientHubUri = hubUri;
 
                     _managementServerClient.OnGetCommandResult += PerformHubCommandWithResult;
                     _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
@@ -968,7 +1039,7 @@ namespace Certify.Management
             if (arg.CommandType == ManagementHubCommands.GetInstanceInfo)
             {
                 var update = GetManagedInstanceInfo();
-                _managementServerClient.UpdateCachedInstanceInfo(update);
+                _managementServerClient?.UpdateCachedInstanceInfo(update);
                 val = update;
             }
             else if (arg.CommandType == ManagementHubCommands.GetManagedItem)
@@ -1126,18 +1197,26 @@ namespace Certify.Management
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 var managedCert = await GetManagedCertificate(managedCertIdArg.Value);
 
-                var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCert);
-                var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+                if (managedCert == null)
+                {
+                    _serviceLog.Warning("Hub requested a certificate request for an unknown managed certificate {managedCertId}", managedCertIdArg.Value);
+                    val = false;
+                }
+                else
+                {
+                    var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCert);
+                    var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
-                _ = await PerformCertificateRequest(
-                                                        null,
-                                                        managedCert,
-                                                        progressIndicator,
-                                                        resumePaused: true,
-                                                        isInteractive: true
-                                                        );
+                    _ = await PerformCertificateRequest(
+                                                            null,
+                                                            managedCert,
+                                                            progressIndicator,
+                                                            resumePaused: true,
+                                                            isInteractive: true
+                                                            );
 
-                val = true;
+                    val = true;
+                }
             }
             else if (arg.CommandType == ManagementHubCommands.GetCertificateAuthorities)
             {
@@ -1517,7 +1596,7 @@ namespace Certify.Management
             {
                 var rejoinRequest = JsonSerializer.Deserialize<ManagementHubRejoinRequest>(arg.Value ?? "{}", JsonOptions.DefaultJsonSerializerOptions);
 
-                if (rejoinRequest == null
+                if (rejoinRequest?.JoiningCredential == null
                     || string.IsNullOrWhiteSpace(rejoinRequest.JoiningCredential.ClientId)
                     || string.IsNullOrWhiteSpace(rejoinRequest.JoiningCredential.Secret))
                 {

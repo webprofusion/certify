@@ -26,7 +26,7 @@ namespace Certify.Client
         private HubConnection _connection;
         private readonly SemaphoreSlim _connectionSync = new SemaphoreSlim(1, 1);
 
-        private string _hubUri = "";
+        private readonly string _hubUri;
 
         private ManagedInstanceInfo _instanceInfo;
 
