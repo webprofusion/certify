@@ -38,7 +38,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
             {
                 AcmeErrorTypes.OrderNotFound or AcmeErrorTypes.AuthorizationNotFound =>
                     new NotFoundObjectResult(error),
-                AcmeErrorTypes.Unauthorized =>
+                AcmeErrorTypes.Unauthorized or AcmeErrorTypes.OrderNotReady =>
                     new ObjectResult(error) { StatusCode = 403 },
                 AcmeErrorTypes.ServerInternal =>
                     new ObjectResult(error) { StatusCode = 500 },

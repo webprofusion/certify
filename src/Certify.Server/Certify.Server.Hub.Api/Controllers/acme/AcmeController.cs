@@ -140,6 +140,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "JWS header must contain 'jwk' for new account requests");
             }
 
+            if (request == null)
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "New account request payload is required");
+            }
+
             // Validate External Account Binding if required
             string validatedEabKeyInternalId;
             string owningSecurityPrincipalId;
@@ -423,6 +428,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
+            if (string.IsNullOrWhiteSpace(request?.Csr))
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.BadCSR, "Finalize request must contain a CSR");
+            }
+
             var order = await _config.GetAcmeOrder(orderId);
             if (order == null)
             {
@@ -454,8 +464,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return csrCheck;
             }
 
-            // Check if finalization is already in progress
-            if (order.Status != OrderStatus.InternalFinalizationInProgress)
+            // the order keeps its internal status for the background tasks, a repeated finalize is not queued again
+            if (order.TryMarkFinalizeRequested())
             {
                 var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
 
@@ -468,17 +478,14 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
                 if (!taskEnqueued)
                 {
+                    order.ClearFinalizeRequested();
                     _logger.LogError("Failed to enqueue finalization task for order {OrderId}", orderId);
                     return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Failed to process finalization");
                 }
             }
 
-            // Update order status to processing
-            order.Status = OrderStatus.Processing;
-            await _config.StoreAcmeOrder(orderId, order);
-
             AddRetryAfterHeader(60);
-            return Ok(order);
+            return Ok(order.ToClientOrder());
         }
 
         /// <summary>
@@ -575,21 +582,14 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Order not found");
             }
 
-            if (order.Status == OrderStatus.ReadyForInternalFinalization)
-            {
-                order.Status = OrderStatus.Processing;
-            }
-            else if (order.Status == OrderStatus.InternalFinalizationInProgress)
-            {
-                order.Status = OrderStatus.Processing;
-            }
+            var clientOrder = order.ToClientOrder();
 
-            if (order.Status == OrderStatus.Processing)
+            if (clientOrder.Status == OrderStatus.Processing)
             {
                 AddRetryAfterHeader(10);
             }
 
-            return Ok(order);
+            return Ok(clientOrder);
         }
 
         /// <summary>

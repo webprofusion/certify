@@ -93,5 +93,41 @@ namespace Certify.Server.Hub.Api.Models.Acme
         /// </summary>
         [JsonIgnore]
         public string AccountKid { get; set; }
+
+        private int _finalizeRequested;
+
+        /// <summary>
+        /// True once the client has asked to finalize the order.
+        /// </summary>
+        [JsonIgnore]
+        public bool FinalizeRequested => Volatile.Read(ref _finalizeRequested) == 1;
+
+        /// <summary>
+        /// Records the client's finalize request. Returns false if finalize was already requested.
+        /// </summary>
+        public bool TryMarkFinalizeRequested() => Interlocked.Exchange(ref _finalizeRequested, 1) == 0;
+
+        /// <summary>
+        /// Clears a finalize request which could not be queued, so the client can retry.
+        /// </summary>
+        public void ClearFinalizeRequested() => Volatile.Write(ref _finalizeRequested, 0);
+
+        /// <summary>
+        /// A copy of the order with the status an ACME client should see. The internal finalization statuses
+        /// are reported as ready until the client finalizes, then as processing.
+        /// </summary>
+        public AcmeOrder ToClientOrder()
+        {
+            var copy = (AcmeOrder)MemberwiseClone();
+
+            copy.Status = Status switch
+            {
+                OrderStatus.Ready or OrderStatus.ReadyForInternalFinalization => FinalizeRequested ? OrderStatus.Processing : OrderStatus.Ready,
+                OrderStatus.InternalFinalizationInProgress => OrderStatus.Processing,
+                _ => Status
+            };
+
+            return copy;
+        }
     }
 }
