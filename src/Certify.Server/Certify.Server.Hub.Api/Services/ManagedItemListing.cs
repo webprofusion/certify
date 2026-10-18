@@ -192,6 +192,24 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// Order items by title (the default), last renewed or expiry, with title as the tie break so pages stay stable
+        /// </summary>
+        /// <param name="sortBy">title, renewed or expiry</param>
+        public static IEnumerable<ManagedCertificateSummary> Sort(IEnumerable<ManagedCertificateSummary> items, string? sortBy, bool sortDescending)
+        {
+            Func<ManagedCertificateSummary, IComparable?> key = sortBy?.ToLowerInvariant() switch
+            {
+                "renewed" => i => i.DateRenewed ?? DateTimeOffset.MinValue,
+                "expiry" => i => i.DateExpiry ?? DateTimeOffset.MinValue,
+                _ => i => i.Title
+            };
+
+            var sorted = sortDescending ? items.OrderByDescending(key) : items.OrderBy(key);
+
+            return sortDescending ? sorted.ThenByDescending(i => i.Title).ThenByDescending(i => i.Id) : sorted.ThenBy(i => i.Title).ThenBy(i => i.Id);
+        }
+
+        /// <summary>
         /// Count the given items by CA and by key type, largest groups first
         /// </summary>
         public static ManagedCertificateBreakdown Breakdown(IEnumerable<ManagedCertificateSummary> items)

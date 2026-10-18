@@ -69,6 +69,28 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNull(ManagedItemListing.GetIssuerName(null));
         }
 
+        [TestMethod]
+        public void Sort_OrdersByTheChosenColumnWithTitleAsTieBreak()
+        {
+            var now = DateTimeOffset.UtcNow;
+            var items = new List<ManagedCertificateSummary>
+            {
+                new() { Id = "1", Title = "b", DateExpiry = now.AddDays(10), DateRenewed = now.AddDays(-5) },
+                new() { Id = "2", Title = "a", DateExpiry = now.AddDays(30), DateRenewed = null },
+                new() { Id = "3", Title = "c", DateExpiry = now.AddDays(10), DateRenewed = now.AddDays(-1) },
+                new() { Id = "4", Title = "d", DateExpiry = null, DateRenewed = now.AddDays(-9) }
+            };
+
+            string Order(string? sortBy, bool descending) => string.Join(",", ManagedItemListing.Sort(items, sortBy, descending).Select(i => i.Id));
+
+            Assert.AreEqual("2,1,3,4", Order(null, false), "Title by default");
+            Assert.AreEqual("4,3,1,2", Order("title", true));
+            Assert.AreEqual("2,3,1,4", Order("expiry", true), "Equal expiry dates fall back to title, and no expiry sorts as earliest");
+            Assert.AreEqual("4,1,3,2", Order("EXPIRY", false));
+            Assert.AreEqual("2,4,1,3", Order("renewed", false), "Never renewed sorts as earliest");
+            Assert.AreEqual("2,1,3,4", Order("unknown", false), "An unknown column sorts by title");
+        }
+
         /// <summary>
         /// The CA which issued the current certificate is preferred over a later attempt with another CA, and the
         /// recorded key type of the certificate over the configured one

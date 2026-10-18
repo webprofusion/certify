@@ -51,12 +51,14 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="pageSize"></param>
         /// <param name="certificateAuthority">optional id of the CA last used for the item to match</param>
         /// <param name="keyType">optional key type to match, as a StandardKeyTypes value such as RS256 or ECDSA256</param>
+        /// <param name="sortBy">optional order applied before paging: title (the default), renewed or expiry</param>
+        /// <param name="sortDescending">if true results are in descending order</param>
         /// <returns></returns>
         [HttpGet]
         [Route("items")]
         [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false, int? page = null, int? pageSize = null, string? certificateAuthority = null, string? keyType = null)
+        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false, int? page = null, int? pageSize = null, string? certificateAuthority = null, string? keyType = null, string? sortBy = null, bool sortDescending = false)
         {
             var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
 
@@ -77,7 +79,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 TotalResults = list.Count,
                 PageIndex = resolvedPageIndex,
                 PageSize = resolvedPageSize,
-                Results = list.OrderBy(l => l.Title).Skip(resolvedPageIndex * resolvedPageSize).Take(resolvedPageSize)
+                Results = ManagedItemListing.Sort(list, sortBy, sortDescending).Skip(resolvedPageIndex * resolvedPageSize).Take(resolvedPageSize)
             });
         }
 

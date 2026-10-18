@@ -3393,10 +3393,12 @@ namespace Certify.Server.Hub.Api
         /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
         /// <param name="certificateAuthority">optional id of the CA last used for the item to match</param>
         /// <param name="keyType">optional key type to match, as a StandardKeyTypes value such as RS256 or ECDSA256</param>
+        /// <param name="sortBy">optional order applied before paging: title (the default), renewed or expiry</param>
+        /// <param name="sortDescending">if true results are in descending order</param>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, string certificateAuthority, string keyType)
+        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, string certificateAuthority, string keyType, string sortBy, bool? sortDescending)
         {
-            return GetHubManagedItemsAsync(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged, page, pageSize, certificateAuthority, keyType, System.Threading.CancellationToken.None);
+            return GetHubManagedItemsAsync(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged, page, pageSize, certificateAuthority, keyType, sortBy, sortDescending, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -3411,8 +3413,10 @@ namespace Certify.Server.Hub.Api
         /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
         /// <param name="certificateAuthority">optional id of the CA last used for the item to match</param>
         /// <param name="keyType">optional key type to match, as a StandardKeyTypes value such as RS256 or ECDSA256</param>
+        /// <param name="sortBy">optional order applied before paging: title (the default), renewed or expiry</param>
+        /// <param name="sortDescending">if true results are in descending order</param>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, string certificateAuthority, string keyType, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, System.Collections.Generic.IEnumerable<string> tagScopes, bool? requireAllTags, bool? includeUntagged, int? page, int? pageSize, string certificateAuthority, string keyType, string sortBy, bool? sortDescending, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -3467,6 +3471,14 @@ namespace Certify.Server.Hub.Api
                     if (keyType != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("keyType")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(keyType, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (sortBy != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("sortBy")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(sortBy, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (sortDescending != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("sortDescending")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(sortDescending, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     urlBuilder_.Length--;
 
