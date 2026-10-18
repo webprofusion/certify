@@ -511,15 +511,16 @@ certifyManager.SetStatusReporting(statusReporting);
 // initialize the CertifyManager instance, this includes initial setup of hub assigned instance id
 await certifyManager.Init();
 
+var hubStateProvider = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
+
+// inform the management hub of our assigned backend instance id, so we can tell when we are interacting with the mgmt hub vs a normal instance.
+// Set before the direct client, which sends the activity held during init straight away.
+hubStateProvider.SetManagementHubInstanceId(certifyManager.GetManagedInstanceInfo().InstanceId);
+
 // setup direct management client, this tells the primary backend CertifyManager instance to talk directly to the management hub instead of via SignalR
 var directServerClient = app.Services.GetRequiredService<IManagementServerClient>();
 
 certifyManager.SetDirectManagementClient(directServerClient);
-
-var hubStateProvider = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
-
-// inform the management hub of our assigned backend instance id, so we can tell when we are interacting with the mgmt hub vs a normal instance
-hubStateProvider.SetManagementHubInstanceId(certifyManager.GetManagedInstanceInfo().InstanceId);
 
 statusReporting.OnRequestProgressStateUpdated += (RequestProgressState state) =>
 {

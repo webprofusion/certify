@@ -703,6 +703,9 @@ namespace Certify.Server.Hub.Api.Services
                     sum.AwaitingUser += item.Value.AwaitingUser;
                     sum.Healthy += item.Value.Healthy;
                     sum.NoCertificate += item.Value.NoCertificate;
+                    sum.InvalidConfig += item.Value.InvalidConfig;
+                    sum.ExternallyManaged += item.Value.ExternallyManaged;
+                    sum.TotalDomains += item.Value.TotalDomains;
                 }
             }
 

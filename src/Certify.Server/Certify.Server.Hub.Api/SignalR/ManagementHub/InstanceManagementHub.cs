@@ -310,6 +310,9 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     var updatedManagedCertificate = System.Text.Json.JsonSerializer.Deserialize<ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
                     if (updatedManagedCertificate != null)
                     {
+                        // the item belongs to the instance on this connection, whatever it reports
+                        updatedManagedCertificate.InstanceId = instanceId;
+
                         var previousManagedCertificate = GetCachedManagedCertificate(instanceId, updatedManagedCertificate.Id);
 
                         await _uiStatus.SendManagedItemUpdated(updatedManagedCertificate);
