@@ -116,6 +116,12 @@ namespace Certify.Service.Controllers
         [NonAction]
         public bool IsInternalSystemContext() => _currentAuthContext?.UserId == Models.Hub.StandardSecurityPrincipals.System;
 
+        /// <summary>
+        /// The role assignments the caller's token is limited to, if any
+        /// </summary>
+        [NonAction]
+        public List<string> GetContextScopedAssignedRoles() => _currentAuthContext?.ScopedAssignedRoles;
+
         [NonAction]
         public string GetContextUserId()
         {

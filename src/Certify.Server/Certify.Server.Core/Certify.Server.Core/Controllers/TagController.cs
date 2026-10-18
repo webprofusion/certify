@@ -23,6 +23,27 @@ namespace Certify.Service.Controllers
         }
 
         /// <summary>
+        /// An access check for the current user, limited to the role assignments the caller's token is scoped to
+        /// </summary>
+        private AccessCheck ContextAccessCheck(string resourceType, string action)
+        {
+            return new AccessCheck(GetContextUserId(), resourceType, action)
+            {
+                ScopedAssignedRoles = GetContextScopedAssignedRoles() ?? []
+            };
+        }
+
+        /// <summary>
+        /// Keeps cached permission results for a scoped token apart from those for the principal's full roles
+        /// </summary>
+        private string ContextScopeCacheKey()
+        {
+            var scopedRoles = GetContextScopedAssignedRoles();
+
+            return scopedRoles?.Count > 0 ? string.Join(",", scopedRoles.Order(StringComparer.Ordinal)) : "*";
+        }
+
+        /// <summary>
         /// Check if the current user has the specified tag action permission (with short-lived caching)
         /// </summary>
         private async Task<bool> HasTagPermission(string action)
@@ -35,7 +56,7 @@ namespace Certify.Service.Controllers
             }
 
             var userId = GetContextUserId();
-            var cacheKey = $"{userId}:{action}";
+            var cacheKey = $"{userId}:{ContextScopeCacheKey()}:{action}";
 
             // Check cache first
             if (_permissionCache.TryGetValue(cacheKey, out var cached) && cached.Expiry > DateTime.UtcNow)
@@ -45,7 +66,7 @@ namespace Certify.Service.Controllers
 
             // Cache miss or expired - check the database
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var check = new AccessCheck(userId, ResourceTypes.Tag, action);
+            var check = ContextAccessCheck(ResourceTypes.Tag, action);
             var result = await accessControl.IsSecurityPrincipalAuthorised(check);
 
             // Store in cache with expiry
@@ -80,7 +101,7 @@ namespace Certify.Service.Controllers
         private async Task<bool> HasItemUpdatePermission(string itemType)
         {
             var userId = GetContextUserId();
-            var cacheKey = $"{userId}:itemupdate:{itemType}";
+            var cacheKey = $"{userId}:{ContextScopeCacheKey()}:itemupdate:{itemType}";
 
             // Check cache first
             if (_permissionCache.TryGetValue(cacheKey, out var cached) && cached.Expiry > DateTime.UtcNow)
@@ -106,7 +127,7 @@ namespace Certify.Service.Controllers
                 return false;
             }
 
-            var check = new AccessCheck(null, resourceType, action);
+            var check = ContextAccessCheck(resourceType, action);
             var result = await accessControl.IsSecurityPrincipalAuthorised(check);
 
             // Store in cache with expiry
@@ -418,7 +439,7 @@ namespace Certify.Service.Controllers
             // Tag administration permits tagging any item, but only when it is held without a tag scope. A tag scoped
             // assignment granting it would otherwise let the holder tag items into their own scope.
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var tagAddScope = await accessControl.EvaluateAccessScope(new AccessCheck(GetContextUserId(), ResourceTypes.Tag, StandardResourceActions.TagAdd));
+            var tagAddScope = await accessControl.EvaluateAccessScope(ContextAccessCheck(ResourceTypes.Tag, StandardResourceActions.TagAdd));
 
             if (tagAddScope.HasAccess)
             {
