@@ -15,7 +15,6 @@ namespace Certify.Models.Hub
     {
         public string? code { get; set; }
         public string? state { get; set; }
-        public string? id_token { get; set; }
         public string? error { get; set; }
         public string? error_description { get; set; }
     }
@@ -58,7 +57,16 @@ namespace Certify.Models.Hub
         public string ClientId { get; set; } = "";
         public string ClientSecret { get; set; } = "";
         public string RedirectUri { get; set; } = "";
+
+        /// <summary>
+        /// Not used: sign in always uses the authorization code flow with the response in the redirect URI query string.
+        /// Kept so existing provider configs round trip unchanged.
+        /// </summary>
         public string? ResponseType { get; set; }
+
+        /// <summary>
+        /// Not used, see <see cref="ResponseType"/>.
+        /// </summary>
         public string? ResponseMode { get; set; }
         public string? Scope { get; set; }
         public string? AuthorizeEndpoint { get; set; }
@@ -88,6 +96,7 @@ namespace Certify.Models.Hub
     {
         public string Provider { get; set; } = "";
         public string Nonce { get; set; } = "";
+        public string CodeVerifier { get; set; } = "";
         public string? ReturnUrl { get; set; }
         public DateTimeOffset Timestamp { get; set; }
     }

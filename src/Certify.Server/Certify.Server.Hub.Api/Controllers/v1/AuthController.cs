@@ -1,15 +1,13 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Json;
 using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Certify.Server.Hub.Api.Controllers
@@ -272,21 +270,29 @@ namespace Certify.Server.Hub.Api.Controllers
                     return BadRequest($"OIDC provider '{provider}' not configured");
                 }
 
-                // Generate state and nonce for security
+                // only fetch discovery when the authorize endpoint has not been configured explicitly
+                var discovery = string.IsNullOrWhiteSpace(oidcConfig.AuthorizeEndpoint)
+                    ? await OidcSignIn.GetConfigurationManager(oidcConfig).GetConfigurationAsync(HttpContext.RequestAborted)
+                    : null;
+
+                var authorizationEndpoint = OidcSignIn.GetAuthorizationEndpoint(oidcConfig, discovery);
+
+                // Generate state, nonce and PKCE verifier for security
                 var state = GenerateSecureToken();
                 var nonce = GenerateSecureToken();
+                var codeVerifier = OidcSignIn.CreateCodeVerifier();
 
-                // Store state and nonce for validation (using session for simplicity)
+                // Store them for validation when the callback arrives
                 _memoryCache.Set($"oidc_state_{state}", JsonSerializer.Serialize(new OidcState
                 {
                     Provider = provider,
                     Nonce = nonce,
+                    CodeVerifier = codeVerifier,
                     ReturnUrl = returnUrl,
                     Timestamp = DateTimeOffset.UtcNow
                 }), TimeSpan.FromMinutes(2));
 
-                // Build authorization URL
-                var authUrl = BuildAuthorizationUrl(oidcConfig, state, nonce);
+                var authUrl = OidcSignIn.BuildAuthorizationUrl(oidcConfig, authorizationEndpoint, state, nonce, OidcSignIn.CreateCodeChallenge(codeVerifier));
 
                 return Ok(new OidcLoginResponse { AuthUrl = authUrl, State = state });
             }
@@ -300,11 +306,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Handle OIDC callback and complete authentication
         /// </summary>
-        /// <param name="code">Authorization code from OIDC provider</param>
-        /// <param name="state">State parameter for CSRF protection</param>
-        /// <param name="id_token">ID token (for implicit flow)</param>
-        /// <param name="error">Error from OIDC provider</param>
-        /// <param name="error_description">Error description</param>
+        /// <param name="msg">Authorization code, state, or error returned to the redirect URI by the OIDC provider</param>
         /// <returns>Authentication result</returns>
         [HttpPost]
         [Route("oidc/login-callback")]
@@ -315,13 +317,12 @@ namespace Certify.Server.Hub.Api.Controllers
             try
             {
 
-                // Only non-secret fields are logged. The callback body carries the authorization code and may carry an
-                // id_token, and this log is written to file and retained, so it must not be destructured wholesale.
+                // Only non-secret fields are logged. The callback body carries the authorization code, and this log is
+                // written to file and retained, so it must not be destructured wholesale.
                 _logger.LogInformation(
-                    "OIDC authentication CompleteOidcLogin: state {state}, has code: {hasCode}, has id_token: {hasIdToken}",
+                    "OIDC authentication CompleteOidcLogin: state {state}, has code: {hasCode}",
                     msg.state,
-                    !string.IsNullOrEmpty(msg.code),
-                    !string.IsNullOrEmpty(msg.id_token));
+                    !string.IsNullOrEmpty(msg.code));
 
                 // Handle OIDC errors
                 if (!string.IsNullOrEmpty(msg.error))
@@ -366,19 +367,12 @@ namespace Certify.Server.Hub.Api.Controllers
                     return BadRequest(new AuthResponse { IsSuccess = false, Detail = "invalid_provider" });
                 }
 
-                ClaimsPrincipal? userClaims = null;
+                if (string.IsNullOrEmpty(msg.code))
+                {
+                    return BadRequest(new AuthResponse { IsSuccess = false, Detail = "missing_code" });
+                }
 
-                // Handle different OIDC flows
-                if (!string.IsNullOrEmpty(msg.code))
-                {
-                    // Authorization Code flow
-                    userClaims = await HandleAuthorizationCodeFlow(oidcConfig, msg.code, oidcState.Nonce);
-                }
-                else if (!string.IsNullOrEmpty(msg.id_token))
-                {
-                    // Implicit flow
-                    userClaims = await HandleImplicitFlow(oidcConfig, msg.id_token, oidcState.Nonce);
-                }
+                var userClaims = await HandleAuthorizationCodeFlow(oidcConfig, msg.code, oidcState);
 
                 if (userClaims == null)
                 {
@@ -402,48 +396,18 @@ namespace Certify.Server.Hub.Api.Controllers
             return await _client.GetOidcProviderWithSecret(provider, CurrentAuthContext);
         }
 
-        private string BuildAuthorizationUrl(OidcProviderConfig config, string state, string nonce)
+        private static readonly HttpClient _tokenHttpClient = new HttpClient();
+
+        private async Task<ClaimsPrincipal?> HandleAuthorizationCodeFlow(OidcProviderConfig config, string code, OidcState oidcState)
         {
-            var queryParams = new Dictionary<string, string>
-            {
-                ["client_id"] = config.ClientId,
-                ["response_type"] = config.ResponseType ?? "code",
-                ["scope"] = config.Scope ?? "openid profile email",
-                ["redirect_uri"] = config.RedirectUri,
-                ["state"] = state,
-                ["nonce"] = nonce
-            };
-
-            if (!string.IsNullOrEmpty(config.ResponseMode))
-            {
-                // queryParams["response_mode"] = config.ResponseMode;
-            }
-
-            var queryString = string.Join("&", queryParams.Select(kvp =>
-                $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
-
-            var authEndpoint = config.AuthorizeEndpoint ?? $"{config.Authority.TrimEnd('/')}/oauth2/v2.0/authorize";
-            return $"{authEndpoint}?{queryString}";
-        }
-
-        private async Task<ClaimsPrincipal?> HandleAuthorizationCodeFlow(OidcProviderConfig config, string code, string nonce)
-        {
-            using var httpClient = new HttpClient();
+            var configManager = OidcSignIn.GetConfigurationManager(config);
+            var discovery = await configManager.GetConfigurationAsync(HttpContext.RequestAborted);
 
             // Exchange code for tokens
-            var tokenRequest = new Dictionary<string, string>
-            {
-                ["grant_type"] = "authorization_code",
-                ["client_id"] = config.ClientId,
-                ["client_secret"] = config.ClientSecret,
-                ["code"] = code,
-                ["redirect_uri"] = config.RedirectUri
-            };
-
-            var tokenEndpoint = config.TokenEndpoint ?? $"{config.Authority.TrimEnd('/')}/oauth2/v2.0/token";
-            var tokenResponse = await httpClient.PostAsync(
-                tokenEndpoint,
-                new FormUrlEncodedContent(tokenRequest));
+            var tokenResponse = await _tokenHttpClient.PostAsync(
+                OidcSignIn.GetTokenEndpoint(config, discovery),
+                new FormUrlEncodedContent(OidcSignIn.CreateTokenRequest(config, code, oidcState.CodeVerifier)),
+                HttpContext.RequestAborted);
 
             if (!tokenResponse.IsSuccessStatusCode)
             {
@@ -460,48 +424,16 @@ namespace Certify.Server.Hub.Api.Controllers
                 return null;
             }
 
-            return await ValidateIdToken(config, idTokenElement.GetString()!, nonce);
-        }
-
-        private async Task<ClaimsPrincipal?> HandleImplicitFlow(OidcProviderConfig config, string idToken, string nonce)
-        {
-            return await ValidateIdToken(config, idToken, nonce);
-        }
-
-        private async Task<ClaimsPrincipal?> ValidateIdToken(OidcProviderConfig config, string idToken, string nonce)
-        {
             try
             {
-                var discoveryEndpoint = config.DiscoveryEndpoint ?? $"{config.Authority.TrimEnd('/')}/.well-known/openid-configuration";
-                var configManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-                    discoveryEndpoint,
-                    new OpenIdConnectConfigurationRetriever());
-
-                var oidcConfig = await configManager.GetConfigurationAsync();
-
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var validationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = false,
-                    ValidIssuers = new[] { oidcConfig.Issuer },
-                    ValidateAudience = true,
-                    ValidAudience = config.ClientId,
-                    ValidateLifetime = true,
-                    IssuerSigningKeys = oidcConfig.SigningKeys,
-                    ClockSkew = TimeSpan.FromMinutes(5)
-                };
-
-                var principal = tokenHandler.ValidateToken(idToken, validationParameters, out _);
-
-                // Validate nonce
-                var tokenNonce = principal.FindFirst("nonce")?.Value;
-                if (tokenNonce != nonce)
-                {
-                    _logger.LogError("Nonce validation failed");
-                    return null;
-                }
-
-                return principal;
+                return OidcSignIn.ValidateIdToken(config, discovery, idTokenElement.GetString()!, oidcState.Nonce);
+            }
+            catch (SecurityTokenSignatureKeyNotFoundException ex)
+            {
+                // the provider may have rolled its signing keys since discovery was cached, so the next attempt refetches them
+                configManager.RequestRefresh();
+                _logger.LogError(ex, "ID token validation failed");
+                return null;
             }
             catch (Exception ex)
             {
