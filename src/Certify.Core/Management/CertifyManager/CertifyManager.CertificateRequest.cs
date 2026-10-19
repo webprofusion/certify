@@ -589,10 +589,8 @@ namespace Certify.Management
                     else if (managedCertificate.IsActionableSubscription)
                     {
                         // interactive requests explicitly fetch the latest external certificate;
-                        // non-interactive renewals follow the automatic due/pending checks.
-                        requestResult = isInteractive
-                            ? await PerformSubscriptionRequest(managedCertificate, progress, SubscriptionRequestMode.Manual)
-                            : await PerformAutomaticSubscriptionRequest(managedCertificate, progress);
+                        // non-interactive renewals and subscription passes follow the automatic due/pending checks.
+                        requestResult = await PerformSubscriptionRequest(managedCertificate, progress, isInteractive ? SubscriptionRequestMode.Manual : SubscriptionRequestMode.Automatic);
                     }
                     else
                     {

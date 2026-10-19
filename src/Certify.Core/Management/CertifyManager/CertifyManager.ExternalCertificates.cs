@@ -202,28 +202,21 @@ namespace Certify.Management
                         continue;
                     }
 
-                    // the item's place in _renewalsInProgress is what keeps this pass and a renewal driven request off
-                    // the same item: the subscription gate only covers this pass, and a redeployment of the certificate
-                    // already held goes through the renewal pass without taking it. A renewal driven request holds its
-                    // place for the whole request, including its post-request deployment tasks, which run after the
-                    // subscription gate is released, and this pass holds its place for the same span
-                    if (!TryBeginRequest(item))
-                    {
-                        _serviceLog?.Verbose("Skipping subscription poll for {name} [{id}], a certificate request is already in progress for it.", item.Name, item.Id);
-                        continue;
-                    }
+                    // the same request a renewal pass makes for the item, so it is tracked as a run, reports its outcome
+                    // and runs the applicable deployment tasks. The request takes the item's place in
+                    // _renewalsInProgress for its whole span, and is skipped if a request already holds it, which is
+                    // what keeps this pass and a renewal driven request off the same item
+                    var reason = HasPendingSubscriptionUpdate(item.ExternalSource)
+                        ? "Pending external certificate update is awaiting deployment."
+                        : "External certificate source is due to be checked.";
 
                     try
                     {
-                        await ProcessSubscriptionPoll(item, cancellationToken);
+                        await PerformCertificateRequest(null, item, reason: reason);
                     }
                     catch (Exception ex)
                     {
                         _serviceLog?.Error(ex, "External certificate processing failed for {name} [{id}]", item.Name, item.Id);
-                    }
-                    finally
-                    {
-                        _renewalsInProgress.TryRemove(item.Id, out _);
                     }
                 }
             }
@@ -231,28 +224,6 @@ namespace Certify.Management
             {
                 _serviceLog?.Error(ex, "RunSubscriptionPass: unhandled exception while processing external certificate subscriptions");
             }
-        }
-
-        /// <summary>
-        /// Perform a scheduled check of an external certificate subscription, deploying any available update and
-        /// performing the applicable post-request deployment tasks. This uses the same task trigger evaluation as a
-        /// renewal driven request, so the outcome does not depend on which scheduled process picked up the item first.
-        /// Only called from <see cref="PerformSubscriptionTasks"/>, which already holds the subscription processing gate
-        /// (<see cref="_isSubscriptionTaskRunning"/>), so it does not take it again, and which holds the item's place
-        /// in <see cref="_renewalsInProgress"/> for the duration so no other request runs against the item meanwhile
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task ProcessSubscriptionPoll(ManagedCertificate item, CancellationToken cancellationToken)
-        {
-            // preserve the failure count from before the request, since the request itself may reset it
-            var currentFailureCount = item.RenewalFailureCount;
-
-            var result = await PerformSubscriptionRequest(item, progress: null, SubscriptionRequestMode.Automatic, cancellationToken);
-
-            // the pass has no progress tracker of its own, the outcome is broadcast to connected UI clients regardless
-            await PerformPostRequestTasksIfApplicable(log: null, result.ManagedItem ?? item, result, skipTasks: false, currentFailureCount, isFinalRequestStage: true, progress: null);
         }
 
         /// <summary>
@@ -1491,33 +1462,6 @@ namespace Certify.Management
             }
 
             return identifiers;
-        }
-
-        /// <summary>
-        /// Perform an automatic (renewal driven) subscription request, waiting for any scheduled subscription poll to
-        /// finish first so that a fetch and deployment is not run by both at once.
-        /// This gate covers fetch and deployment only - the post-request deployment tasks run after it is released, by
-        /// the caller. The poll skips items with a request in progress, which is what keeps the two paths off the same
-        /// item for the whole request
-        /// </summary>
-        /// <param name="managedCertificate"></param>
-        /// <param name="progress"></param>
-        /// <returns></returns>
-        private async Task<CertificateRequestResult> PerformAutomaticSubscriptionRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress)
-        {
-            while (Interlocked.CompareExchange(ref _isSubscriptionTaskRunning, 1, 0) != 0)
-            {
-                await Task.Delay(1000);
-            }
-
-            try
-            {
-                return await PerformSubscriptionRequest(managedCertificate, progress, SubscriptionRequestMode.Automatic);
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _isSubscriptionTaskRunning, 0);
-            }
         }
 
         /// <summary>

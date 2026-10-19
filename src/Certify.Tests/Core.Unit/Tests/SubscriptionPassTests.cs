@@ -237,6 +237,29 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.Contains("has-update", store.GetByIdCalls, "An announced update is applied on the next pass rather than at the next poll interval");
         }
 
+        [TestMethod, Description("The pass requests an item as a tracked run, so its last progress message finishes the run")]
+        public async Task PassRequestReportsAFinalProgressMessage()
+        {
+            var store = new RecordingItemStore(CreateSubscription("has-update", pendingVersion: "v2"));
+            var manager = CreateManager(store);
+
+            var reported = new ConcurrentQueue<RequestProgressState>();
+            var statusReporting = new Moq.Mock<IStatusReporting>();
+            statusReporting
+                .Setup(s => s.ReportRequestProgress(Moq.It.IsAny<RequestProgressState>()))
+                .Callback<RequestProgressState>(reported.Enqueue)
+                .Returns(Task.CompletedTask);
+            manager.SetStatusReporting(statusReporting.Object);
+
+            await RunSubscriptionTasks(manager);
+
+            // without a final message, a client showing request progress keeps showing the request as running
+            var last = reported.LastOrDefault(p => p.ManagedCertificate?.Id == "has-update");
+            Assert.IsNotNull(last, "The request reports its progress");
+            Assert.IsTrue(last.IsFinal, "The last message for the request finishes its run");
+            Assert.IsNotNull(last.RunId, "The request is tracked as a run");
+        }
+
         [TestMethod, Description("A subscription with a request already in progress is skipped by the pass")]
         public async Task SubscriptionWithARequestInProgressIsSkipped()
         {
