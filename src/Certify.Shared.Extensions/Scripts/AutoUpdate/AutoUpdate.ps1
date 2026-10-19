@@ -39,8 +39,15 @@ $hasReleaseNotes = ($null -ne $updateInfo.message.releaseNotes -and $updateInfo.
 
 if ($hasReleaseNotes) {
     $releaseDateString = $updateInfo.message.releaseNotes[0].releasedate
-    $releaseDate = [datetime]::ParseExact($releaseDateString, 'yyyy-MM-dd', $null)
-    $updateDateIsStable = $releaseDate -lt ((Get-Date).AddDays(-$installAfterNDays))
+    $releaseDate = [datetime]::MinValue
+    $releaseDateFormats = [string[]]@('yyyy-MM-dd', 'yyyy/MM/dd')
+
+    if ([datetime]::TryParseExact($releaseDateString, $releaseDateFormats, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None, [ref]$releaseDate)) {
+        $updateDateIsStable = $releaseDate -lt ((Get-Date).AddDays(-$installAfterNDays))
+    } else {
+        Write-Output "$scriptName : Could not read update release date '$releaseDateString', skipping update."
+        $updateDateIsStable = $false
+    }
 } else {
     $updateDateIsStable = $false
 }
