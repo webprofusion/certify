@@ -128,9 +128,13 @@ namespace Certify.Tests.Server.Core.Unit
             var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
             hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
 
+            // the in-process instance runs the command in the background, as a remote instance would
+            var commandRun = new TaskCompletionSource<InstanceCommandRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+
             var manager = CreateManagerMock();
             manager
                 .Setup(x => x.PerformHubCommandWithResult(It.IsAny<InstanceCommandRequest>()))
+                .Callback<InstanceCommandRequest>(cmd => commandRun.TrySetResult(cmd))
                 .ReturnsAsync(new InstanceCommandResult { ObjectValue = new ActionResult("Queued", true), Value = "{}" });
 
             var managementApi = new ManagementAPI(
@@ -143,6 +147,7 @@ namespace Certify.Tests.Server.Core.Unit
 
             Assert.IsTrue(result.IsSuccess);
             Assert.AreEqual("External managed certificate refresh requested for 'integrated management hub instance'.", result.Message);
+            await commandRun.Task.WaitAsync(TimeSpan.FromSeconds(10));
             manager.Verify(x => x.PerformHubCommandWithResult(It.Is<InstanceCommandRequest>(cmd => cmd.CommandType == ManagementHubCommands.RefreshExternalManagedCertificates)), Times.Once);
         }
 

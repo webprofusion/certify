@@ -272,7 +272,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
             try
             {
-                await mgmtApi.PerformManagedCertificateRequest(task.HubInstanceId, task.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
+                await mgmtApi.PerformManagedCertificateRequestAndWait(task.HubInstanceId, task.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
 
                 var itemStatus = await mgmtApi.GetManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, PrincipalAccess.SystemAuthContext);
                 var orderDetails = await configService.GetAcmeOrder(task.OrderId);
@@ -377,7 +377,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 managedCert.RequestConfig.CustomCSR = FormatCsrPem(task.Csr);
                 await mgmtApi.UpdateManagedCertificate(hubInstanceId, managedCert, PrincipalAccess.SystemAuthContext);
 
-                await mgmtApi.PerformManagedCertificateRequest(hubInstanceId, managedCertId, PrincipalAccess.SystemAuthContext);
+                await mgmtApi.PerformManagedCertificateRequestAndWait(hubInstanceId, managedCertId, PrincipalAccess.SystemAuthContext);
 
                 managedCert = await mgmtApi.GetManagedCertificate(hubInstanceId, managedCertId, PrincipalAccess.SystemAuthContext);
 

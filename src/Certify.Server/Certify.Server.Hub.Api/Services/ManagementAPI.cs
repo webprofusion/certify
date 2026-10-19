@@ -359,8 +359,20 @@ namespace Certify.Server.Hub.Api.Services
         {
             if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
             {
-                // send directly to in-process instance
-                await _certifyManager.PerformHubCommandWithResult(cmd);
+                // run on the in-process instance without waiting, as for a remote instance. A command such as a
+                // certificate order can take minutes, longer than a proxy in front of the hub holds an API call open.
+                var certifyManager = _certifyManager;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await certifyManager.PerformHubCommandWithResult(cmd);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogError(ex, "Hub instance command {cmdId} {cmdType} failed.", cmd.CommandId, cmd.CommandType);
+                    }
+                });
             }
             else
             {
@@ -1131,21 +1143,40 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="currentAuthContext">The current authentication context.</param>
         internal async Task PerformManagedCertificateRequest(string instanceId, string managedCertId, AuthContext? currentAuthContext)
         {
+            var cmd = await CreateManagedCertificateRequestCommand(instanceId, managedCertId, currentAuthContext);
+
+            await SendCommandWithNoResult(instanceId, cmd);
+        }
+
+        /// <summary>
+        /// Performs a certificate request for the specified managed certificate on the target instance, and waits for it to finish.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="managedCertId">The managed certificate identifier.</param>
+        /// <param name="currentAuthContext">The current authentication context.</param>
+        internal async Task PerformManagedCertificateRequestAndWait(string instanceId, string managedCertId, AuthContext? currentAuthContext)
+        {
+            var cmd = await CreateManagedCertificateRequestCommand(instanceId, managedCertId, currentAuthContext);
+            cmd.IsResultAwaited = true;
+
+            // an order can wait on challenge validation for some time
+            await GetCommandResult(instanceId, cmd, TimeSpan.FromMinutes(10));
+        }
+
+        private async Task<InstanceCommandRequest> CreateManagedCertificateRequestCommand(string instanceId, string managedCertId, AuthContext? currentAuthContext)
+        {
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId) ,
                         new("managedCertId",managedCertId)
                     };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.PerformManagedItemRequest, args);
-
-            // recorded first: the hub's own instance performs the request before the command returns, and the run
-            // which follows is credited to whoever asked for it
+            // recorded before the command is sent, so the run which follows is credited to whoever asked for it
             if (_activity != null)
             {
                 await _activity.ItemChangedAsync(instanceId, managedCertId, null, ActivityEventTypes.ItemRequested, currentAuthContext);
             }
 
-            await SendCommandWithNoResult(instanceId, cmd);
+            return new InstanceCommandRequest(ManagementHubCommands.PerformManagedItemRequest, args);
         }
 
         internal async Task<ManagedCertificate?> ResetManagedItemStatus(string instanceId, string managedCertId, AuthContext? currentAuthContext)
