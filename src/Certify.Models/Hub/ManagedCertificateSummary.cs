@@ -97,6 +97,12 @@ namespace Certify.Models.Hub
         public bool IsSubscription { get; set; }
 
         /// <summary>
+        /// If true, is the temporary target of a hub Managed ACME order, driven by the ACME client which placed it and
+        /// so shown read-only
+        /// </summary>
+        public bool IsManagedAcmeOrder { get; set; }
+
+        /// <summary>
         /// Tags assigned to this managed certificate
         /// </summary>
         public List<TagSummary> Tags { get; set; } = new();

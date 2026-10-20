@@ -445,6 +445,12 @@ namespace Certify.Server.Hub.Api.Services.Activity
         /// </summary>
         internal static AttentionItem? GetItemAttention(ManagedCertificate item, DateTimeOffset now)
         {
+            // a hub Managed ACME order is continued (or abandoned) by the ACME client which placed it, not by a person
+            if (item.IsManagedAcmeOrder)
+            {
+                return null;
+            }
+
             var expiry = item.DateExpiry;
             var expiresIn = expiry.HasValue ? expiry.Value - now : (TimeSpan?)null;
             var expiryText = DescribeExpiry(expiry, now);

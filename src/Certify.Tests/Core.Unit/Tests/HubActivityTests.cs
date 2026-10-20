@@ -504,6 +504,16 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        public void NoAttention_ForAHubManagedAcmeOrder()
+        {
+            var paused = new ManagedCertificate { Id = "1", Name = "Hub ACME Order 1", LastRenewalStatus = RequestState.Paused, ManagedAcmeOrder = new ManagedAcmeOrderInfo { OrderId = "1" } };
+            Assert.IsNull(HubActivityService.GetItemAttention(paused, Now));
+
+            var failing = new ManagedCertificate { Id = "2", Name = "Hub ACME Order 2", LastRenewalStatus = RequestState.Error, RenewalFailureCount = 4, DateExpiry = Now.AddDays(9), ManagedAcmeOrder = new ManagedAcmeOrderInfo { OrderId = "2" } };
+            Assert.IsNull(HubActivityService.GetItemAttention(failing, Now));
+        }
+
+        [TestMethod]
         public void Attention_ForRepeatedFailures_ButNotASingleFailureWithTimeToSpare()
         {
             var once = new ManagedCertificate { Id = "1", Name = "a", LastRenewalStatus = RequestState.Error, RenewalFailureCount = 1, DateExpiry = Now.AddDays(40), IncludeInAutoRenew = true, RenewalPlan = new RenewalDueInfo { DateNextRenewalAttempt = Now.AddHours(2) } };

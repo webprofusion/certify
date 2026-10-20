@@ -200,6 +200,11 @@ namespace Certify.Models
         public string Name { get; set; } = string.Empty;
         public string FailureMessage { get; set; } = string.Empty;
         public int FailureCount { get; set; }
+
+        /// <summary>
+        /// True if the item is the temporary target of a hub Managed ACME order, which only its ACME client continues
+        /// </summary>
+        public bool IsManagedAcmeOrder { get; set; }
     }
 
     public class RequestProgressState : BindableBase
@@ -218,7 +223,8 @@ namespace Certify.Models
                 InstanceId = item.InstanceId ?? "",
                 Name = item.Name ?? "",
                 FailureMessage = item.RenewalFailureMessage ?? "",
-                FailureCount = item.RenewalFailureCount
+                FailureCount = item.RenewalFailureCount,
+                IsManagedAcmeOrder = item.IsManagedAcmeOrder
             };
 
             IsPreviewMode = isPreviewMode;

@@ -162,6 +162,13 @@ namespace Certify.Management
                 return;
             }
 
+            // a hub Managed ACME order pauses until its ACME client sends the CSR, then the hub requests it again to
+            // finish it. The pause is not waiting on a person, so only the run which finishes the order is recorded
+            if (managedCertificate.IsManagedAcmeOrder && run.Outcome == RequestState.Paused)
+            {
+                return;
+            }
+
             QueueActivityNotification(ManagementHubCommands.NotificationRequestRun, run);
 
             ReportActivityToMgmtHub(BuildRequestCompletedEvent(run, managedCertificate, hadCertificateBefore));

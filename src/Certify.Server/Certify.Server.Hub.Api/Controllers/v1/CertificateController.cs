@@ -685,7 +685,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 Comments = item.Comments ?? string.Empty,
                 HasCertificate = !string.IsNullOrEmpty(item.CertificatePath),
                 IsExternallyManaged = item.IsExternallyManaged,
-                IsSubscription = item.IsSubscription
+                IsSubscription = item.IsSubscription,
+                IsManagedAcmeOrder = item.IsManagedAcmeOrder
             };
         }
     }

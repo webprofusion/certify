@@ -500,6 +500,13 @@ namespace Certify.Models
         [JsonIgnore]
         public bool IsExternallyManaged => IsExternalSourceItem && !IsSubscription;
 
+        /// <summary>
+        /// True if this item is the temporary target of a hub Managed ACME order. The order is driven by the ACME client
+        /// which placed it, so the item is not edited or requested directly
+        /// </summary>
+        [JsonIgnore]
+        public bool IsManagedAcmeOrder => ManagedAcmeOrder != null;
+
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
         [JsonIgnore]

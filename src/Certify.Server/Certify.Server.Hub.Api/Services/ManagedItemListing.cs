@@ -125,6 +125,7 @@ namespace Certify.Server.Hub.Api.Services
                         HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
                         IsExternallyManaged = i.IsExternallyManaged,
                         IsSubscription = i.IsSubscription,
+                        IsManagedAcmeOrder = i.IsManagedAcmeOrder,
                         Tags = tags
                     });
                 }
