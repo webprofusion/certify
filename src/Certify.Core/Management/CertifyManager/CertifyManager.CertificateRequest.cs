@@ -1382,7 +1382,8 @@ namespace Certify.Management
                     certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log,
                         managedCertificate, pendingOrder.OrderUri, pfxPwd, preferredChain,
                         CoreAppSettings.Current.DefaultKeyType, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs,
-                        caRequiresCN: (certAuthority?.RequiresCN == true));
+                        caRequiresCN: (certAuthority?.RequiresCN == true),
+                        strictOrderIdentifiers: CoreAppSettings.Current.StrictAcmeOrderIdentifiers);
                 }
                 finally
                 {

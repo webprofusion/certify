@@ -213,6 +213,11 @@ namespace Certify.Management
         /// </summary>
         public bool DisableARIChecks { get; set; }
 
+        /// <summary>
+        /// If true, identifiers the CA adds to an ACME order which were not requested (e.g. www) are not included in the CSR
+        /// </summary>
+        public bool StrictAcmeOrderIdentifiers { get; set; }
+
         public List<CertificateManagerPreference> CertificateManagers { get; set; } = new List<CertificateManagerPreference>();
 
         /// <summary>
@@ -286,6 +291,8 @@ namespace Certify.Management
 
             CoreAppSettings.Current.DisableARIChecks = prefs.DisableARIChecks;
 
+            CoreAppSettings.Current.StrictAcmeOrderIdentifiers = prefs.StrictAcmeOrderIdentifiers;
+
             CoreAppSettings.Current.EnableIssuerCache = prefs.EnableIssuerCache;
 
             CoreAppSettings.Current.CertificateManagers = prefs.CertificateManagers;
@@ -339,6 +346,7 @@ namespace Certify.Management
                 CsrCommonNameMode = CoreAppSettings.Current.CsrCommonNameMode,
                 EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
                 DisableARIChecks = CoreAppSettings.Current.DisableARIChecks,
+                StrictAcmeOrderIdentifiers = CoreAppSettings.Current.StrictAcmeOrderIdentifiers,
                 DefaultACMERetryInterval = CoreAppSettings.Current.DefaultACMERetryInterval,
                 StoreCertificateIntermediates = CoreAppSettings.Current.StoreCertificateIntermediates,
                 CertificateManagers = CoreAppSettings.Current.CertificateManagers,
@@ -365,6 +373,7 @@ namespace Certify.Management
             prefs.DefaultKeyType = update.DefaultKeyType;
             prefs.CsrCommonNameMode = update.CsrCommonNameMode;
             prefs.DisableARIChecks = update.DisableARIChecks;
+            prefs.StrictAcmeOrderIdentifiers = update.StrictAcmeOrderIdentifiers;
 
             prefs.EnableAppTelematics = update.EnableAppTelematics;
             prefs.EnableAutomaticCAFailover = update.EnableAutomaticCAFailover;

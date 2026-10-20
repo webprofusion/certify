@@ -1562,7 +1562,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="log">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs, bool caRequiresCN)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs, bool caRequiresCN, bool strictOrderIdentifiers)
         {
             if (!_currentOrders.TryGetValue(orderId, out var orderContext))
             {
@@ -1587,17 +1587,26 @@ namespace Certify.Providers.ACME.Anvil
                 return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
             }
 
-            // the CSR is built from our requested identifiers, if the CA has altered its order (e.g. dropping a wildcard) note the difference to help diagnose a finalize rejection
+            // the CSR always includes our requested identifiers, even if the CA has dropped some from its order (e.g. a wildcard).
+            // Identifiers the CA has added to its order (e.g. www) are also included unless strict order identifiers are required.
             var requestedIdentifiers = GetOrderIdentifiers(managedCertificate.RequestConfig);
             var missingFromOrder = GetIdentifiersNotIn(requestedIdentifiers, order.Identifiers);
             var notRequested = GetIdentifiersNotIn(order.Identifiers, requestedIdentifiers);
 
+            var csrIdentifiers = strictOrderIdentifiers ? requestedIdentifiers : requestedIdentifiers.Concat(notRequested).ToList();
+
+            string list(IEnumerable<Identifier> ids) => string.Join(", ", ids?.Select(i => i.Value) ?? Enumerable.Empty<string>());
+
+            if (!strictOrderIdentifiers && notRequested.Any())
+            {
+                log?.Warning($"The Certificate Authority has added identifiers to the order which were not requested: [{list(notRequested)}]. These will be included in the CSR.");
+            }
+
+            // note any difference to help diagnose a finalize rejection
             string orderMismatchWarning = null;
             if (missingFromOrder.Any() || notRequested.Any())
             {
-                string list(IEnumerable<Identifier> ids) => string.Join(", ", ids?.Select(i => i.Value) ?? Enumerable.Empty<string>());
-
-                orderMismatchWarning = $"The Certificate Authority's order identifiers [{list(order.Identifiers)}] do not match the requested identifiers [{list(requestedIdentifiers)}] (missing from order: [{list(missingFromOrder)}], not requested: [{list(notRequested)}]). The CSR includes the requested identifiers, which may be why the CA rejected it.";
+                orderMismatchWarning = $"The Certificate Authority's order identifiers [{list(order.Identifiers)}] do not match the requested identifiers [{list(requestedIdentifiers)}] (missing from order: [{list(missingFromOrder)}], not requested: [{list(notRequested)}]). The CSR includes [{list(csrIdentifiers)}], which may be why the CA rejected it.";
             }
 
             // generate temp keypair for signing CSR, default to RSA 256, 2048. Popular Microsoft products such as Exchange do not support ECDSA keys
@@ -1736,7 +1745,7 @@ namespace Certify.Providers.ACME.Anvil
                             csrInfo.CommonName = commonNameIsDns ? _idnMapping.GetAscii(config.PrimaryDomain) : config.PrimaryDomain;
                         }
 
-                        order = await orderContext.Finalize(csrInfo, csrKey, requestedIdentifiers);
+                        order = await orderContext.Finalize(csrInfo, csrKey, csrIdentifiers);
                     }
                 }
 

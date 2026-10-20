@@ -322,6 +322,11 @@ namespace Certify.Models
         public bool DisableARIChecks { get; set; }
 
         /// <summary>
+        /// If true, identifiers the CA adds to an ACME order which were not requested (e.g. www) are not included in the CSR
+        /// </summary>
+        public bool StrictAcmeOrderIdentifiers { get; set; }
+
+        /// <summary>
         /// Preferences for external certificate managers (enable/disable, config/log paths)
         /// </summary>
         public List<CertificateManagerPreference> CertificateManagers { get; set; } = new List<CertificateManagerPreference>();
