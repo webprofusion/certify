@@ -35,7 +35,7 @@ namespace Certify.UI.ViewModel
             SyncSelectedExternalSourceDisplayInfo();
 
             // check for invalid primary domains (from previous RadioButton in DataGrid UI bug)
-            if (SelectedItem?.DomainOptions.Count(d => d.IsPrimaryDomain) > 1)
+            if (SelectedItem?.DomainOptions?.Count(d => d?.IsPrimaryDomain == true) > 1)
             {
                 HasInvalidPrimaryDomainConfig = true;
             }

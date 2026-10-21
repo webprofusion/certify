@@ -334,6 +334,13 @@ namespace Certify.UI.ViewModel
                 if (MessageBox.Show(SR.ManagedCertificateSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK)
                 {
                     existing.Deleted = true;
+
+                    // a new item which has not been saved yet only exists in this app, there is nothing for the service to delete
+                    if (selectedItem.Id == null)
+                    {
+                        return true;
+                    }
+
                     var deletedOK = await _certifyClient.DeleteManagedCertificate(selectedItem.Id);
                     if (deletedOK)
                     {
