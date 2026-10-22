@@ -224,6 +224,20 @@ namespace Certify.Models
         }
 
         /// <summary>
+        /// Drop empty entries from the domain options, an item posted via the API can include null entries (or no list at all)
+        /// which every consumer of the domain options would otherwise have to guard against
+        /// </summary>
+        public void NormalizeDomainOptions()
+        {
+            DomainOptions ??= new ObservableCollection<DomainOption>();
+
+            foreach (var empty in DomainOptions.Where(d => d == null).ToList())
+            {
+                DomainOptions.Remove(empty);
+            }
+        }
+
+        /// <summary>
         /// Adopt the current item type for a certificate subscription, if this item still carries the legacy type.
         /// Subscriptions were originally stored as <see cref="ManagedCertificateType.SSL_ExternallyManaged"/> with a
         /// configured external source, which is the same type used for items discovered via a certificate manager provider

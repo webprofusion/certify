@@ -335,7 +335,7 @@ namespace Certify.Management
             }
 
             // count items with invalid config (e.g. multiple primary domains)
-            summary.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
+            summary.InvalidConfig = ms.Count(c => c.DomainOptions?.Count(d => d?.IsPrimaryDomain == true) > 1);
 
             summary.TotalDomains = ms.Sum(s => s.RequestConfig.SubjectAlternativeNames.Count());
 
@@ -1290,6 +1290,8 @@ namespace Certify.Management
 
             // an external source configuration is only meaningful for an item which takes its certificate externally
             managedCert.NormalizeExternalSourceSettings();
+
+            managedCert.NormalizeDomainOptions();
 
             if (
                 !string.IsNullOrEmpty(managedCert.RequestConfig.WebhookUrl)
