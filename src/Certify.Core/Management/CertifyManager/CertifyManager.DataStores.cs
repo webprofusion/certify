@@ -229,7 +229,7 @@ namespace Certify.Management
                     {
                         // default sqlite storage
                         _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                        _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
+                        _credentialsManager = new LinkedCredentialsManager(new SQLiteCredentialStore("", _serviceLog), _serviceLog);
 
                         // config store is a generic store for settings etc
                         _configStore = new SQLiteConfigurationStore("", _serviceLog);
@@ -271,7 +271,7 @@ namespace Certify.Management
                 else
                 {
                     _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                    _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
+                    _credentialsManager = new LinkedCredentialsManager(new SQLiteCredentialStore("", _serviceLog), _serviceLog);
 
                     _configStore = new SQLiteConfigurationStore("", _serviceLog);
                     _accessControl = new AccessControl(_serviceLog, _configStore);
@@ -707,7 +707,7 @@ namespace Certify.Management
             }
             else
             {
-                _credentialsManager = provider;
+                _credentialsManager = new LinkedCredentialsManager(provider, _serviceLog);
                 return true;
             }
         }

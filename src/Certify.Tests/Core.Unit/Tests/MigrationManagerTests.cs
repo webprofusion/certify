@@ -65,6 +65,38 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(export.Errors.Any(e => e.Contains("DNS Task") && e.Contains("could not be decrypted")), "Decrypt failures should be recorded in export errors.");
         }
 
+        [TestMethod, Description("Ensure export includes credentials which referenced credentials take secret values from")]
+        public async Task TestPerformExportIncludesLinkedCredentials()
+        {
+            var managedCert = CreateManagedCertificate(
+                id: "managed-1",
+                primaryDomain: "example.com",
+                certificatePasswordCredentialId: null,
+                postRequestCredentialId: "cred-task");
+
+            var itemStore = new TestManagedItemStore(managedCert);
+            var credentialsStore = new TestCredentialsManager(
+            [
+                new StoredCredential { StorageKey = "cred-task", Title = "Azure App" },
+                new StoredCredential { StorageKey = "cred-token", Title = "Shared Secret", ProviderType = StandardAuthTypes.STANDARD_AUTH_API_TOKEN },
+                new StoredCredential { StorageKey = "cred-unused", Title = "Unused", ProviderType = StandardAuthTypes.STANDARD_AUTH_API_TOKEN }
+            ]);
+
+            credentialsStore.UnlockedSecrets["cred-task"] = "{\"tenantid\":\"tenant-1\",\"secret.credential\":\"cred-token\"}";
+            credentialsStore.UnlockedSecrets["cred-token"] = "{\"api_token\":\"shared-secret\"}";
+
+            var migrationManager = new MigrationManager(itemStore, credentialsStore, new List<ITargetWebServer>());
+
+            var export = await migrationManager.PerformExport(new ManagedCertificateFilter(), new ExportSettings
+            {
+                EncryptionSecret = "secret",
+                ExportAllStoredCredentials = false,
+                ExportCustomCertificateAuthorities = false
+            }, isPreview: false);
+
+            CollectionAssert.AreEquivalent(new[] { "cred-task", "cred-token" }, export.Content.StoredCredentials.Select(c => c.StorageKey).ToArray());
+        }
+
         [TestMethod, Description("Ensure import stops when the provided password cannot decrypt secrets")]
         public async Task TestPerformImportReturnsErrorForWrongPassword()
         {

@@ -336,6 +336,99 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
+        /// Check a stored credential the caller has submitted to save: that it is within their scope, and that each stored
+        /// credential its secret fields link to (see <see cref="StoredCredentialLinks"/>) is an API Key or Token credential on
+        /// the same instance which the caller could list. A link is reported as not found where the caller could not see the credential.
+        /// </summary>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckSubmittedStoredCredential(
+            ICertifyInternalApiClient internalApiClient,
+            ManagementAPI mgmtAPI,
+            string resourceActionId,
+            string? instanceId,
+            StoredCredential? item)
+        {
+            var outOfScope = await CheckStoredCredentialInScope(internalApiClient, mgmtAPI, resourceActionId, instanceId, item?.StorageKey, allowNew: true);
+
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
+            var linkedKeys = StoredCredentialLinks.GetLinkedStorageKeys(item?.Secret);
+
+            if (!linkedKeys.Any())
+            {
+                return null;
+            }
+
+            var credentials = await mgmtAPI.GetStoredCredentials(instanceId!, CurrentAuthContext);
+
+            foreach (var linkedKey in linkedKeys)
+            {
+                var linkedOutOfScope = await CheckStoredCredentialInScope(internalApiClient, mgmtAPI, StandardResourceActions.StoredCredentialList, instanceId, linkedKey, allowNew: false);
+
+                if (linkedOutOfScope != null)
+                {
+                    return linkedOutOfScope;
+                }
+
+                var linked = credentials?.FirstOrDefault(c => c.StorageKey == linkedKey);
+
+                if (linked == null)
+                {
+                    return NotFoundInScope("Stored credential not found");
+                }
+
+                if (linked.ProviderType != StoredCredentialLinks.LinkedCredentialType)
+                {
+                    return Problem(detail: "A secret can only take its value from an API Key or Token stored credential.", statusCode: StatusCodes.Status400BadRequest);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Check a stored credential the caller asks to unlock: that it is within their scope, and that so is each stored
+        /// credential it takes a secret value from, as unlocking releases those values too
+        /// </summary>
+        /// <returns>null when the caller may proceed, otherwise the response to return</returns>
+        internal async Task<IActionResult?> CheckUnlockStoredCredential(
+            ICertifyInternalApiClient internalApiClient,
+            ManagementAPI mgmtAPI,
+            string resourceActionId,
+            string? instanceId,
+            string? storageKey)
+        {
+            var outOfScope = await CheckStoredCredentialInScope(internalApiClient, mgmtAPI, resourceActionId, instanceId, storageKey, allowNew: false);
+
+            if (outOfScope != null)
+            {
+                return outOfScope;
+            }
+
+            var scope = await ResourceScope.Resolve(internalApiClient, CurrentAuthContext, ResourceTypes.StoredCredential, resourceActionId);
+
+            if (scope.IsUnrestricted || string.IsNullOrWhiteSpace(instanceId) || string.IsNullOrWhiteSpace(storageKey))
+            {
+                return null;
+            }
+
+            foreach (var linkedKey in await mgmtAPI.GetStoredCredentialLinks(instanceId, storageKey, CurrentAuthContext))
+            {
+                var tags = await HubItemTags.GetItemTags(internalApiClient, TaggedItemTypes.StoredCredential, instanceId, linkedKey);
+
+                if (!scope.PermitsTags(tags, linkedKey))
+                {
+                    return Problem(detail: "This credential uses the value of a stored credential you do not have access to.", statusCode: StatusCodes.Status403Forbidden);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Narrow a stored credential listing to the credentials within the caller's scope
         /// </summary>
         internal async Task<ICollection<StoredCredential>?> FilterStoredCredentialsInScope(

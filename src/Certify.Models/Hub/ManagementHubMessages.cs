@@ -48,6 +48,11 @@ namespace Certify.Models.Hub
         public const string RemoveStoredCredential = "RemoveStoredCredential";
         public const string UnlockStoredCredential = "UnlockStoredCredential";
 
+        /// <summary>
+        /// Get the storage keys of the stored credentials a stored credential takes secret values from (see StoredCredentialLinks)
+        /// </summary>
+        public const string GetStoredCredentialLinks = "GetStoredCredentialLinks";
+
         public const string GetChallengeProviders = "GetChallengeProviders";
         public const string GetDnsZones = "GetDnsZones";
 

@@ -160,6 +160,26 @@ namespace Certify.Core.Management
                         }
                     }
                 }
+
+                // used credentials can take secret values from other stored credentials, which are needed too
+                foreach (var c in usedCredentialsDict.Values.ToList())
+                {
+                    try
+                    {
+                        foreach (var linkedKey in StoredCredentialLinks.GetLinkedStorageKeys(await _credentialsManager.GetUnlockedCredential(c.StorageKey)))
+                        {
+                            var linkedCredential = allCredentials.FirstOrDefault(a => a.StorageKey == linkedKey);
+                            if (linkedCredential != null)
+                            {
+                                usedCredentialsDict.TryAdd(linkedKey, linkedCredential);
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // a credential which cannot be decrypted is reported as it is exported below
+                    }
+                }
             }
 
             // decrypt each used stored credential, re-encrypt and base64 encode secret

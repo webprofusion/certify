@@ -30,7 +30,11 @@ namespace Certify.UI.Windows
             }
 
             var providerParameter = item as ProviderParameter;
-            if (providerParameter == null)
+            if (item is LinkableSecretField)
+            {
+                template = context.FindResource("ProviderLinkableSecretParameter") as DataTemplate;
+            }
+            else if (providerParameter == null)
             {
                 template = context.FindResource("ProviderStringParameter") as DataTemplate;
             }

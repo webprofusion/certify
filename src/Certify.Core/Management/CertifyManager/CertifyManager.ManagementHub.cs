@@ -1029,6 +1029,51 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Get a stored credential with its unlocked secret, if it allows unlocking. Values it takes from other stored credentials are resolved,
+        /// and are only released if those credentials allow unlocking too
+        /// </summary>
+        private async Task<StoredCredentialUnlockResult> UnlockStoredCredential(string storageKey)
+        {
+            var cred = await _credentialsManager.GetCredential(storageKey);
+            if (cred?.AllowUnlock != true)
+            {
+                return new StoredCredentialUnlockResult { IsSuccess = false, Message = "This credential does not allow unlocking" };
+            }
+
+            var secret = await _credentialsManager.GetUnlockedCredential(storageKey);
+            var linkedKeys = StoredCredentialLinks.GetLinkedStorageKeys(secret);
+
+            if (linkedKeys.Any())
+            {
+                foreach (var linkedKey in linkedKeys)
+                {
+                    var linked = await _credentialsManager.GetCredential(linkedKey);
+                    if (linked?.AllowUnlock != true)
+                    {
+                        var name = linked != null ? $"stored credential '{linked.Title}'" : "a stored credential";
+                        return new StoredCredentialUnlockResult { IsSuccess = false, Message = $"This credential uses the value of {name}, which does not allow unlocking" };
+                    }
+                }
+
+                var values = await _credentialsManager.GetUnlockedCredentialsDictionary(storageKey);
+                if (values == null)
+                {
+                    return new StoredCredentialUnlockResult { IsSuccess = false, Message = "This credential uses a value from a stored credential which could not be found or unlocked" };
+                }
+
+                secret = Newtonsoft.Json.JsonConvert.SerializeObject(values);
+            }
+
+            if (secret == null)
+            {
+                return null;
+            }
+
+            cred.Secret = secret;
+            return new StoredCredentialUnlockResult { IsSuccess = true, Result = cred };
+        }
+
         public async Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg)
         {
             object val = null;
@@ -1304,25 +1349,21 @@ namespace Certify.Management
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
-                var key = itemArg.Value;
-                var cred = await _credentialsManager.GetCredential(key);
-                if (cred?.AllowUnlock == true)
-                {
-                    var unlockedCredValue = await _credentialsManager.GetUnlockedCredential(key);
-                    if (unlockedCredValue != null)
-                    {
+                val = await UnlockStoredCredential(itemArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetStoredCredentialLinks)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
 
-                        cred.Secret = unlockedCredValue;
-                        val = new StoredCredentialUnlockResult { IsSuccess = true, Result = cred };
-                    }
-                    else
-                    {
-                        val = null;
-                    }
-                }
-                else
+                try
                 {
-                    val = new StoredCredentialUnlockResult { IsSuccess = false, Message = "This credential does not allow unlocking" };
+                    val = StoredCredentialLinks.GetLinkedStorageKeys(await _credentialsManager.GetUnlockedCredential(itemArg.Value));
+                }
+                catch (Exception)
+                {
+                    // a credential which cannot be decrypted here cannot be unlocked either
+                    val = new List<string>();
                 }
             }
             else if (arg.CommandType == ManagementHubCommands.GetChallengeProviders)

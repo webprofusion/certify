@@ -846,7 +846,7 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "item", GetFormattedTypeName(typeof(Certify.Models.Config.StoredCredential)) } },
                     RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialUpdate)],
-                    ScopeCheck = "CheckStoredCredentialInScope(_client, _mgmtAPI, \"{action}\", instanceId, item?.StorageKey, allowNew: true)"
+                    ScopeCheck = "CheckSubmittedStoredCredential(_client, _mgmtAPI, \"{action}\", instanceId, item)"
                 },
                 new()
                 {
@@ -872,7 +872,7 @@ namespace Certify.SourceGenerators
                     ReturnType = GetFormattedTypeName(typeof(Models.Config.StoredCredentialUnlockResult)),
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" } },
                     RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialReadSecret)],
-                    ScopeCheck = "CheckStoredCredentialInScope(_client, _mgmtAPI, \"{action}\", instanceId, storageKey, allowNew: false)"
+                    ScopeCheck = "CheckUnlockStoredCredential(_client, _mgmtAPI, \"{action}\", instanceId, storageKey)"
                 },
                 new()
                 {

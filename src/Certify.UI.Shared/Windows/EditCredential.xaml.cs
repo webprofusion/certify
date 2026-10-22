@@ -8,12 +8,56 @@ using Newtonsoft.Json;
 
 namespace Certify.UI.Windows
 {
+    /// <summary>
+    /// A secret field being edited, which can instead take its value from an API Key or Token stored credential
+    /// </summary>
+    public class LinkableSecretField : Models.BindableBase
+    {
+        public LinkableSecretField(ProviderParameter secret, ProviderParameter link, List<StoredCredential> options)
+        {
+            Secret = secret;
+            Link = link;
+            Options = options;
+        }
+
+        public ProviderParameter Secret { get; }
+        public ProviderParameter Link { get; }
+        public List<StoredCredential> Options { get; }
+
+        public bool IsChoosingLink { get; set; }
+
+        public string LinkedStorageKey
+        {
+            get => Link.Value;
+            set
+            {
+                Link.Value = value;
+                IsChoosingLink = false;
+
+                RaisePropertyChangedEvent(nameof(IsLinked));
+                RaisePropertyChangedEvent(nameof(LinkedTitle));
+            }
+        }
+
+        public bool IsLinked => !string.IsNullOrEmpty(Link.Value);
+
+        public string LinkedTitle => Options.FirstOrDefault(o => o.StorageKey == Link.Value)?.Title ?? Link.Value;
+    }
+
     public class EditCredentialViewModel : Models.BindableBase
     {
 
         public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-        public ObservableCollection<ProviderParameter> CredentialSet { get; set; }
+        /// <summary>
+        /// The credential fields being edited, including any links of secret fields to other credentials
+        /// </summary>
+        public List<ProviderParameter> CredentialFields { get; set; } = new List<ProviderParameter>();
+
+        /// <summary>
+        /// The fields as shown, with each secret field which can link to another credential shown together with its link
+        /// </summary>
+        public ObservableCollection<object> CredentialSet { get; set; }
         public StoredCredential Item { get; set; }
         public List<ChallengeProviderDefinition> ChallengeProviders { get; set; }
 
@@ -103,35 +147,26 @@ namespace Certify.UI.Windows
         {
             StoredCredential credential;
 
-            var credentialsToStore = new Dictionary<string, string>();
-
             if (string.IsNullOrEmpty(EditViewModel.Item.Title))
             {
                 MessageBox.Show("Stored credentials require a name.");
                 return;
             }
 
-            if (!EditViewModel.CredentialSet.Any())
+            if (!EditViewModel.CredentialFields.Any())
             {
                 MessageBox.Show("No credentials selected.");
                 return;
             }
 
-            foreach (var c in EditViewModel.CredentialSet)
+            var valuesToStore = StoredCredentialLinks.GetValuesToStore(EditViewModel.CredentialFields);
+            if (!valuesToStore.IsSuccess)
             {
-                //store entered value
-
-                if (c.IsRequired && string.IsNullOrEmpty(c.Value))
-                {
-                    MessageBox.Show($"{c.Name} is a required value");
-                    return;
-                }
-
-                if (!string.IsNullOrEmpty(c.Value))
-                {
-                    credentialsToStore.Add(c.Key, c.Value);
-                }
+                MessageBox.Show(valuesToStore.Message);
+                return;
             }
+
+            var credentialsToStore = valuesToStore.Result;
 
             var item = EditViewModel.Item;
 
@@ -185,11 +220,37 @@ namespace Certify.UI.Windows
                 var selectedType = JsonConvert.DeserializeObject<ProviderDefinition>(JsonConvert.SerializeObject(ProviderTypes.SelectedItem as ProviderDefinition));
                 if (selectedType != null)
                 {
-                    EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters.Where(p => p.IsCredential));
+                    var fields = StoredCredentialLinks.GetEditableFields(selectedType);
+                    var linkOptions = MainViewModel.StoredCredentials?.Where(c => c.ProviderType == StoredCredentialLinks.LinkedCredentialType).ToList() ?? new List<StoredCredential>();
+
+                    EditViewModel.CredentialFields = fields;
+                    EditViewModel.CredentialSet = new ObservableCollection<object>(fields
+                        .Where(f => !StoredCredentialLinks.IsLinkKey(f.Key))
+                        .Select(f =>
+                        {
+                            var link = fields.FirstOrDefault(l => l.Key == StoredCredentialLinks.GetLinkKey(f.Key));
+                            return link != null ? new LinkableSecretField(f, link, linkOptions) : (object)f;
+                        }));
 
                     EditViewModel.RaisePropertyChangedEvent(nameof(EditViewModel.SelectedChallengeProvider));
                     EditViewModel.RaisePropertyChangedEvent(nameof(EditViewModel.ItemExpiryDate));
                 }
+            }
+        }
+
+        private void LinkSecret_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is LinkableSecretField field)
+            {
+                field.IsChoosingLink = !field.IsChoosingLink;
+            }
+        }
+
+        private void ClearSecretLink_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is LinkableSecretField field)
+            {
+                field.LinkedStorageKey = null;
             }
         }
 

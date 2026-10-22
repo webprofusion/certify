@@ -1075,6 +1075,23 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// Gets the storage keys of the stored credentials a stored credential on the target instance takes secret values from.
+        /// An instance which does not support linked secrets returns none.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="storageKey">The storage key of the credential.</param>
+        /// <param name="authContext">The authentication context.</param>
+        public async Task<List<string>> GetStoredCredentialLinks(string instanceId, string storageKey, AuthContext? authContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                        new("instanceId", instanceId) ,
+                        new("storageKey",storageKey)
+                    };
+
+            return await PerformInstanceCommandTaskWithResult<List<string>?>(instanceId, args, ManagementHubCommands.GetStoredCredentialLinks) ?? [];
+        }
+
+        /// <summary>
         /// Retrieves the log entries of a managed certificate from the target instance.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>
