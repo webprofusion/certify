@@ -1629,7 +1629,7 @@ namespace Certify.Management
                     }
                     else
                     {
-                        log?.Debug($"One or more failures. Cleanup skipped.");
+                        log?.Debug($"One or more deployment failures. Previous certificate cleanup skipped.");
 
                         // we failed to install this cert or create/update the https binding
                         var msg = string.Join("\r\n",
@@ -1646,7 +1646,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    log?.Debug($"Request Failed. Cleanup skipped.");
+                    log?.Debug($"Request Failed. Previous certificate cleanup skipped.");
 
                     // certificate request failed
                     result.IsSuccess = false;
@@ -1660,7 +1660,7 @@ namespace Certify.Management
             }
             else
             {
-                log?.Debug($"Failed to validate. Cleanup skipped.");
+                log?.Debug($"Failed to validate. Previous certificate cleanup skipped.");
 
                 //failed to validate all identifiers
                 result.IsSuccess = false;
