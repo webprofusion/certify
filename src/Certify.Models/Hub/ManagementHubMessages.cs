@@ -41,6 +41,7 @@ namespace Certify.Models.Hub
         public const string GetAcmeAccounts = "GetAcmeAccounts";
         public const string AddAcmeAccount = "AddAcmeAccount";
         public const string RemoveAcmeAccount = "RemoveAcmeAccount";
+        public const string GetDnsPersistDirectoryInfo = "GetDnsPersistDirectoryInfo";
 
         public const string GetStoredCredentials = "GetStoredCredentials";
         public const string UpdateStoredCredential = "UpdateStoredCredential";

@@ -33,6 +33,8 @@ namespace Certify.Core.Management.Challenges
         /// <param name="serverManager">  </param>
         /// <param name="managedCertificate">  </param>
         /// <param name="performCleanupOnly"> If true, perform cleanup of challenges only, this mode otherwise the same as a non-test challenge response.</param>
+        /// <param name="dnsPersistDirectory"> The account and CA directory values dns-persist-01 records are checked against, if any identifier uses dns-persist-01.</param>
+        /// <param name="acmeAccountUri"> The URL of the ACME account the request uses, which dns-account-01 record names are derived from.</param>
         /// <returns> APIResult </returns>
         /// <remarks> 
         /// The purpose of this method is to test the options (permissions, configuration) before
@@ -47,10 +49,14 @@ namespace Certify.Core.Management.Challenges
             bool enableDnsChecks,
             bool performCleanupOnly,
             ICredentialsManager credentialsManager,
-            IProgress<RequestProgressState> progress = null
+            IProgress<RequestProgressState> progress = null,
+            DnsPersistDirectoryInfo dnsPersistDirectory = null,
+            string acmeAccountUri = null
             )
         {
             var results = new List<StatusMessage>();
+
+            var checkedPersistRecords = new HashSet<string>(StringComparer.Ordinal);
 
             var requestConfig = managedCertificate.RequestConfig;
 
@@ -173,20 +179,37 @@ namespace Certify.Core.Management.Challenges
                         return results;
 
                     }
-                    else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                    else if (SupportedChallengeTypes.UsesDnsProvider(challengeType))
                     {
                         var recordName = $"{Certify.Models.Hub.ManagedChallengeAccess.DnsChallengeTestRecordPrefix}{domain.Value}".Replace("*.", "");
 
+                        // the record a real challenge response uses, which for dns-account-01 depends on the ACME account
+                        string realRecordName = null;
+                        if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                        {
+                            realRecordName = $"_acme-challenge.{domain.Value}".Replace("*.", "");
+                        }
+                        else if (!string.IsNullOrEmpty(acmeAccountUri))
+                        {
+                            realRecordName = DnsAccountLabel.GetRecordName(acmeAccountUri, domain.Value);
+                        }
+
                         if (performCleanupOnly)
                         {
-                            recordName = $"_acme-challenge.{domain.Value}".Replace("*.", "");
+                            if (realRecordName == null)
+                            {
+                                results.Add(new StatusMessage { IsOK = true, HasWarning = true, Message = $"The dns-account-01 record for {domain.Value} was not cleaned up, because the ACME account is not known." });
+                                continue;
+                            }
 
+                            recordName = realRecordName;
                         }
+
                         // ISSUE: dependency on changing behavior for a specific plugin
-                        if (challengeConfig.ChallengeProvider == "DNS01.API.AcmeDns" || challengeConfig.ChallengeProvider == "DNS01.API.CertifyDns")
+                        if ((challengeConfig.ChallengeProvider == "DNS01.API.AcmeDns" || challengeConfig.ChallengeProvider == "DNS01.API.CertifyDns") && realRecordName != null)
                         {
                             // use real cname to avoid having to setup different records
-                            recordName = $"_acme-challenge.{domain.Value}".Replace("*.", "");
+                            recordName = realRecordName;
                         }
 
                         var simulatedAuthorization = new PendingAuthorization
@@ -194,7 +217,7 @@ namespace Certify.Core.Management.Challenges
                             Challenges = new List<AuthorizationChallengeItem> {
                                      new AuthorizationChallengeItem
                                      {
-                                          ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                          ChallengeType = challengeType,
                                             Key= recordName,
                                             Value = GenerateSimulatedDnsAuthValue()
                                      }
@@ -205,6 +228,7 @@ namespace Certify.Core.Management.Challenges
                         var dnsResult =
                              await PerformChallengeResponse_Dns01(
                                 log,
+                                challengeType,
                                 domain,
                                 managedCertificate,
                                 simulatedAuthorization,
@@ -226,8 +250,24 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
                     {
-                        // dns-persist-01: simulate a _validation-persist record creation check
-                        var persistRecordName = $"_validation-persist.{domain.Value}".Replace("*.", "");
+                        // dns-persist-01: check the existing _validation-persist record, once per record name
+                        var persistRecordName = DnsPersistRecordBuilder.GetRecordName(domain.Value);
+
+                        if (performCleanupOnly || !checkedPersistRecords.Add(persistRecordName))
+                        {
+                            continue;
+                        }
+
+                        if (dnsPersistDirectory == null)
+                        {
+                            results.Add(new StatusMessage
+                            {
+                                IsOK = true,
+                                HasWarning = true,
+                                Message = $"The dns-persist-01 record {persistRecordName} was not checked, because the ACME account or its CA directory is not available."
+                            });
+                            continue;
+                        }
 
                         var simulatedAuthorization = new PendingAuthorization
                         {
@@ -236,11 +276,10 @@ namespace Certify.Core.Management.Challenges
                                 {
                                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST,
                                     Key = persistRecordName,
-                                    Value = GenerateSimulatedDnsAuthValue()
+                                    DnsPersist = DnsPersistChallengeInfo.FromDirectory(dnsPersistDirectory)
                                 }
                             }
                         };
-                        generatedAuthorizations.Add(simulatedAuthorization);
 
                         var persistResult =
                             await PerformChallengeResponse_DnsPersist01(
@@ -248,14 +287,13 @@ namespace Certify.Core.Management.Challenges
                                 domain,
                                 managedCertificate,
                                 simulatedAuthorization,
-                                isTestMode: performCleanupOnly ? false : true,
-                                isCleanupOnly: performCleanupOnly,
-                                credentialsManager
+                                isCleanupOnly: false
                             );
 
                         var result = new StatusMessage();
                         result.Message = persistResult.Result.Message;
                         result.IsOK = persistResult.Result.IsSuccess;
+                        result.HasWarning = persistResult.Result.IsWarning;
                         if (!result.IsOK)
                         {
                             result.FailedItemSummary.Add(persistResult.Result.Message);
@@ -354,10 +392,10 @@ namespace Certify.Core.Management.Challenges
                         }
                     }
 
-                    if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                    if (SupportedChallengeTypes.UsesDnsProvider(requiredChallenge.ChallengeType))
                     {
-                        // perform dns-01 challenge response
-                        var check = await PerformChallengeResponse_Dns01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, isCleanupOnly: false, credentialsManager);
+                        // perform dns-01 (or dns-account-01) challenge response
+                        var check = await PerformChallengeResponse_Dns01(log, requiredChallenge.ChallengeType, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, isCleanupOnly: false, credentialsManager);
                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
@@ -368,10 +406,9 @@ namespace Certify.Core.Management.Challenges
 
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
                     {
-                        // perform dns-persist-01 challenge response (draft-ietf-acme-dns-persist)
-                        // uses the same DNS provider infrastructure as dns-01 but creates a persistent
-                        // _validation-persist TXT record instead of _acme-challenge
-                        var check = await PerformChallengeResponse_DnsPersist01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, isCleanupOnly: false, credentialsManager);
+                        // perform dns-persist-01 challenge response (draft-ietf-acme-dns-persist): check the
+                        // persistent _validation-persist TXT record the domain owner created, warning if the CA may not accept it
+                        var check = await PerformChallengeResponse_DnsPersist01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isCleanupOnly: false);
                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
@@ -593,13 +630,17 @@ namespace Certify.Core.Management.Challenges
 
         private DnsChallengeHelper _dnsHelper = null;
 
-        internal async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
+        /// <summary>
+        /// Create the TXT record for a dns-01 or dns-account-01 challenge, which differ only in the record name the
+        /// challenge gives, through the configured DNS provider
+        /// </summary>
+        internal async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string challengeType, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
         {
-            var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
+            var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == challengeType);
 
             if (dnsChallenge == null)
             {
-                var msg = $"No dns-01 challenge to completed for {managedCertificate.Name}. Request cannot continue.";
+                var msg = $"No {challengeType} challenge to completed for {managedCertificate.Name}. Request cannot continue.";
 
                 log.Warning(msg);
 
@@ -654,11 +695,12 @@ namespace Certify.Core.Management.Challenges
         }
 
         /// <summary>
-        /// Creates or verifies the persistent DNS TXT record required for dns-persist-01 validation
-        /// (draft-ietf-acme-dns-persist). The record at _validation-persist.{domain} is persistent
-        /// and intentionally not cleaned up after each use.
+        /// Checks DNS for the persistent _validation-persist TXT record required for dns-persist-01 validation
+        /// (draft-ietf-acme-dns-persist). The record is created once by the domain owner and is never cleaned up.
+        /// If no record the CA will accept is found, a warning describing the problem and the record to create is
+        /// logged, and the request continues for the CA to check.
         /// </summary>
-        internal async Task<DnsChallengeHelperResult> PerformChallengeResponse_DnsPersist01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
+        internal async Task<DnsChallengeHelperResult> PerformChallengeResponse_DnsPersist01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isCleanupOnly)
         {
             var persistChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST);
 
@@ -669,17 +711,81 @@ namespace Certify.Core.Management.Challenges
                 return new DnsChallengeHelperResult(new ActionResult { IsSuccess = false, Message = msg });
             }
 
-            if (_dnsHelper == null)
-            {
-                _dnsHelper = new DnsChallengeHelper(credentialsManager);
-            }
-
-            var dnsResult = new DnsChallengeHelperResult { Result = new ActionResult($"To complete the dns-persist-01 challenge create a TXT record {persistChallenge.Key} in your domain DNS with value {persistChallenge.Value}", true) };
-
             // the _validation-persist record is intentionally persistent - no cleanup action
             pendingAuth.Cleanup = () => Task.CompletedTask;
 
-            return dnsResult;
+            if (isCleanupOnly)
+            {
+                return new DnsChallengeHelperResult(new ActionResult("dns-persist-01 records are persistent and are not removed.", true));
+            }
+
+            var challenge = persistChallenge.DnsPersist;
+            if (challenge == null)
+            {
+                return new DnsChallengeHelperResult(new ActionResult($"To complete the dns-persist-01 challenge create a TXT record {persistChallenge.Key} in your domain DNS with value {persistChallenge.Value}", true));
+            }
+
+            var validationDomain = DnsPersistRecordBuilder.GetValidationDomain(domain.Value);
+            var recordName = DnsPersistRecordBuilder.GetRecordName(domain.Value);
+
+            // identifiers sharing this record (e.g. example.com and *.example.com) need one record, with policy=wildcard if any is a wildcard
+            var requiresWildcard = DnsPersistRecordBuilder.IsWildcard(domain.Value)
+                || DnsPersistRecordBuilder.GroupByRecord(managedCertificate.GetCertificateIdentifiers().Where(i => i.IdentifierType == CertIdentifierType.Dns).Select(i => i.Value))
+                    .Any(g => g.Domain == validationDomain && g.RequiresWildcard);
+
+            var txtValues = await _netUtil.GetDNSRecordTXTValues(log, recordName);
+
+            if (txtValues == null)
+            {
+                // this instance could not query DNS, which does not mean the CA cannot, so let the CA check the record
+                var notChecked = $"dns-persist-01: the TXT records at {recordName} could not be checked from this instance, so they are left for the CA to check.";
+                log?.Warning(notChecked);
+                return new DnsChallengeHelperResult(new ActionResult(notChecked, true) { IsWarning = true });
+            }
+
+            var check = DnsPersistRecordChecker.Check(txtValues, challenge, domain.Value, requiresWildcard, DateTimeOffset.UtcNow);
+
+            foreach (var warning in check.Warnings)
+            {
+                log?.Warning($"dns-persist-01: {warning}");
+            }
+
+            if (check.IsMatch)
+            {
+                persistChallenge.Key = recordName;
+                persistChallenge.Value = check.MatchedRecord.Raw;
+
+                var found = $"dns-persist-01: found the TXT record {recordName} for {check.MatchedRecord.IssuerDomainName}.";
+                log?.Information(found);
+
+                return new DnsChallengeHelperResult(new ActionResult(string.Join(" ", new[] { found }.Concat(check.Warnings)), true) { IsWarning = check.Warnings.Any() });
+            }
+
+            var record = DnsPersistRecordBuilder.Build(new DnsPersistRecordOptions
+            {
+                Variant = challenge.Variant,
+                Domain = validationDomain,
+                IssuerDomainName = DnsPersistRecordBuilder.ChooseIssuerDomainName(challenge.IssuerDomainNames, challenge.DirectoryIssuerDomainNames, check.IssuersInDns),
+                AccountUrl = challenge.AccountUrl,
+                AccountThumbprint = challenge.AccountThumbprint,
+                AccountHashPrefix = challenge.AccountHashPrefix,
+                PolicyWildcard = requiresWildcard
+            });
+
+            persistChallenge.Key = record.Name;
+            persistChallenge.Value = record.Value;
+
+            var instructions = $"dns-persist-01: {string.Join(" ", check.Problems)} The CA may not accept the existing records. A record it will accept is the TXT record {record.Name} with the value {record.Value}";
+
+            if (record.ValueStrings.Count > 1)
+            {
+                instructions += $" (as {record.ValueStrings.Count} strings: {record.ZoneFileEntry})";
+            }
+
+            // this instance's view of DNS can differ from the CA's (e.g. split-horizon DNS), so the CA still checks the record
+            log?.Warning(instructions);
+
+            return new DnsChallengeHelperResult(new ActionResult(instructions, true) { IsWarning = true });
         }
     }
 }

@@ -127,6 +127,30 @@ namespace Certify.Models.Hub
         }
 
         /// <summary>
+        /// The identifier's own TXT record names a response for it can be written at, given the name the caller requested
+        /// (which may be a CNAME delegated name): its dns-01 name and its configuration test name, or, when the requested
+        /// name starts with a dns-account-01 account label, its name under that label, _{account label}._acme-challenge.{identifier}.
+        /// The account label is derived from the caller's own ACME account URL, which the hub does not know, so any well
+        /// formed label is accepted; the record is still confined to the identifier's own _acme-challenge name, which only
+        /// ACME validation uses. Empty when the identifier is not a DNS name.
+        /// </summary>
+        public static IReadOnlyList<string> GetDnsChallengeRecordNames(string? identifier, string? responseKey)
+        {
+            var expected = GetDnsChallengeRecordName(identifier);
+
+            if (expected == null)
+            {
+                return [];
+            }
+
+            var accountLabel = global::Certify.Models.Shared.Validation.DnsAccountLabel.GetAccountLabelFromRecordName(responseKey);
+
+            return accountLabel != null
+                ? [$"{accountLabel}.{expected}"]
+                : [expected, GetDnsChallengeTestRecordName(identifier)!];
+        }
+
+        /// <summary>
         /// True when a requested TXT record name is the one the identifier's dns-01 response is published at.
         ///
         /// Authorization decides which identifiers a caller may answer challenges for, so the record written must be

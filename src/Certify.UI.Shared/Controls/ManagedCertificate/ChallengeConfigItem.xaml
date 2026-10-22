@@ -9,6 +9,7 @@
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
+    xmlns:validation="clr-namespace:Certify.Models.Shared.Validation;assembly=Certify.Models"
     d:DesignHeight="200"
     d:DesignWidth="468"
     mc:Ignorable="d">
@@ -159,11 +160,29 @@
                         <DataTrigger Binding="{Binding SelectedItem.ChallengeType}" Value="{x:Static models:SupportedChallengeTypes.CHALLENGE_TYPE_DNS}">
                             <Setter Property="UIElement.Visibility" Value="Visible" />
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding SelectedItem.ChallengeType}" Value="{x:Static models:SupportedChallengeTypes.CHALLENGE_TYPE_DNS_ACCOUNT}">
+                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                        </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </StackPanel.Style>
             <StackPanel Margin="160,0,0,0">
                 <TextBlock Style="{StaticResource Instructions}"><Run Text="For DNS validation the app will need to create a 'TXT' record in the DNS zone of your domain(s) as an answer to the authorization challenge." /></TextBlock>
+                <TextBlock Margin="0,4,0,0" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style BasedOn="{StaticResource Instructions}" TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedItem.ChallengeType}" Value="{x:Static models:SupportedChallengeTypes.CHALLENGE_TYPE_DNS_ACCOUNT}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                    <Run Text="dns-account-01 (draft) works like dns-01, but the record is at _&lt;account label&gt;._acme-challenge.&lt;domain&gt;, where the label is derived from the ACME account, so several accounts or ACME clients can validate the same domain without conflicting. The CA must support dns-account-01." />
+                    <LineBreak />
+                    <Hyperlink NavigateUri="{Binding Source={x:Static validation:DnsAccountLabel.SpecificationUrl}}" RequestNavigate="HelpUrl_RequestNavigate">Read the specification</Hyperlink>
+                </TextBlock>
             </StackPanel>
             <StackPanel Margin="0,8,0,0" Orientation="Vertical">
                 <StackPanel Orientation="Horizontal">
@@ -308,7 +327,9 @@
             <StackPanel Margin="160,0,0,0">
                 <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
                     <Run Text="dns-persist-01 uses a persistent DNS TXT record that is set up once and reused for future renewals. It is suitable for environments where real-time DNS updates are impractical." />
-
+                    <Run Text="Each record is for one CA and one ACME account: staging and production accounts need separate records, and several CAs can each have their own record at the same name." />
+                    <LineBreak />
+                    <Hyperlink NavigateUri="{Binding Source={x:Static validation:DnsPersistRecordBuilder.SpecificationUrl}}" RequestNavigate="HelpUrl_RequestNavigate">Read the specification</Hyperlink>
                 </TextBlock>
             </StackPanel>
 
@@ -319,18 +340,90 @@
                 </Grid.ColumnDefinitions>
 
                 <TabControl Grid.Column="1">
-                    <TabItem mah:HeaderedControlHelper.HeaderFontSize="12" Header="Example Records">
+                    <TabItem mah:HeaderedControlHelper.HeaderFontSize="12" Header="Records">
                         <StackPanel Margin="8">
-                            <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
-                                <Run Text="Each record should be created at _validation-persist.{your-domain} and contain your ACME account URI and the issuer domain." />
-                            </TextBlock>
+                            <TextBlock
+                                Style="{StaticResource Instructions}"
+                                Text="{Binding DnsPersistFormatDescription}"
+                                TextWrapping="Wrap" />
 
-                            <TextBox
-                                MinHeight="120"
+                            <TextBlock
                                 Margin="0,8,0,0"
+                                Foreground="DarkOrange"
+                                Text="{Binding DnsPersistIssuerPlaceholderWarning}"
+                                TextWrapping="Wrap"
+                                Visibility="{Binding HasNoDnsPersistIssuers, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                Foreground="DarkOrange"
+                                Text="The persistUntil date has passed, so the CA would not use these records."
+                                TextWrapping="Wrap"
+                                Visibility="{Binding IsDnsPersistUntilPassed, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+
+                            <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding DnsPersistRecords}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="70" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <Label
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                Content="Name" />
+                                            <TextBox
+                                                Grid.Row="0"
+                                                Grid.Column="1"
+                                                IsReadOnly="True"
+                                                Text="{Binding Name, Mode=OneWay}" />
+                                            <Button
+                                                Grid.Row="0"
+                                                Grid.Column="2"
+                                                Margin="4,0,0,0"
+                                                Click="CopyDnsPersistValue_Click"
+                                                Content="Copy"
+                                                Tag="{Binding Name}" />
+
+                                            <Label
+                                                Grid.Row="1"
+                                                Grid.Column="0"
+                                                Content="TXT Value" />
+                                            <TextBox
+                                                Grid.Row="1"
+                                                Grid.Column="1"
+                                                Margin="0,4,0,0"
+                                                IsReadOnly="True"
+                                                Text="{Binding Value, Mode=OneWay}"
+                                                TextWrapping="Wrap" />
+                                            <Button
+                                                Grid.Row="1"
+                                                Grid.Column="2"
+                                                Margin="4,4,0,0"
+                                                Click="CopyDnsPersistValue_Click"
+                                                Content="Copy"
+                                                Tag="{Binding Value}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock
+                                Style="{StaticResource Instructions}"
+                                Text="As zone file entries (values over 255 characters are split into several strings):"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                Margin="0,4,0,0"
                                 AcceptsReturn="True"
                                 IsReadOnly="True"
-                                Text="{Binding DnsPersistRecordExamplesText, Mode=OneWay}"
+                                Text="{Binding DnsPersistZoneFileText, Mode=OneWay}"
                                 TextWrapping="Wrap"
                                 VerticalScrollBarVisibility="Auto" />
                         </StackPanel>
@@ -355,17 +448,44 @@
                             </TextBlock>
 
                             <StackPanel Orientation="Horizontal">
-                                <Label Width="160" Content="ACME Account" />
+                                <Label Width="160" Content="Certificate Authority" />
                                 <ComboBox
                                     Width="270"
                                     DisplayMemberPath="Title"
                                     ItemsSource="{Binding DnsPersistAccounts}"
+                                    ToolTip="The records are for the account a request for this CA uses. Choose the certificate's CA."
                                     SelectedValue="{Binding SelectedDnsPersistAccountUri, UpdateSourceTrigger=PropertyChanged}"
                                     SelectedValuePath="AccountURI" />
                             </StackPanel>
 
+                            <StackPanel
+                                Margin="0,8,0,0"
+                                Orientation="Horizontal"
+                                Visibility="{Binding HasMultipleDnsPersistIssuers, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                                <Label Width="160" Content="Issuer Domain Name" />
+                                <ComboBox
+                                    Width="270"
+                                    ItemsSource="{Binding DnsPersistIssuerOptions}"
+                                    SelectedItem="{Binding SelectedDnsPersistIssuer, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
                             <StackPanel Margin="4,8,0,0" Orientation="Vertical">
                                 <CheckBox Content="Include policy=wildcard (authorizes wildcard and subdomain certificates)" IsChecked="{Binding DnsPersistPolicyWildcard, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Style="{StaticResource Instructions}"
+                                    Text="Records for wildcard identifiers always include policy=wildcard."
+                                    Visibility="{Binding DnsPersistHasWildcardIdentifiers, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                            </StackPanel>
+
+                            <StackPanel
+                                Margin="4,8,0,0"
+                                Orientation="Vertical"
+                                Visibility="{Binding IsDnsPersistHashed, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                                <CheckBox Content="Use one account value for every domain (domain name *)" IsChecked="{Binding DnsPersistUseDomainOptOut, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Style="{StaticResource Instructions}"
+                                    Text="By default each domain's record has its own hashed account value, so records for different domains cannot be linked to one account. With this option every record has the same value."
+                                    TextWrapping="Wrap" />
                             </StackPanel>
 
                             <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
@@ -374,7 +494,7 @@
                             </StackPanel>
                             <StackPanel Margin="160,0,0,0">
                                 <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
-                                    <Run Text="Optional date after which this record should not be used for new validations." />
+                                    <Run Text="Optional date from which (00:00 UTC) the CA will not use this record for new validations." />
                                 </TextBlock>
                             </StackPanel>
                         </StackPanel>

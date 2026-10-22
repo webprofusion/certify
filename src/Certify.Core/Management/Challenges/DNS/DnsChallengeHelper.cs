@@ -488,7 +488,8 @@ namespace Certify.Core.Management.Challenges
                             {
                                 // non wildcard substitution, all source variants point to same level
                                 // eg. _acme-challenge.[test.com] and _acme-challenge.[www.test.com] point directly to _acme-challenge.[auth.example.com]
-                                var recordName = sourceChallengeTXTRecordName.Split('.')[0];
+                                // the challenge labels before the identifier are kept, which for dns-account-01 are _{label}._acme-challenge
+                                var recordName = GetLabelsBeforeDomain(sourceChallengeTXTRecordName, identifierKey) ?? sourceChallengeTXTRecordName.Split('.')[0];
                                 return $"{recordName}.{ruleTargetDomain}";
                             }
                         }
@@ -520,7 +521,27 @@ namespace Certify.Core.Management.Challenges
             return identifier == sourceDomain || identifier.EndsWith("." + sourceDomain, StringComparison.Ordinal);
         }
 
-        private static string TrimWildcard(string domain) => domain.StartsWith("*.", StringComparison.Ordinal) ? domain.Substring(2) : domain;
+        /// <summary>
+        /// The labels of a record name before the domain it is for, e.g. _acme-challenge or (dns-account-01) _{label}._acme-challenge.
+        /// Both are compared in ASCII form, as either may be in unicode (IDN) form. Null if the record name is not under the domain.
+        /// </summary>
+        private static string GetLabelsBeforeDomain(string recordName, string domain)
+        {
+            try
+            {
+                var idnMapping = new IdnMapping();
+                var name = idnMapping.GetAscii(recordName.TrimEnd('.'));
+                var suffix = "." + idnMapping.GetAscii(domain.TrimEnd('.'));
+
+                return name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) ? name.Substring(0, name.Length - suffix.Length) : null;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        private static string TrimWildcard(string domain) =>domain.StartsWith("*.", StringComparison.Ordinal) ? domain.Substring(2) : domain;
 
         public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, CertIdentifierItem domain, string txtRecordName, string txtRecordValue)
         {

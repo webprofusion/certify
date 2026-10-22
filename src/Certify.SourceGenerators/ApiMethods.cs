@@ -751,6 +751,19 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "GetDnsPersistDirectoryInfo",
+                    OperationMethod = HttpGet,
+                    Comment = "Get the dns-persist-01 values each ACME account's CA publishes in its directory",
+                    UseManagementAPI = true,
+                    ManagementHubCommandType = Models.Hub.ManagementHubCommands.GetDnsPersistDirectoryInfo,
+                    PublicAPIController = "CertificateAuthority",
+                    PublicAPIRoute = "{instanceId}/accounts/dnspersist",
+                    ReturnType = "ICollection<Certify.Models.Shared.Validation.DnsPersistDirectoryInfo>",
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.AcmeAccount, StandardResourceActions.AcmeAccountList)]
+                },
+                new()
+                {
                     OperationName = "AddAcmeAccount",
                     OperationMethod = HttpPost,
                     Comment = "Add New Acme Account",

@@ -7,6 +7,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
+using Certify.Models.Shared.Validation;
 using Certify.Providers.ACME.Anvil;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -483,6 +484,66 @@ namespace Certify.Management
             return (account, certAuthority, acmeProvider);
 
         }
+
+        /// <summary>
+        /// The dns-persist-01 values each ACME account's CA publishes in its directory, used to build and check
+        /// _validation-persist records. Each account's ACME provider caches the directory once fetched.
+        /// </summary>
+        public async Task<List<DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfo()
+        {
+            var accounts = await GetAccountRegistrations();
+
+            return (await Task.WhenAll(accounts.Select(GetDnsPersistDirectoryInfo))).ToList();
+        }
+
+        private async Task<DnsPersistDirectoryInfo> GetDnsPersistDirectoryInfo(AccountDetails account)
+        {
+            var info = new DnsPersistDirectoryInfo
+            {
+                AccountUri = account.AccountURI,
+                CertificateAuthorityId = account.CertificateAuthorityId,
+                IsStagingAccount = account.IsStagingAccount,
+                AccountThumbprint = DnsPersistRecordBuilder.GetThumbprintFromFingerprint(account.AccountFingerprint)
+            };
+
+            try
+            {
+                if (_certificateAuthorities.TryGetValue(account.CertificateAuthorityId ?? string.Empty, out var certAuthority) && !string.IsNullOrEmpty(account.StorageKey))
+                {
+                    var acmeProvider = await GetACMEProvider(account.StorageKey, account.IsStagingAccount ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint, account, certAuthority.AllowUntrustedTls);
+
+                    // a CA which does not answer must not hold up the values of every other account
+                    var directory = await TaskWithTimeoutAndException(acmeProvider.GetAcmeDirectory(), _dnsPersistDirectoryTimeout);
+
+                    if (directory?.Meta != null)
+                    {
+                        info.IsDirectoryAvailable = true;
+                        info.IssuerDomainNames = directory.Meta.IssuerDomainNames?.ToList();
+                        info.AccountHashPrefix = directory.Meta.AccountHashPrefix;
+                        info.CaaIdentities = directory.Meta.CaaIdentities?.ToList();
+                    }
+                    else if (directory != null)
+                    {
+                        info.IsDirectoryAvailable = true;
+                    }
+                }
+            }
+            catch (TimeoutException)
+            {
+                _serviceLog?.Warning($"Could not fetch the ACME directory for account {account.AccountURI}: the CA did not respond within {_dnsPersistDirectoryTimeout.TotalSeconds} seconds.");
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Warning($"Could not fetch the ACME directory for account {account.AccountURI}: {ex.Message}");
+            }
+
+            return info;
+        }
+
+        /// <summary>
+        /// How long to wait for a CA's directory when reading its dns-persist-01 values
+        /// </summary>
+        private static readonly TimeSpan _dnsPersistDirectoryTimeout = TimeSpan.FromSeconds(10);
 
         public async Task<ActionResult<AccountDetails>> ChangeAccountKey(string storageKey, string newKeyPEM = null)
         {

@@ -62,6 +62,7 @@ namespace Certify.Management
         Task<ActionResult> UpdateAccountContact(string storageKey, ContactRegistration contact);
         Task<ActionResult> RemoveAccount(string storageKey, bool includeAccountDeactivation = false);
         Task<ActionResult<AccountDetails>> ChangeAccountKey(string storageKey, string? newKeyPEM = null);
+        Task<List<Certify.Models.Shared.Validation.DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfo();
 
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState>? progress = null);
         Task<List<StatusMessage>> PerformChallengeCleanup(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null);

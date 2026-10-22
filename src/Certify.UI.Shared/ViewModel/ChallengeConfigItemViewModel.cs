@@ -15,8 +15,12 @@ namespace Certify.UI.ViewModel
         private const string NoCredentialOptionTitle = "(None)";
 
         private string? _selectedDnsPersistAccountUri;
+        private string? _selectedDnsPersistIssuer;
         private bool _dnsPersistPolicyWildcard;
-        private DateTime? _dnsPersistUntilDate;
+        private bool _dnsPersistUseDomainOptOut;
+        private long? _dnsPersistUntil;
+        private List<DnsPersistDirectoryInfo>? _dnsPersistDirectories;
+        private bool _isDnsPersistDirectoryLoading;
 
         /// <summary>
         /// Note: this view model has a complex binding relationship with the parent managed certificate view model. 
@@ -74,6 +78,7 @@ namespace Certify.UI.ViewModel
                         SelectedItem.ChallengeCredentialKey = null;
                         SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
                         EnsureDefaultDnsPersistAccountSelection();
+                        _ = InitDnsPersistGuidance();
                     }
 
                     RaiseDnsPersistStateChanged();
@@ -117,6 +122,7 @@ namespace Certify.UI.ViewModel
                     return new string[] {
                         SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
                         SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                        SupportedChallengeTypes.CHALLENGE_TYPE_DNS_ACCOUNT,
                         SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST
                     };
                 }
@@ -125,7 +131,11 @@ namespace Certify.UI.ViewModel
 
         public bool IsDnsPersistSelected => SelectedItem?.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST;
 
-        public ObservableCollection<AccountDetails> DnsPersistAccounts => _appViewModel.AccountDetails;
+        /// <summary>
+        /// One account per CA (production and staging) with an account: the one a request for that CA uses, which the
+        /// dns-persist-01 records are built for
+        /// </summary>
+        public List<AccountDetails> DnsPersistAccounts => AccountDetails.GetRequestAccounts(_appViewModel.AccountDetails, _appViewModel.CertificateAuthorities.Select(c => c.Id));
 
         public bool HasDnsPersistAccounts => DnsPersistAccounts?.Any() == true;
 
@@ -155,34 +165,123 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// The date picked for persistUntil. The record stops being used from 00:00 UTC on this date.
+        /// </summary>
         public DateTime? DnsPersistUntilDate
         {
-            get => _dnsPersistUntilDate;
+            get => DnsPersistRecordBuilder.GetPersistUntilDate(_dnsPersistUntil);
             set
             {
-                if (_dnsPersistUntilDate != value)
+                var persistUntil = DnsPersistRecordBuilder.GetPersistUntil(value);
+                if (_dnsPersistUntil != persistUntil)
                 {
-                    _dnsPersistUntilDate = value;
+                    _dnsPersistUntil = persistUntil;
                     RaiseDnsPersistStateChanged();
                 }
             }
         }
 
-        public string DnsPersistUntil => DnsPersistUntilDate.HasValue
-            ? new DateTimeOffset(DnsPersistUntilDate.Value.Date, TimeSpan.Zero).ToUnixTimeSeconds().ToString()
-            : string.Empty;
+        public bool IsDnsPersistUntilPassed => _dnsPersistUntil.HasValue && _dnsPersistUntil.Value <= DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        public string DnsPersistRecordExamplesText => string.Join(Environment.NewLine, GetDnsPersistRecordExamples());
-
-        public IReadOnlyList<string> GetDnsPersistRecordExamples()
+        public string? SelectedDnsPersistIssuer
         {
-            return CertificateEditorService.GetDnsPersistExampleRecords(
-                ParentManagedCertificate,
-                SelectedDnsPersistAccountUri,
-                includePolicyWildcard: DnsPersistPolicyWildcard,
-                persistUntil: DnsPersistUntil,
-                issuerDomainName: SelectedDnsPersistAccountUri?.Contains("letsencrypt.org") == true ? "letsencrypt.org" : "ca.example",
-                domainMatchRule: SelectedItem?.DomainMatch);
+            get => _selectedDnsPersistIssuer;
+            set
+            {
+                if (_selectedDnsPersistIssuer != value)
+                {
+                    _selectedDnsPersistIssuer = value;
+                    RaiseDnsPersistStateChanged();
+                }
+            }
+        }
+
+        public bool DnsPersistUseDomainOptOut
+        {
+            get => _dnsPersistUseDomainOptOut;
+            set
+            {
+                if (_dnsPersistUseDomainOptOut != value)
+                {
+                    _dnsPersistUseDomainOptOut = value;
+                    RaiseDnsPersistStateChanged();
+                }
+            }
+        }
+
+        private DnsPersistDirectoryInfo? SelectedDnsPersistDirectory => _dnsPersistDirectories?.FirstOrDefault(d => d.AccountUri == SelectedDnsPersistAccountUri);
+
+        public bool IsDnsPersistHashed => SelectedDnsPersistDirectory?.GetVariant() == DnsPersistVariant.HashedAccountUri;
+
+        public List<string> DnsPersistIssuerOptions => SelectedDnsPersistDirectory?.GetKnownIssuerDomainNames() ?? new List<string>();
+
+        public bool HasMultipleDnsPersistIssuers => DnsPersistIssuerOptions.Count > 1;
+
+        public bool HasNoDnsPersistIssuers => !_isDnsPersistDirectoryLoading && !DnsPersistIssuerOptions.Any();
+
+        public string DnsPersistIssuerPlaceholderWarning => $"This CA does not publish its issuer domain names. Replace {DnsPersistRecordBuilder.IssuerDomainNamePlaceholder} with the name given in the CA's documentation.";
+
+        private List<string> DnsPersistIdentifiers => DnsPersistRecordBuilder.GetGuidanceIdentifiers(ParentManagedCertificate, SelectedItem?.DomainMatch);
+
+        public bool DnsPersistHasWildcardIdentifiers => DnsPersistIdentifiers.Any(DnsPersistRecordBuilder.IsWildcard);
+
+        public string DnsPersistFormatDescription => DnsPersistRecordBuilder.GetGuidanceDescription(SelectedDnsPersistDirectory, _isDnsPersistDirectoryLoading);
+
+        /// <summary>
+        /// One record per _validation-persist name, for the selected account and the CA's published values
+        /// </summary>
+        public List<DnsPersistRecord> DnsPersistRecords => DnsPersistRecordBuilder.BuildGuidanceRecords(
+            DnsPersistIdentifiers,
+            SelectedDnsPersistDirectory,
+            SelectedDnsPersistAccountUri,
+            SelectedDnsPersistIssuer,
+            DnsPersistPolicyWildcard,
+            _dnsPersistUntil,
+            DnsPersistUseDomainOptOut);
+
+        public string DnsPersistZoneFileText => string.Join(Environment.NewLine, DnsPersistRecords.Select(r => r.ZoneFileEntry));
+
+        private bool _isDnsPersistGuidanceInitialised;
+
+        /// <summary>
+        /// Once dns-persist-01 is selected, tick policy=wildcard if any identifier is a wildcard and read what each
+        /// account's CA publishes about dns-persist-01
+        /// </summary>
+        private async Task InitDnsPersistGuidance()
+        {
+            if (!_isDnsPersistGuidanceInitialised)
+            {
+                _isDnsPersistGuidanceInitialised = true;
+                DnsPersistPolicyWildcard = DnsPersistHasWildcardIdentifiers;
+            }
+
+            await LoadDnsPersistDirectories();
+        }
+
+        /// <summary>
+        /// Read what each account's CA publishes. If that fails the directories stay unknown, and are read again the next
+        /// time dns-persist-01 guidance is shown.
+        /// </summary>
+        private async Task LoadDnsPersistDirectories()
+        {
+            if (_dnsPersistDirectories != null || _isDnsPersistDirectoryLoading)
+            {
+                return;
+            }
+
+            _isDnsPersistDirectoryLoading = true;
+            RaiseDnsPersistStateChanged();
+
+            try
+            {
+                _dnsPersistDirectories = await _appViewModel.GetDnsPersistDirectoryInfo();
+            }
+            finally
+            {
+                _isDnsPersistDirectoryLoading = false;
+                RaiseDnsPersistStateChanged();
+            }
         }
 
         public bool UsesCredentials { get; set; }
@@ -276,6 +375,11 @@ namespace Certify.UI.ViewModel
 
             EnsureDefaultDnsPersistAccountSelection();
 
+            if (IsDnsPersistSelected)
+            {
+                await InitDnsPersistGuidance();
+            }
+
             RaisePropertyChangedEvent(nameof(SelectedChallengeProvider));
             RaisePropertyChangedEvent(nameof(ProviderParameters));
             RaiseDnsPersistStateChanged();
@@ -357,7 +461,7 @@ namespace Certify.UI.ViewModel
             var definition = _appViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == SelectedItem.ChallengeProvider);
 
             // challenge provider has changed, by way of change to overall challenge type
-            if (SelectedItem.ChallengeType != definition?.ChallengeType)
+            if (SupportedChallengeTypes.GetProviderChallengeType(SelectedItem.ChallengeType) != definition?.ChallengeType)
             {
                 definition = null;
             }
@@ -460,8 +564,17 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(SelectedDnsPersistAccountUri));
             RaisePropertyChangedEvent(nameof(DnsPersistPolicyWildcard));
             RaisePropertyChangedEvent(nameof(DnsPersistUntilDate));
-            RaisePropertyChangedEvent(nameof(DnsPersistUntil));
-            RaisePropertyChangedEvent(nameof(DnsPersistRecordExamplesText));
+            RaisePropertyChangedEvent(nameof(IsDnsPersistUntilPassed));
+            RaisePropertyChangedEvent(nameof(SelectedDnsPersistIssuer));
+            RaisePropertyChangedEvent(nameof(DnsPersistUseDomainOptOut));
+            RaisePropertyChangedEvent(nameof(IsDnsPersistHashed));
+            RaisePropertyChangedEvent(nameof(DnsPersistIssuerOptions));
+            RaisePropertyChangedEvent(nameof(HasMultipleDnsPersistIssuers));
+            RaisePropertyChangedEvent(nameof(HasNoDnsPersistIssuers));
+            RaisePropertyChangedEvent(nameof(DnsPersistHasWildcardIdentifiers));
+            RaisePropertyChangedEvent(nameof(DnsPersistFormatDescription));
+            RaisePropertyChangedEvent(nameof(DnsPersistRecords));
+            RaisePropertyChangedEvent(nameof(DnsPersistZoneFileText));
         }
     }
 }

@@ -45,6 +45,18 @@ namespace Certify.Models.Shared
 
             [JsonProperty("externalAccountRequired")]
             public bool? ExternalAccountRequired { get; set; }
+
+            /// <summary>
+            /// dns-persist-01 issuer domain names usable before an order exists (draft-ietf-acme-dns-persist-02)
+            /// </summary>
+            [JsonProperty("issuerDomainNames")]
+            public IList<string>? IssuerDomainNames { get; set; }
+
+            /// <summary>
+            /// Prefix of dns-persist-01 hashed account URIs (draft-ietf-acme-dns-persist-02)
+            /// </summary>
+            [JsonProperty("accountHashPrefix")]
+            public string? AccountHashPrefix { get; set; }
         }
 
         [JsonProperty("newNonce")]

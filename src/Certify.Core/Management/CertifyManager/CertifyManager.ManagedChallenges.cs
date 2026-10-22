@@ -23,6 +23,15 @@ namespace Certify.Management
             return string.Equals(challengeType, SupportedChallengeTypes.CHALLENGE_TYPE_DNS, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// A managed challenge is a dns-01 configuration, whose DNS provider also answers dns-account-01 requests: the
+        /// same TXT record, at the identifier's _acme-challenge name under the caller's account label
+        /// </summary>
+        private static bool IsManagedChallengeRequestTypeSupported(string? challengeType)
+        {
+            return SupportedChallengeTypes.UsesDnsProvider(challengeType?.ToLowerInvariant());
+        }
+
         public async Task<ICollection<ManagedChallenge>> GetManagedChallenges()
         {
             return await _configStore.GetItems<ManagedChallenge>(nameof(ManagedChallenge));
@@ -489,8 +498,9 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// The identifier's own dns-01 TXT record name, which the matched challenge then writes (applying its own
-        /// CNAME delegation rule), or the refusal for a request naming any other record.
+        /// The identifier's own dns-01 TXT record name (or its dns-account-01 name, _{account label}._acme-challenge.{identifier},
+        /// when the requested name has an account label), which the matched challenge then writes (applying its own CNAME
+        /// delegation rule), or the refusal for a request naming any other record.
         ///
         /// Authorization is decided on the identifier, so the record written must be derived from it; a caller
         /// supplied name would otherwise place a record anywhere the challenge's DNS credentials can write.
@@ -513,7 +523,9 @@ namespace Certify.Management
                 return (null, new ActionResult { IsSuccess = false, Message = "The challenge identifier is not a valid DNS name." });
             }
 
-            foreach (var recordName in new[] { expected, ManagedChallengeAccess.GetDnsChallengeTestRecordName(request.Identifier) })
+            // a dns-account-01 response is at the identifier's own _acme-challenge name under the caller's account label,
+            // either as sent or as delegated by the challenge's rule, in the same way as for dns-01
+            foreach (var recordName in ManagedChallengeAccess.GetDnsChallengeRecordNames(request.Identifier, request.ResponseKey))
             {
                 if (ManagedChallengeAccess.IsSameDnsName(recordName, request.ResponseKey))
                 {
@@ -578,9 +590,9 @@ namespace Certify.Management
                 return new ManagedChallengeResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" };
             }
             else if (!IsManagedChallengeTypeSupported(matchingChallenge.ChallengeConfig.ChallengeType)
-                || !IsManagedChallengeTypeSupported(request.ChallengeType))
+                || !IsManagedChallengeRequestTypeSupported(request.ChallengeType))
             {
-                return Refused("Managed challenge only supports dns-01 requests");
+                return Refused("Managed challenge only supports dns-01 and dns-account-01 requests");
             }
             else
             {
@@ -736,9 +748,9 @@ namespace Certify.Management
                 return new ActionResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" };
             }
             else if (!IsManagedChallengeTypeSupported(matchingChallenge.ChallengeConfig.ChallengeType)
-                || !IsManagedChallengeTypeSupported(request.ChallengeType))
+                || !IsManagedChallengeRequestTypeSupported(request.ChallengeType))
             {
-                return new ActionResult { IsSuccess = false, Message = "Managed challenge only supports dns-01 requests" };
+                return new ActionResult { IsSuccess = false, Message = "Managed challenge only supports dns-01 and dns-account-01 requests" };
             }
             else
             {

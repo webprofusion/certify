@@ -19,6 +19,11 @@ namespace Certify.Models
         public int HashIterationCount { get; set; }
 
         /// <summary>
+        /// For dns-persist-01, what the CA accepts in the _validation-persist record
+        /// </summary>
+        public Shared.Validation.DnsPersistChallengeInfo? DnsPersist { get; set; }
+
+        /// <summary>
         /// A challenge may already have been validated in a previous request and this may still be
         /// OK to proceed without further validation steps
         /// </summary>

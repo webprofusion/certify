@@ -982,7 +982,7 @@ namespace Certify.UI.ViewModel
                 return new ValidationResult(true, string.Empty, string.Empty);
             }
 
-            foreach (var challenge in SelectedItem.RequestConfig.Challenges.Where(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && !string.IsNullOrWhiteSpace(c.ChallengeProvider)))
+            foreach (var challenge in SelectedItem.RequestConfig.Challenges.Where(c => SupportedChallengeTypes.UsesDnsProvider(c.ChallengeType) && !string.IsNullOrWhiteSpace(c.ChallengeProvider)))
             {
                 var provider = _appViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == challenge.ChallengeProvider);
                 if (provider?.ProviderParameters?.Any(p => p.IsCredential) == true
@@ -1022,7 +1022,7 @@ namespace Certify.UI.ViewModel
 
             RaiseSelectedItemChanges();
 
-            if (result.wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS))
+            if (result.wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c => SupportedChallengeTypes.UsesDnsProvider(c.ChallengeType) || c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST))
             {
                 // wildcard added but no DNS challenges exist yet
                 MessageBox.Show("You have added a wildcard domain, you will also need to configure a corresponding DNS challenge under Authorization. ");

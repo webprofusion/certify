@@ -124,31 +124,61 @@ namespace Certify.Shared.Core.Utils
         }
 
 #if NET6_0_OR_GREATER
+        /// <summary>
+        /// Get the value of the first TXT record at the given name, following any CNAME chain
+        /// </summary>
+        /// <returns>the TXT value, or null if there is none or the query failed</returns>
         public async Task<string> GetDNSRecordTXT(ILog log, string fullyQualifiedRecordName)
         {
+            return (await GetDNSRecordTXTValues(log, fullyQualifiedRecordName))?.FirstOrDefault();
+        }
 
+        /// <summary>
+        /// Get the values of all TXT records at the given name, following any CNAME chain
+        /// </summary>
+        /// <returns>the TXT values (character-strings of each record joined), or null if the query failed</returns>
+        public async Task<List<string>> GetDNSRecordTXTValues(ILog log, string fullyQualifiedRecordName)
+        {
             try
             {
-                // check TXT
-                var dn = DomainName.Parse(fullyQualifiedRecordName);
+                var name = DomainName.Parse(fullyQualifiedRecordName);
 
-                var query = await DnsClient.Default.ResolveAsync(dn, RecordType.Txt);
-
-                foreach (var txtRecord in query.AnswerRecords.Where(r => r.RecordType == RecordType.Txt))
+                for (var depth = 0; depth < 8; depth++)
                 {
-                    var r = ((TxtRecord)txtRecord);
-                    if (r.Name.ToString() == fullyQualifiedRecordName)
+                    var query = await DnsClient.Default.ResolveAsync(name, RecordType.Txt);
+
+                    if (query == null || (query.ReturnCode != ReturnCode.NoError && query.ReturnCode != ReturnCode.NxDomain))
                     {
-                        return r.TextData;
+                        log?.Warning($"'{fullyQualifiedRecordName}' DNS query for TXT records failed: {query?.ReturnCode}");
+                        return null;
                     }
+
+                    // the answer may hold the CNAME chain and the TXT records of its target
+                    var visited = 0;
+                    var cname = query.AnswerRecords.OfType<CNameRecord>().FirstOrDefault(r => r.Name.Equals(name));
+                    while (cname != null && visited++ < 8)
+                    {
+                        name = cname.CanonicalName;
+                        cname = query.AnswerRecords.OfType<CNameRecord>().FirstOrDefault(r => r.Name.Equals(name));
+                    }
+
+                    var values = query.AnswerRecords.OfType<TxtRecord>().Where(r => r.Name.Equals(name)).Select(r => r.TextData).ToList();
+
+                    if (values.Any() || visited == 0)
+                    {
+                        return values;
+                    }
+
+                    // the CNAME target's records were not in the answer, so query the target
                 }
             }
             catch (Exception exp)
             {
-                log.Error(exp, $"'{fullyQualifiedRecordName}' DNS error resolving TXT record ");
+                log?.Error(exp, $"'{fullyQualifiedRecordName}' DNS error resolving TXT records");
+                return null;
             }
 
-            return null;
+            return new List<string>();
         }
 #endif
 

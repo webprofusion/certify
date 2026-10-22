@@ -16,6 +16,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
+using Certify.Models.Shared.Validation;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
 
@@ -492,7 +493,9 @@ namespace Certify.Providers.ACME.Anvil
                         TermsOfService = dir.Meta?.TermsOfService,
                         Website = dir.Meta?.Website,
                         CaaIdentities = dir.Meta?.CaaIdentities,
-                        ExternalAccountRequired = dir.Meta?.ExternalAccountRequired
+                        ExternalAccountRequired = dir.Meta?.ExternalAccountRequired,
+                        IssuerDomainNames = dir.Meta?.IssuerDomainNames,
+                        AccountHashPrefix = dir.Meta?.AccountHashPrefix
                     },
                     RenewalInfo = dir.RenewalInfo
                 };
@@ -1025,6 +1028,7 @@ namespace Certify.Providers.ACME.Anvil
                         var includeDns01 = true;
                         var includeTkAuth01 = true;
                         var includeDnsPersist01 = config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST) == true;
+                        var includeDnsAccount01 = config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_ACCOUNT) == true;
 
                         if (_compatibilityMode == ACMECompatibilityMode.AltProvider1)
                         {
@@ -1159,6 +1163,54 @@ namespace Certify.Providers.ACME.Anvil
                             }
                         }
 
+                        // add dns-account-01 challenge (if any) - draft-ietf-acme-dns-account-label. The TXT value is as for
+                        // dns-01, the record name has an account specific label: _{label}._acme-challenge.{domain}
+                        if (includeDnsAccount01)
+                        {
+                            IChallengeContext dnsAccountChallenge = null;
+                            try
+                            {
+                                var allChallenges = await authContext.Challenges();
+                                dnsAccountChallenge = allChallenges.FirstOrDefault(ch => ch.Type == ChallengeTypes.DnsAccount01);
+                            }
+                            catch (Exception)
+                            {
+                                log.Information("Could not fetch a dns-account-01 challenge for this identifier: " + authzDomain);
+                            }
+
+                            if (dnsAccountChallenge == null)
+                            {
+                                log.Warning($"The CA did not offer a dns-account-01 challenge for {authzDomain}.");
+                            }
+                            else
+                            {
+                                var dnsAccountChallengeStatus = useAuthzForChallengeStatus
+                                    ? allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.DnsAccount01)
+                                    : await dnsAccountChallenge.Resource();
+
+                                if (dnsAccountChallengeStatus != null)
+                                {
+                                    log.Information($"Got dns-account-01 challenge {dnsAccountChallengeStatus.Url}");
+
+                                    if (dnsAccountChallengeStatus.Status == ChallengeStatus.Invalid)
+                                    {
+                                        log?.Error($"dns-account-01 challenge has an invalid status");
+                                    }
+
+                                    var accountUri = _settings?.AccountUri ?? (await _acme.GetAccountUri())?.ToString();
+
+                                    challenges.Add(new AuthorizationChallengeItem
+                                    {
+                                        ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS_ACCOUNT,
+                                        Key = DnsAccountLabel.GetRecordName(accountUri, authzDomain),
+                                        Value = _acme.AccountKey.DnsTxt(dnsAccountChallenge.Token),
+                                        ChallengeContext = dnsAccountChallenge,
+                                        IsValidated = (dnsAccountChallengeStatus.Status == ChallengeStatus.Valid)
+                                    });
+                                }
+                            }
+                        }
+
                         // add TkAuth challenge (if any)
                         if (includeTkAuth01)
                         {
@@ -1243,14 +1295,11 @@ namespace Certify.Providers.ACME.Anvil
                                         log?.Error($"dns-persist-01 challenge has an invalid status");
                                     }
 
-                                    // choose first available issuer domain name provided by the CA
-                                    var issuerDomainName = dnsPersistChallengeStatus.IssuerDomainNames?.FirstOrDefault() ?? string.Empty;
-
-                                    // TXT record name: _validation-persist.{domain} (wildcards use base domain)
-                                    var persistKey = $"_validation-persist.{authzDomain}".Replace("*.", "");
+                                    var isValidated = dnsPersistChallengeStatus.Status == ChallengeStatus.Valid;
 
                                     var currentAccountUri = _settings?.AccountUri ?? (await _acme.GetAccountUri())?.ToString();
 
+                                    // draft-01 includes accounturi in the challenge object, which must identify the current account
                                     if (!string.IsNullOrWhiteSpace(dnsPersistChallengeStatus.AccountUri)
                                         && !string.Equals(dnsPersistChallengeStatus.AccountUri, currentAccountUri, StringComparison.Ordinal))
                                     {
@@ -1261,27 +1310,51 @@ namespace Certify.Providers.ACME.Anvil
                                         return new PendingOrder(msg);
                                     }
 
-                                    // TXT record value per spec: "{issuer-domain-name}; accounturi={accountUri}"
-                                    // draft-01 adds accounturi to the challenge object. The client validates
-                                    // that the CA-provided account URI identifies the current account, then
-                                    // uses that exact value in the persistent DNS record.
-                                    var accountUri = dnsPersistChallengeStatus.AccountUri ?? currentAccountUri;
-                                    var persistValue = $"{issuerDomainName}; accounturi={accountUri}";
+                                    var directoryMeta = (await _acme.GetDirectory())?.Meta;
 
-                                    if (authzDomain.StartsWith("*.", StringComparison.Ordinal))
+                                    var persistInfo = new DnsPersistChallengeInfo
                                     {
-                                        persistValue += "; policy=wildcard";
+                                        Variant = DnsPersistRecordBuilder.DetectVariant(directoryMeta?.AccountHashPrefix),
+                                        IssuerDomainNames = DnsPersistRecordBuilder.NormalizeDomainNames(dnsPersistChallengeStatus.IssuerDomainNames),
+                                        DirectoryIssuerDomainNames = DnsPersistRecordBuilder.NormalizeDomainNames(directoryMeta?.IssuerDomainNames),
+                                        AccountHashPrefix = directoryMeta?.AccountHashPrefix,
+                                        AccountUrl = currentAccountUri,
+                                        AccountThumbprint = _acme.AccountKey?.Thumbprint()
+                                    };
+
+                                    var issuerProblem = DnsPersistRecordBuilder.ValidateIssuerDomainNames(dnsPersistChallengeStatus.IssuerDomainNames, directoryMeta?.IssuerDomainNames, directoryMeta?.CaaIdentities);
+
+                                    if (issuerProblem != null && !isValidated)
+                                    {
+                                        var msg = $"{issuerProblem} [{authzDomain}]";
+                                        log?.Error(msg);
+
+                                        _currentOrders.TryRemove(orderUri, out var existingOrderContext);
+                                        return new PendingOrder(msg);
                                     }
 
-                                    log.Information($"dns-persist-01: CA will check for TXT record with name '{persistKey}' with value equivalent to '{persistValue}'");
+                                    // the record to create, before checking DNS for an existing record (see ChallengeResponseService)
+                                    var persistRecord = DnsPersistRecordBuilder.Build(new DnsPersistRecordOptions
+                                    {
+                                        Variant = persistInfo.Variant,
+                                        Domain = authzDomain,
+                                        IssuerDomainName = DnsPersistRecordBuilder.ChooseIssuerDomainName(persistInfo.IssuerDomainNames, persistInfo.DirectoryIssuerDomainNames, null),
+                                        AccountUrl = persistInfo.AccountUrl,
+                                        AccountThumbprint = persistInfo.AccountThumbprint,
+                                        AccountHashPrefix = persistInfo.AccountHashPrefix,
+                                        PolicyWildcard = DnsPersistRecordBuilder.IsWildcard(authzDomain)
+                                    });
+
+                                    log.Information($"dns-persist-01 ({persistInfo.Variant}): the CA accepts a TXT record at '{persistRecord.Name}' for any of [{string.Join(", ", persistInfo.IssuerDomainNames)}], such as '{persistRecord.Value}'");
 
                                     challenges.Add(new AuthorizationChallengeItem
                                     {
                                         ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST,
-                                        Key = persistKey,
-                                        Value = persistValue,
+                                        Key = persistRecord.Name,
+                                        Value = persistRecord.Value,
+                                        DnsPersist = persistInfo,
                                         ChallengeContext = dnsPersistChallenge,
-                                        IsValidated = (dnsPersistChallengeStatus.Status == ChallengeStatus.Valid)
+                                        IsValidated = isValidated
                                     });
                                 }
                             }

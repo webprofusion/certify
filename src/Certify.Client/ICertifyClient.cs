@@ -106,6 +106,7 @@ namespace Certify.Client
         Task<ActionResult> UpdateAccountContact(ContactRegistration contact, AuthContext authContext = null);
         Task<ActionResult> RemoveAccount(string storageKey, bool deactivate, AuthContext authContext = null);
         Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM = null, AuthContext authContext = null);
+        Task<List<Models.Shared.Validation.DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfo(AuthContext authContext = null);
         #endregion Accounts
 
         #region Hub Subscriptions

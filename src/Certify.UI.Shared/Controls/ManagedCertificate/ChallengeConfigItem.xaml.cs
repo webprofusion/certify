@@ -240,6 +240,21 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private void CopyDnsPersistValue_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is string value && !string.IsNullOrEmpty(value))
+            {
+                try
+                {
+                    Clipboard.SetText(value);
+                }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    // the clipboard can be briefly locked by another application
+                }
+            }
+        }
+
         private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // ignore the initial selection from binding when the config is displayed, only react to a change of type
@@ -248,7 +263,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-            if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+            if (SupportedChallengeTypes.UsesDnsProvider((string)ChallengeTypeList.SelectedValue))
             {
                 if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {

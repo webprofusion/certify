@@ -793,6 +793,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<AccountDetails>>(result);
         }
 
+        public async Task<List<Models.Shared.Validation.DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfo(AuthContext authContext = null)
+        {
+            var result = await FetchAsync("accounts/dnspersist", authContext);
+            return JsonConvert.DeserializeObject<List<Models.Shared.Validation.DnsPersistDirectoryInfo>>(result);
+        }
+
         public async Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext authContext = null)
         {
             var result = await PostAsync("accounts", contact, authContext);

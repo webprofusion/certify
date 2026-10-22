@@ -173,10 +173,12 @@ namespace Certify.Management
                             newLine);
                     }
 
-                    if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                    if (SupportedChallengeTypes.UsesDnsProvider(challengeConfig.ChallengeType))
                     {
                         challengeInfo.AppendLine(
-                            $"This will involve the creation of a DNS TXT record named `_acme-challenge.yourdomain.com` for each domain or subdomain included in the certificate. " +
+                            (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_ACCOUNT
+                                ? $"This will involve the creation of a DNS TXT record named `_<account label>._acme-challenge.yourdomain.com` (dns-account-01, where the label is derived from the ACME account) for each domain or subdomain included in the certificate. "
+                                : $"This will involve the creation of a DNS TXT record named `_acme-challenge.yourdomain.com` for each domain or subdomain included in the certificate. ") +
                             newLine);
 
                         if (!string.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))

@@ -832,6 +832,14 @@ namespace Certify.Management
                 }
             }
 
+            // dns-persist-01 records are checked against the values of the account and CA the request will use, and
+            // dns-account-01 record names are derived from that account
+            var challengeAccount = await GetChallengeRecordAccount(managedCertificate);
+
+            var dnsPersistDirectory = challengeAccount != null && managedCertificate.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
+                ? await GetDnsPersistDirectoryInfo(challengeAccount)
+                : null;
+
             results.AddRange(
                 await _challengeResponseService.TestChallengeResponse(
                     log,
@@ -841,7 +849,9 @@ namespace Certify.Management
                     CoreAppSettings.Current.EnableDNSValidationChecks,
                     performCleanupOnly: false,
                     _credentialsManager,
-                    progress
+                    progress,
+                    dnsPersistDirectory,
+                    challengeAccount?.AccountURI
                 )
             );
 
@@ -870,6 +880,22 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// The ACME account a request for the item would use, when one of its challenges depends on it: dns-account-01
+        /// record names are derived from the account URL, and dns-persist-01 records are checked against the account
+        /// and its CA. Null if no challenge needs it, or the item has no account.
+        /// </summary>
+        private async Task<AccountDetails> GetChallengeRecordAccount(ManagedCertificate managedCertificate)
+        {
+            if (managedCertificate.RequestConfig.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_ACCOUNT || c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST) != true)
+            {
+                return null;
+            }
+
+            var caAccount = await GetAccountDetails(managedCertificate, logOnFailure: false);
+            return string.IsNullOrEmpty(caAccount?.AccountURI) ? null : caAccount;
+        }
+
+        /// <summary>
         /// Perform a forced cleanup of challenges where possible. This is particularly useful for cleanup of stray DNS challenge TXT records.
         /// </summary>
         /// <param name="log">Log to use</param>
@@ -891,7 +917,8 @@ namespace Certify.Management
                    enableDnsChecks: false,
                    performCleanupOnly: true,
                    credentialsManager: _credentialsManager,
-                   progress
+                   progress,
+                   acmeAccountUri: (await GetChallengeRecordAccount(managedCertificate))?.AccountURI
                )
            );
 

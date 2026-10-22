@@ -21,6 +21,12 @@ namespace Certify.Service.Controllers
             return await _certifyManager.GetAccountRegistrations();
         }
 
+        [HttpGet, Route("dnspersist")]
+        public async Task<List<Models.Shared.Validation.DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfo()
+        {
+            return await _certifyManager.GetDnsPersistDirectoryInfo();
+        }
+
         [HttpPost, Route("")]
         [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> AddAccount(ContactRegistration registration)

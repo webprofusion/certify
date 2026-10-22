@@ -702,6 +702,47 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Why the order cannot proceed when the CA did not offer the configured challenge type for an identifier still
+        /// to be validated (e.g. dns-account-01 from a CA which does not support it), or null when every pending
+        /// authorization has a challenge of its configured type. Checked before any challenge response is prepared.
+        /// </summary>
+        internal static string GetUnavailableChallengeTypeMessage(ManagedCertificate managedCertificate, IEnumerable<PendingAuthorization> authorizations)
+        {
+            var idnMapping = new IdnMapping();
+            var problems = new List<string>();
+
+            foreach (var identifier in managedCertificate.GetCertificateIdentifiers())
+            {
+                var authKey = identifier.IdentifierType == CertIdentifierType.Dns ? idnMapping.GetAscii(identifier.Value).ToLower() : identifier.Value;
+
+                var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Value == authKey && a.Identifier?.IdentifierType.ToLower() == identifier.IdentifierType.ToLower());
+
+                // an authorization which is already valid needs no challenge
+                if (authorization?.Identifier == null || authorization.IsValidated || authorization.Identifier.IsAuthorizationPending == false)
+                {
+                    continue;
+                }
+
+                var challengeType = managedCertificate.GetChallengeConfig(identifier).ChallengeType;
+
+                if (authorization.Challenges?.Any(c => c.ChallengeType == challengeType) != true)
+                {
+                    var offered = authorization.Challenges?.Select(c => c.ChallengeType).Where(t => !string.IsNullOrEmpty(t)).Distinct().ToList() ?? [];
+
+                    problems.Add($"The Certificate Authority did not offer a {challengeType} challenge for {identifier.Value}"
+                        + (offered.Any() ? $" (challenge types available include {string.Join(", ", offered)})." : "."));
+                }
+            }
+
+            if (!problems.Any())
+            {
+                return null;
+            }
+
+            return string.Join(" ", problems) + " Choose a challenge type this CA supports, or a CA which supports the configured challenge type.";
+        }
+
+        /// <summary>
         /// Describe what a person must do for each challenge awaiting them. The DNS record to create is given in full
         /// where it is known exactly; with a challenge delegation rule the record is somewhere else, which only the
         /// instructions describe.
@@ -724,7 +765,7 @@ namespace Certify.Management
                 var hasDelegation = authorization.Identifier != null
                     && !string.IsNullOrEmpty(managedCertificate.GetChallengeConfig(authorization.Identifier)?.ChallengeDelegationRule);
 
-                if (challenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && !hasDelegation && !string.IsNullOrEmpty(challenge.Key))
+                if (SupportedChallengeTypes.UsesDnsProvider(challenge.ChallengeType) && !hasDelegation && !string.IsNullOrEmpty(challenge.Key))
                 {
                     action.Title = "Create DNS record";
                     action.RecordName = challenge.Key;
@@ -880,6 +921,22 @@ namespace Certify.Management
                 {
                     // store the Order Uri so we can resume the order later if required
                     managedCertificate.CurrentOrderUri = pendingOrder.OrderUri;
+                }
+
+                // the configured challenge type must be one the CA offered, otherwise nothing can be prepared or submitted
+                var unavailableChallengeMessage = GetUnavailableChallengeTypeMessage(managedCertificate, authorizations);
+                if (unavailableChallengeMessage != null)
+                {
+                    log?.Error(unavailableChallengeMessage);
+
+                    result.IsSuccess = false;
+                    result.Abort = true;
+                    result.Message = unavailableChallengeMessage;
+                    SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
+
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
+
+                    return result;
                 }
 
                 // perform all automated challenges (creating either http resources within the identifier
@@ -1727,7 +1784,7 @@ namespace Certify.Management
                 var challengeConfig = managedCertificate.GetChallengeConfig(identifier);
 
                 // if our challenge takes a while to propagate, wait
-                if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                if (SupportedChallengeTypes.UsesDnsProvider(challengeConfig.ChallengeType))
                 {
                     result.ChallengeResponsePropagationSeconds = 60;
                 }

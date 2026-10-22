@@ -51,6 +51,7 @@
         "Certify.Config",
         "Certify.Models",
         "Certify.Models.Shared",
+        "Certify.Models.Shared.Validation",
         "Certify.Models.Reporting",
         "Certify.Models.Config",
         "Certify.Models.API",

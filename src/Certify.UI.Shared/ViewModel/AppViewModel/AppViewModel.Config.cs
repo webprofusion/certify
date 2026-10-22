@@ -110,6 +110,8 @@ namespace Certify.UI.ViewModel
 
             var list = await client.GetAccounts();
 
+            _dnsPersistDirectories = null;
+
             AccountDetails.Clear();
 
             var tmpList = new List<AccountDetails>();
@@ -124,6 +126,37 @@ namespace Certify.UI.ViewModel
                 .OrderBy(t => t.Title)
                 .ToList()
                 .ForEach(a => AccountDetails.Add(a));
+        }
+
+        private List<Models.Shared.Validation.DnsPersistDirectoryInfo> _dnsPersistDirectories;
+
+        /// <summary>
+        /// What each ACME account's CA publishes about dns-persist-01. This contacts the CAs, so the result is kept
+        /// until the accounts change. Null if it could not be read, so a later call tries again.
+        /// </summary>
+        public async Task<List<Models.Shared.Validation.DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfo()
+        {
+            if (_dnsPersistDirectories != null)
+            {
+                return _dnsPersistDirectories;
+            }
+
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return null;
+            }
+
+            try
+            {
+                _dnsPersistDirectories = await client.GetDnsPersistDirectoryInfo() ?? new List<Models.Shared.Validation.DnsPersistDirectoryInfo>();
+            }
+            catch
+            {
+                // the service may be unavailable, or an older one may not provide this, in which case records use the plain account URL
+                return null;
+            }
+
+            return _dnsPersistDirectories;
         }
 
         /// <summary>

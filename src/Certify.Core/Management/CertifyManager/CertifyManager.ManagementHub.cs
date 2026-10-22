@@ -1248,6 +1248,10 @@ namespace Certify.Management
 
                 val = accounts;
             }
+            else if (arg.CommandType == ManagementHubCommands.GetDnsPersistDirectoryInfo)
+            {
+                val = await GetDnsPersistDirectoryInfo();
+            }
             else if (arg.CommandType == ManagementHubCommands.AddAcmeAccount)
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);

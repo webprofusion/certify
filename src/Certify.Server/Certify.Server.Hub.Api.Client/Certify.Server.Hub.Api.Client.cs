@@ -7,6 +7,7 @@
 using Certify.Config;
 using Certify.Models;
 using Certify.Models.Shared;
+using Certify.Models.Shared.Validation;
 using Certify.Models.Reporting;
 using Certify.Models.Config;
 using Certify.Models.API;
@@ -2432,6 +2433,93 @@ namespace Certify.Server.Hub.Api
                         if (status_ == 200)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<AccountDetails>>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Get the dns-persist-01 values each ACME account's CA publishes in its directory [Generated]
+        /// </summary>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfoAsync(string instanceId)
+        {
+            return GetDnsPersistDirectoryInfoAsync(instanceId, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Get the dns-persist-01 values each ACME account's CA publishes in its directory [Generated]
+        /// </summary>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfoAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
+        {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "internal/v1/certificateauthority/{instanceId}/accounts/dnspersist"
+                    urlBuilder_.Append("internal/v1/certificateauthority/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/accounts/dnspersist");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<DnsPersistDirectoryInfo>>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -7224,7 +7312,7 @@ namespace Certify.Server.Hub.Api
         /// <summary>
         /// Handle OIDC callback and complete authentication
         /// </summary>
-        /// <param name="body">Error description</param>
+        /// <param name="body">Authorization code, state, or error returned to the redirect URI by the OIDC provider</param>
         /// <returns>Authentication result</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<AuthResponse> CompleteOidcLoginAsync(OidcCallbackBody body)
@@ -7236,7 +7324,7 @@ namespace Certify.Server.Hub.Api
         /// <summary>
         /// Handle OIDC callback and complete authentication
         /// </summary>
-        /// <param name="body">Error description</param>
+        /// <param name="body">Authorization code, state, or error returned to the redirect URI by the OIDC provider</param>
         /// <returns>Authentication result</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<AuthResponse> CompleteOidcLoginAsync(OidcCallbackBody body, System.Threading.CancellationToken cancellationToken)

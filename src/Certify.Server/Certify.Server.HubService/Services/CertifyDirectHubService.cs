@@ -193,6 +193,7 @@ namespace Certify.Server.HubService.Services
         public Task<bool> DeleteManagedCertificate(string managedItemId, AuthContext? authContext = null) => throw new NotImplementedException();
 
         public Task<List<AccountDetails>> GetAccounts(AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<List<Models.Shared.Validation.DnsPersistDirectoryInfo>> GetDnsPersistDirectoryInfo(AuthContext? authContext = null) => new ServiceControllers.AccountsController(_certifyManager).GetDnsPersistDirectoryInfo();
         public Task<string> GetAppVersion(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.SystemController(_certifyManager).GetAppVersion());
 
         public Task<List<CertificateAuthority>> GetCertificateAuthorities(AuthContext? authContext = null) => new ServiceControllers.AccountsController(_certifyManager).GetCertificateAuthorities();
