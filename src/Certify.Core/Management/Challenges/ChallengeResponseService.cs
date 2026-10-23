@@ -58,6 +58,8 @@ namespace Certify.Core.Management.Challenges
 
             var checkedPersistRecords = new HashSet<string>(StringComparer.Ordinal);
 
+            var manualDnsNoticeAdded = false;
+
             var requestConfig = managedCertificate.RequestConfig;
 
             if (!performCleanupOnly)
@@ -181,6 +183,18 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (SupportedChallengeTypes.UsesDnsProvider(challengeType))
                     {
+                        // manual DNS can't be tested, a test record would only ask the user to create a record that is never used
+                        if (!performCleanupOnly && challengeConfig.ChallengeProvider == DNS.DnsProviderManual.Definition.Id)
+                        {
+                            if (!manualDnsNoticeAdded)
+                            {
+                                results.Add(new StatusMessage { IsOK = true, Message = "No test available for Manual DNS. The DNS records to create will be shown when the certificate is requested." });
+                                manualDnsNoticeAdded = true;
+                            }
+
+                            continue;
+                        }
+
                         var recordName = $"{Certify.Models.Hub.ManagedChallengeAccess.DnsChallengeTestRecordPrefix}{domain.Value}".Replace("*.", "");
 
                         // the record a real challenge response uses, which for dns-account-01 depends on the ACME account
