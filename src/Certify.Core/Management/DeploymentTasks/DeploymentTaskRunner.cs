@@ -321,13 +321,18 @@ namespace Certify.Core.Management.DeploymentTasks
                     subSteps.Add(new ActionStep
                     {
                         HasError = !r.IsSuccess,
+                        HasWarning = r.IsSuccess && r.IsWarning,
                         Description = r.Message,
                         Title = $"Task Step {stepIndex} of {task.TaskConfig.TaskName}",
                         Key = task.TaskConfig.Id + "_" + stepIndex,
                         Category = "Task Step"
                     });
 
-                    if (r.IsSuccess)
+                    if (r.IsSuccess && r.IsWarning)
+                    {
+                        log?.Warning(r.Message);
+                    }
+                    else if (r.IsSuccess)
                     {
                         log?.Information(r.Message);
                     }
@@ -341,9 +346,16 @@ namespace Certify.Core.Management.DeploymentTasks
 
                 var overallTaskResult = "Unknown";
 
+                var warningResult = taskResults?.FirstOrDefault(t => t.IsSuccess && t.IsWarning);
+
                 if (taskResults != null && taskResults.Any(t => t.IsSuccess == false))
                 {
                     overallTaskResult = taskResults.First(t => t.IsSuccess == false).Message;
+                }
+                else if (warningResult != null)
+                {
+                    // the task ran but reported something which needs attention, which "Task Completed OK" would hide
+                    overallTaskResult = warningResult.Message;
                 }
                 else
                 {
@@ -373,7 +385,7 @@ namespace Certify.Core.Management.DeploymentTasks
                     Category = "Task",
                     HasError = hasError,
                     Description = overallTaskResult,
-                    HasWarning = !shouldRunCurrentTask,
+                    HasWarning = !shouldRunCurrentTask || (!hasError && warningResult != null),
                     Substeps = subSteps
                 };
 

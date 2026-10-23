@@ -23,7 +23,8 @@ namespace Certify.Providers.DeploymentTasks.Core
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter{ Key="message", Name="Message", IsRequired=true, IsCredential=false, Description="Test message"  },
-                    new ProviderParameter{ Key="throw", Name="Throw on demand", IsRequired=true, IsCredential=false, Description="If true, throw exception during task", Type= OptionType.Boolean  }
+                    new ProviderParameter{ Key="throw", Name="Throw on demand", IsRequired=true, IsCredential=false, Description="If true, throw exception during task", Type= OptionType.Boolean  },
+                    new ProviderParameter{ Key="warn", Name="Warn on demand", IsRequired=false, IsCredential=false, Description="If true, report a warning from the task", Type= OptionType.Boolean  }
                 }
             };
         }
@@ -43,6 +44,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             var msg = execParams.Settings.Parameters.FirstOrDefault(c => c.Key == "message")?.Value;
 
             bool.TryParse(execParams.Settings.Parameters.FirstOrDefault(c => c.Key == "throw")?.Value, out var shouldThrow);
+            bool.TryParse(execParams.Settings.Parameters.FirstOrDefault(c => c.Key == "warn")?.Value, out var shouldWarn);
 
             if (string.IsNullOrEmpty(msg))
             {
@@ -61,7 +63,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 {
                     execParams.Log?.Information($"Mock Task says: {msg}");
                     return await Task.FromResult(new List<ActionResult> {
-                        new ActionResult($"{msg}.", true),
+                        new ActionResult($"{msg}.", true) { IsWarning = shouldWarn },
                         new ActionResult($"MockTaskWorkCompleted.", true)
                     });
                 }

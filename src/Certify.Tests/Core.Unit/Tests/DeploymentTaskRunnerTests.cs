@@ -50,6 +50,7 @@ namespace Certify.Tests.Core.Unit.Tests
             string name,
             string msg = "Hello World",
             bool shouldError = false,
+            bool shouldWarn = false,
             bool fatalOnError = true,
             bool continueOnPreviousError = false,
             TaskTriggerType triggerType = TaskTriggerType.ANY_STATUS
@@ -67,6 +68,7 @@ namespace Certify.Tests.Core.Unit.Tests
                         {
                             new ProviderParameterSetting("message", msg),
                             new ProviderParameterSetting("throw", shouldError.ToString()),
+                            new ProviderParameterSetting("warn", shouldWarn.ToString()),
                         }
             };
         }
@@ -389,6 +391,26 @@ namespace Certify.Tests.Core.Unit.Tests
 
             AssertTaskSkipped(steps, disabled, "the task is not enabled");
             AssertTaskRan(steps, anyStatus, "the task runs for any status");
+        }
+
+        [TestMethod, TestCategory("Tasks"), Description("A task which runs but reports a warning is reported with that warning, not as completed OK")]
+        public async Task TestTaskWarningIsReported()
+        {
+            // e.g. a service restart task which declines to stop the service it is running in
+            var warns = GetMockTaskConfig("Post Task (warns)", msg: "Service was not stopped", shouldWarn: true);
+            var anyStatus = GetMockTaskConfig("Post Task (any status)", triggerType: TaskTriggerType.ANY_STATUS);
+
+            var result = GetRequestResult("PostDeploymentTaskWarning", RequestState.Success);
+
+            var steps = await RunPostRequestTasks(result, warns, anyStatus);
+
+            var step = StepFor(steps, warns);
+            Assert.IsTrue(step.HasWarning, "The task's warning should be reported on its step");
+            Assert.IsFalse(step.HasError, "A warning is not a failure");
+            Assert.AreEqual("Service was not stopped.", step.Description, "The step should describe the warning rather than report the task completed OK");
+            Assert.AreEqual(RequestState.Success, warns.LastRunStatus, "The task ran, so its run is recorded as successful");
+
+            AssertTaskRan(steps, anyStatus, "a warning from a preceding task does not stop later tasks");
         }
 
         [TestMethod, TestCategory("Tasks"), Description("An unknown task provider is reported as a failed task rather than being dropped")]
