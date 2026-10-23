@@ -757,8 +757,8 @@ namespace Certify.Management
                     {
                         _serviceLog.Warning("Diagnostic Check Failed: " + d.Message);
 
-                        // report diagnostic failures (if enabled)
-                        if (reportingEmail != null && CoreAppSettings.Current.EnableStatusReporting && _dashboardClient != null)
+                        // report diagnostic failures (if enabled). The email is optional, the API falls back to the dashboard owner of this instance
+                        if (CoreAppSettings.Current.EnableStatusReporting && _dashboardClient != null)
                         {
 
                             try
