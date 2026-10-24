@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certify.Models.Config;
@@ -52,12 +54,100 @@ namespace Certify.Management
             return true;
         }
 
-        #region Tag Categories
+        #region Tag Ids
+
+        // Tag categories, values and item tags are stored under ids derived from what identifies them, so concurrent creates
+        // of the same tag upsert one stored item instead of adding duplicates. Renaming a value changes what identifies it,
+        // so a renamed value and its item tags are stored again under their new ids.
+
+        private static string GetTagCategoryId(string categoryKey) => $"tagcategory:{categoryKey}";
+
+        // values match case insensitively
+        private static string GetTagValueId(string categoryKey, string value) => $"tagvalue:{HashTagKey(categoryKey, value?.ToUpperInvariant())}";
+
+        private static string GetItemTagId(ItemTag tag) => $"itemtag:{HashTagKey(tag.TaggedItemType, tag.TaggedItemId, tag.CategoryKey, tag.Value)}";
+
+        // hashed to keep ids short and safe to use in a url whatever the value text
+        private static string HashTagKey(params string?[] parts) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", parts))));
 
         /// <summary>
-        /// Category ids are derived from the key, so concurrent creates of the same key upsert one stored item instead of adding duplicates
+        /// Store every tag category, value and item tag under its derived id. Items written before ids were derived get their
+        /// derived id, and items stored more than once are merged into one. Categories and values are referred to by key and
+        /// value text, never by id, so nothing else needs updating.
         /// </summary>
-        private static string GetTagCategoryId(string categoryKey) => $"tagcategory:{categoryKey}";
+        private async Task MergeDuplicateTags()
+        {
+            try
+            {
+                await StoreUnderDerivedIds<TagCategory>(c => GetTagCategoryId(c.CategoryKey));
+                var merged = await StoreUnderDerivedIds<TagValue>(v => GetTagValueId(v.CategoryKey, v.Value))
+                    + await StoreUnderDerivedIds<ItemTag>(GetItemTagId);
+
+                if (merged > 0)
+                {
+                    var itemTags = await GetAllHubItemTags();
+                    foreach (var tagValue in await _configStore.GetItems<TagValue>(nameof(TagValue)))
+                    {
+                        var usageCount = itemTags.Count(t => t.CategoryKey == tagValue.CategoryKey && t.Value == tagValue.Value);
+                        if (tagValue.UsageCount != usageCount)
+                        {
+                            tagValue.UsageCount = usageCount;
+                            await _configStore.Update<TagValue>(nameof(TagValue), tagValue);
+                        }
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error(exp, "Failed to merge duplicate tags. {Message}", exp.Message);
+            }
+        }
+
+        /// <returns>the number of duplicate items removed</returns>
+        private async Task<int> StoreUnderDerivedIds<T>(Func<T, string> getId) where T : ConfigurationStoreItem
+        {
+            var itemType = typeof(T).Name;
+            var stored = await _configStore.GetItems<T>(itemType);
+            var removed = 0;
+
+            foreach (var group in stored.GroupBy(getId))
+            {
+                var storedIds = group.Select(i => i.Id).ToList();
+                if (storedIds.Count == 1 && storedIds[0] == group.Key)
+                {
+                    continue;
+                }
+
+                var kept = group
+                    .OrderByDescending(i => i.Id == group.Key)
+                    .ThenBy(i => i.Id, StringComparer.Ordinal)
+                    .First();
+
+                if (kept.Id != group.Key)
+                {
+                    kept.Id = group.Key;
+                    await _configStore.Update<T>(itemType, kept);
+                }
+
+                foreach (var id in storedIds.Where(id => id != group.Key))
+                {
+                    await _configStore.Delete<T>(itemType, id);
+                }
+
+                removed += storedIds.Count - 1;
+            }
+
+            if (removed > 0)
+            {
+                _serviceLog?.Information("Merged {Count} duplicate {ItemType} items", removed, itemType);
+            }
+
+            return removed;
+        }
+
+        #endregion
+
+        #region Tag Categories
 
         /// <summary>
         /// Get all tag categories
@@ -151,35 +241,11 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Merge categories stored more than once under the same key, possible before category ids were derived from the key.
-        /// Tag values and item tags refer to the category by key, so only the extra category items need removing.
-        /// </summary>
-        private async Task MergeDuplicateTagCategories()
-        {
-            var stored = await _configStore.GetItems<TagCategory>(nameof(TagCategory));
-
-            foreach (var group in stored.GroupBy(c => c.CategoryKey).Where(g => g.Count() > 1))
-            {
-                var kept = group
-                    .OrderByDescending(c => c.Id == GetTagCategoryId(c.CategoryKey))
-                    .ThenByDescending(c => c.IsSystemCategory)
-                    .ThenBy(c => c.Id, StringComparer.Ordinal)
-                    .First();
-
-                foreach (var duplicate in group.Where(c => c != kept))
-                {
-                    _serviceLog?.Information("Merging duplicate tag category {CategoryKey}: removing {Id}, keeping {KeptId}", duplicate.CategoryKey, duplicate.Id, kept.Id);
-                    await _configStore.Delete<TagCategory>(nameof(TagCategory), duplicate.Id);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Merge duplicate categories, then create default system categories if they don't exist
+        /// Merge duplicate tags, then create default system categories if they don't exist
         /// </summary>
         public async Task EnsureDefaultTagCategories()
         {
-            await MergeDuplicateTagCategories();
+            await MergeDuplicateTags();
 
             var existing = await GetTagCategories();
 
@@ -283,7 +349,7 @@ namespace Certify.Management
             // Create new value
             var tagValue = new TagValue
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = GetTagValueId(categoryKey, value),
                 CategoryKey = categoryKey,
                 Value = value,
                 DateCreated = DateTimeOffset.UtcNow,
@@ -325,8 +391,7 @@ namespace Certify.Management
                 var itemTags = await GetAllHubItemTags(null, null, null);
                 foreach (var itemTag in itemTags.Where(t => t.CategoryKey == tagValue.CategoryKey && t.Value == tagValue.Value))
                 {
-                    itemTag.Value = newValue;
-                    await _configStore.Update<ItemTag>(nameof(ItemTag), itemTag);
+                    await UpdateItemTagValue(itemTag, newValue);
                 }
 
                 tagValue.Value = newValue;
@@ -337,8 +402,32 @@ namespace Certify.Management
                 tagValue.Description = description;
             }
 
+            var previousId = tagValue.Id;
+            tagValue.Id = GetTagValueId(tagValue.CategoryKey, tagValue.Value);
             await _configStore.Update<TagValue>(nameof(TagValue), tagValue);
+
+            if (tagValue.Id != previousId)
+            {
+                await _configStore.Delete<TagValue>(nameof(TagValue), previousId);
+            }
+
             return new ActionResult("Value updated", true);
+        }
+
+        /// <summary>
+        /// Change an item tag's value, storing it under the id for its new value. If the item already has the new value the two merge.
+        /// </summary>
+        private async Task UpdateItemTagValue(ItemTag itemTag, string newValue)
+        {
+            var previousId = itemTag.Id;
+            itemTag.Value = newValue;
+            itemTag.Id = GetItemTagId(itemTag);
+            await _configStore.Update<ItemTag>(nameof(ItemTag), itemTag);
+
+            if (itemTag.Id != previousId)
+            {
+                await _configStore.Delete<ItemTag>(nameof(ItemTag), previousId);
+            }
         }
 
         /// <summary>
@@ -397,8 +486,7 @@ namespace Certify.Management
             {
                 foreach (var itemTag in itemTags.Where(t => t.CategoryKey == sourceValue.CategoryKey && t.Value == sourceValue.Value))
                 {
-                    itemTag.Value = targetValue.Value;
-                    await _configStore.Update<ItemTag>(nameof(ItemTag), itemTag);
+                    await UpdateItemTagValue(itemTag, targetValue.Value);
                 }
 
                 // Delete the source value
@@ -474,7 +562,7 @@ namespace Certify.Management
 
                 if (duplicate == null)
                 {
-                    itemTag.Id = Guid.NewGuid().ToString();
+                    itemTag.Id = GetItemTagId(itemTag);
                     await _configStore.Add<ItemTag>(nameof(ItemTag), itemTag);
 
                     // Update usage count

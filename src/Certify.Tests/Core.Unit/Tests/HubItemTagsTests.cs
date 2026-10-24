@@ -231,11 +231,7 @@ namespace Certify.Tests.Core.Unit.Tests
         [TestMethod]
         public async Task AddOrUpdateTagCategory_ConcurrentCreatesStoreOneCategory()
         {
-            // every create reads the store before any of them writes, as overlapping requests can on a real store
-            var store = new YieldingReadStore(_store);
-            typeof(CertifyManager)
-                .GetField("_configStore", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(_manager, store);
+            var store = UseYieldingReadStore();
 
             await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => _manager.AddOrUpdateTagCategory(new TagCategory
             {
@@ -249,35 +245,115 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
-        public async Task EnsureDefaultTagCategories_MergesDuplicateCategories()
+        public async Task GetOrCreateTagValue_ConcurrentCreatesStoreOneValue()
         {
-            await AddStoredDuplicateCategory("managed-by", "Managed By");
-            await AddStoredDuplicateCategory("managed-by", "Managed By");
-            await AddStoredDuplicateCategory("tag1", "Tag 1");
-            await _manager.AddHubItemTags(new List<ItemTag> { new ItemTag("item1", "type1", "tag1", "value1") });
+            UseYieldingReadStore();
 
-            await _manager.EnsureDefaultTagCategories();
+            await Task.WhenAll(new[] { "Prod", "prod", "Prod", "PROD", "prod" }.Select(v => _manager.GetOrCreateTagValue("tag1", v)));
 
-            var stored = await _store.GetItems<TagCategory>(nameof(TagCategory));
-            Assert.IsTrue(stored.GroupBy(c => c.CategoryKey).All(g => g.Count() == 1));
-            Assert.HasCount(1, stored.Where(c => c.CategoryKey == "managed-by"));
+            Assert.HasCount(1, await _manager.GetTagValues("tag1"));
+        }
 
-            // the key based category created through the API is the one kept, and existing tags still resolve
-            Assert.AreEqual("tagcategory:tag1", (await _manager.GetTagCategory("tag1"))?.Id);
+        [TestMethod]
+        public async Task AddHubItemTags_ConcurrentAddsStoreOneTag()
+        {
+            UseYieldingReadStore();
+
+            await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => _manager.AddHubItemTags(new List<ItemTag>
+            {
+                new ItemTag("item1", "type1", "tag1", "value1")
+            })));
+
             Assert.HasCount(1, await _manager.GetAllHubItemTags(null, null, null, null));
         }
 
-        /// <summary>
-        /// Write a category with a random id, as older versions did, bypassing the duplicate checks
-        /// </summary>
-        private Task AddStoredDuplicateCategory(string categoryKey, string displayName)
+        [TestMethod]
+        public async Task EnsureDefaultTagCategories_MergesDuplicateTags()
         {
-            return _store.Add<TagCategory>(nameof(TagCategory), new TagCategory
+            await AddStoredWithRandomId(new TagCategory { CategoryKey = "managed-by", DisplayName = "Managed By" });
+            await AddStoredWithRandomId(new TagCategory { CategoryKey = "managed-by", DisplayName = "Managed By" });
+            await AddStoredWithRandomId(new TagCategory { CategoryKey = "tag1", DisplayName = "Tag 1" });
+            await AddStoredWithRandomId(new TagValue { CategoryKey = "tag1", Value = "value1", UsageCount = 2 });
+            await AddStoredWithRandomId(new TagValue { CategoryKey = "tag1", Value = "value1", UsageCount = 2 });
+            await AddStoredWithRandomId(new ItemTag("item1", "type1", "tag1", "value1"));
+            await AddStoredWithRandomId(new ItemTag("item1", "type1", "tag1", "value1"));
+            await _manager.AddHubItemTags(new List<ItemTag> { new ItemTag("item2", "type1", "tag1", "value1") });
+
+            await _manager.EnsureDefaultTagCategories();
+
+            var categories = await _store.GetItems<TagCategory>(nameof(TagCategory));
+            Assert.IsTrue(categories.GroupBy(c => c.CategoryKey).All(g => g.Count() == 1));
+            Assert.HasCount(1, categories.Where(c => c.CategoryKey == "managed-by"));
+
+            // the category created through the API keeps its id, and existing tags still resolve
+            Assert.AreEqual("tagcategory:tag1", (await _manager.GetTagCategory("tag1"))?.Id);
+
+            var values = await _manager.GetTagValues("tag1");
+            Assert.HasCount(1, values);
+            Assert.AreEqual(2, values.Single().UsageCount);
+
+            var itemTags = await _manager.GetAllHubItemTags(null, null, null, null);
+            Assert.HasCount(2, itemTags);
+            Assert.IsTrue(itemTags.All(t => t.Id.StartsWith("itemtag:")));
+
+            // a second start finds nothing left to change
+            await _manager.EnsureDefaultTagCategories();
+            Assert.HasCount(2, await _manager.GetAllHubItemTags(null, null, null, null));
+        }
+
+        [TestMethod]
+        public async Task UpdateTagValue_RenamedValueCanBeAddedAgain()
+        {
+            await _manager.AddHubItemTags(new List<ItemTag> { new ItemTag("item1", "type1", "tag1", "old") });
+            var oldValue = (await _manager.GetTagValues("tag1")).Single();
+
+            var result = await _manager.UpdateTagValue(oldValue.Id, "new");
+            Assert.IsTrue(result.IsSuccess);
+
+            // the renamed value and tag no longer hold the ids for "old", so adding "old" again stores alongside them
+            await _manager.AddHubItemTags(new List<ItemTag> { new ItemTag("item1", "type1", "tag1", "old") });
+
+            CollectionAssert.AreEquivalent(new[] { "new", "old" }, (await _manager.GetTagValues("tag1")).Select(v => v.Value).ToArray());
+            CollectionAssert.AreEquivalent(new[] { "new", "old" }, (await _manager.GetHubItemTags("type1", "item1")).Select(t => t.Value).ToArray());
+        }
+
+        [TestMethod]
+        public async Task MergeTagValues_ItemWithBothValuesKeepsOneTag()
+        {
+            await _manager.AddHubItemTags(new List<ItemTag>
             {
-                Id = System.Guid.NewGuid().ToString(),
-                CategoryKey = categoryKey,
-                DisplayName = displayName
+                new ItemTag("item1", "type1", "tag1", "source"),
+                new ItemTag("item1", "type1", "tag1", "target")
             });
+            var values = await _manager.GetTagValues("tag1");
+
+            var result = await _manager.MergeTagValues([values.Single(v => v.Value == "source").Id], values.Single(v => v.Value == "target").Id);
+            Assert.IsTrue(result.IsSuccess);
+
+            var itemTags = await _manager.GetHubItemTags("type1", "item1");
+            Assert.HasCount(1, itemTags);
+            Assert.AreEqual("target", itemTags.Single().Value);
+        }
+
+        /// <summary>
+        /// Every read of the store yields before returning, so overlapping requests all read before any of them writes, as they can on a real store
+        /// </summary>
+        private YieldingReadStore UseYieldingReadStore()
+        {
+            var store = new YieldingReadStore(_store);
+            typeof(CertifyManager)
+                .GetField("_configStore", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(_manager, store);
+            return store;
+        }
+
+        /// <summary>
+        /// Write an item with a random id, as older versions did, bypassing the duplicate checks
+        /// </summary>
+        private Task AddStoredWithRandomId<T>(T item) where T : ConfigurationStoreItem
+        {
+            item.Id = System.Guid.NewGuid().ToString();
+            return _store.Add<T>(typeof(T).Name, item);
         }
 
         private sealed class YieldingReadStore(IConfigurationStore inner) : IConfigurationStore
