@@ -55,6 +55,11 @@ namespace Certify.Management
         #region Tag Categories
 
         /// <summary>
+        /// Category ids are derived from the key, so concurrent creates of the same key upsert one stored item instead of adding duplicates
+        /// </summary>
+        private static string GetTagCategoryId(string categoryKey) => $"tagcategory:{categoryKey}";
+
+        /// <summary>
         /// Get all tag categories
         /// </summary>
         public async Task<ICollection<TagCategory>> GetTagCategories()
@@ -112,7 +117,7 @@ namespace Certify.Management
             else
             {
                 // Create new
-                category.Id = Guid.NewGuid().ToString();
+                category.Id = GetTagCategoryId(category.CategoryKey);
                 await _configStore.Add<TagCategory>(nameof(TagCategory), category);
                 return new ActionResult("Category created", true);
             }
@@ -146,10 +151,36 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Create default system categories if they don't exist
+        /// Merge categories stored more than once under the same key, possible before category ids were derived from the key.
+        /// Tag values and item tags refer to the category by key, so only the extra category items need removing.
+        /// </summary>
+        private async Task MergeDuplicateTagCategories()
+        {
+            var stored = await _configStore.GetItems<TagCategory>(nameof(TagCategory));
+
+            foreach (var group in stored.GroupBy(c => c.CategoryKey).Where(g => g.Count() > 1))
+            {
+                var kept = group
+                    .OrderByDescending(c => c.Id == GetTagCategoryId(c.CategoryKey))
+                    .ThenByDescending(c => c.IsSystemCategory)
+                    .ThenBy(c => c.Id, StringComparer.Ordinal)
+                    .First();
+
+                foreach (var duplicate in group.Where(c => c != kept))
+                {
+                    _serviceLog?.Information("Merging duplicate tag category {CategoryKey}: removing {Id}, keeping {KeptId}", duplicate.CategoryKey, duplicate.Id, kept.Id);
+                    await _configStore.Delete<TagCategory>(nameof(TagCategory), duplicate.Id);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Merge duplicate categories, then create default system categories if they don't exist
         /// </summary>
         public async Task EnsureDefaultTagCategories()
         {
+            await MergeDuplicateTagCategories();
+
             var existing = await GetTagCategories();
 
             var defaults = new[]
@@ -166,7 +197,7 @@ namespace Certify.Management
             {
                 if (!existing.Any(e => e.CategoryKey == defaultCat.CategoryKey))
                 {
-                    defaultCat.Id = Guid.NewGuid().ToString();
+                    defaultCat.Id = GetTagCategoryId(defaultCat.CategoryKey);
                     await _configStore.Add<TagCategory>(nameof(TagCategory), defaultCat);
                 }
             }

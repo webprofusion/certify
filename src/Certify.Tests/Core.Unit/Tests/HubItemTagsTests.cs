@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models.Hub;
+using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Tests.Core.Unit.Tests
@@ -224,6 +226,81 @@ namespace Certify.Tests.Core.Unit.Tests
 
             var allTags = await _manager.GetAllHubItemTags(null, null, null, null);
             Assert.HasCount(1, allTags); // Should still be only 1
+        }
+
+        [TestMethod]
+        public async Task AddOrUpdateTagCategory_ConcurrentCreatesStoreOneCategory()
+        {
+            // every create reads the store before any of them writes, as overlapping requests can on a real store
+            var store = new YieldingReadStore(_store);
+            typeof(CertifyManager)
+                .GetField("_configStore", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(_manager, store);
+
+            await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => _manager.AddOrUpdateTagCategory(new TagCategory
+            {
+                CategoryKey = "managed-by",
+                DisplayName = "Managed By"
+            })));
+
+            Assert.AreEqual(5, store.Reads);
+            var stored = await _store.GetItems<TagCategory>(nameof(TagCategory));
+            Assert.HasCount(1, stored.Where(c => c.CategoryKey == "managed-by"));
+        }
+
+        [TestMethod]
+        public async Task EnsureDefaultTagCategories_MergesDuplicateCategories()
+        {
+            await AddStoredDuplicateCategory("managed-by", "Managed By");
+            await AddStoredDuplicateCategory("managed-by", "Managed By");
+            await AddStoredDuplicateCategory("tag1", "Tag 1");
+            await _manager.AddHubItemTags(new List<ItemTag> { new ItemTag("item1", "type1", "tag1", "value1") });
+
+            await _manager.EnsureDefaultTagCategories();
+
+            var stored = await _store.GetItems<TagCategory>(nameof(TagCategory));
+            Assert.IsTrue(stored.GroupBy(c => c.CategoryKey).All(g => g.Count() == 1));
+            Assert.HasCount(1, stored.Where(c => c.CategoryKey == "managed-by"));
+
+            // the key based category created through the API is the one kept, and existing tags still resolve
+            Assert.AreEqual("tagcategory:tag1", (await _manager.GetTagCategory("tag1"))?.Id);
+            Assert.HasCount(1, await _manager.GetAllHubItemTags(null, null, null, null));
+        }
+
+        /// <summary>
+        /// Write a category with a random id, as older versions did, bypassing the duplicate checks
+        /// </summary>
+        private Task AddStoredDuplicateCategory(string categoryKey, string displayName)
+        {
+            return _store.Add<TagCategory>(nameof(TagCategory), new TagCategory
+            {
+                Id = System.Guid.NewGuid().ToString(),
+                CategoryKey = categoryKey,
+                DisplayName = displayName
+            });
+        }
+
+        private sealed class YieldingReadStore(IConfigurationStore inner) : IConfigurationStore
+        {
+            private int _reads;
+
+            public int Reads => _reads;
+
+            public async Task<List<T>> GetItems<T>(string itemType)
+            {
+                var items = await inner.GetItems<T>(itemType);
+                Interlocked.Increment(ref _reads);
+                await Task.Delay(50);
+                return items;
+            }
+
+            public Task<T> Get<T>(string itemType, string id) => inner.Get<T>(itemType, id);
+            public Task Add<T>(string itemType, T item) => inner.Add(itemType, item);
+            public Task Update<T>(string itemType, T item) => inner.Update(itemType, item);
+            public Task<bool> Delete<T>(string itemType, string id) => inner.Delete<T>(itemType, id);
+            public Task<bool> IsInitialised() => inner.IsInitialised();
+            public Task<List<SerializedConfigurationItem>> GetAllSerializedItems() => inner.GetAllSerializedItems();
+            public Task UpsertSerializedItem(SerializedConfigurationItem item) => inner.UpsertSerializedItem(item);
         }
     }
 }
