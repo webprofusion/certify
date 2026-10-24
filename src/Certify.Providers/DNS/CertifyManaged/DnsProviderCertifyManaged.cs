@@ -27,6 +27,12 @@ namespace Certify.Providers.DNS.CertifyManaged
         private static readonly TimeSpan ManagedChallengeApiTimeout = TimeSpan.FromMinutes(20);
         private static readonly TimeSpan ManagedChallengeOperationPollInterval = TimeSpan.FromSeconds(5);
 
+        /// <summary>
+        /// Waits before each retry of a begin request answered with a gateway error. A proxy in front of the hub,
+        /// such as an OpenShift or Kubernetes ingress, answers for it while the hub restarts or drops a connection.
+        /// </summary>
+        private static readonly TimeSpan[] GatewayErrorRetryDelays = { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10) };
+
         public static ChallengeProviderDefinition Definition
         {
             get
@@ -103,46 +109,78 @@ namespace Certify.Providers.DNS.CertifyManaged
             var update = CreateManagedChallengeRequest(request);
             var asyncApiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/requestbegin");
 
-            using (var asyncRequest = CreateApiRequest(asyncApiUri, update))
+            HttpResponseMessage result;
+            try
+            {
+                result = await SendBeginRequest(asyncApiUri, update);
+            }
+            catch (TaskCanceledException exp)
+            {
+                return CreateTimeoutFailureResult("Update", exp);
+            }
+            catch (HttpRequestException exp)
+            {
+                return CreateTransportFailureResult("Update", exp);
+            }
+
+            using (result)
+            {
+                if (ShouldFallbackToSync(result.StatusCode))
+                {
+                    var syncApiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/request");
+                    return await SendManagedChallengeRequest(update, syncApiUri, "Update", $"Updated: {request.RecordName} :: {request.RecordValue}");
+                }
+
+                if (!result.IsSuccessStatusCode)
+                {
+                    return await CreateApiFailureResult("Update", result, asyncApiUri);
+                }
+
+                var responseJson = await result.Content.ReadAsStringAsync();
+                var operation = JsonConvert.DeserializeObject<ManagedChallengeOperation>(responseJson);
+
+                if (operation == null || string.IsNullOrWhiteSpace(operation.Id))
+                {
+                    return new ActionResult { IsSuccess = false, Message = "Update failed: Managed Challenge API did not return a valid operation id." };
+                }
+
+                return await PollManagedChallengeOperation(operation.Id, "Update", $"Updated: {request.RecordName} :: {request.RecordValue}");
+            }
+        }
+
+        /// <summary>
+        /// Send the begin request, retrying while a gateway error is returned in place of the hub's own response.
+        /// Each attempt is a new request, as a sent request cannot be sent again and its signature is timestamped.
+        ///
+        /// A gateway error may also follow a request the hub did receive, so a retry can begin a second operation
+        /// for the same record. That writes the same TXT value again, which is preferable to failing the order.
+        /// </summary>
+        private async Task<HttpResponseMessage> SendBeginRequest(Uri apiUri, ManagedChallengeRequest update)
+        {
+            for (var attempt = 0; ; attempt++)
             {
                 HttpResponseMessage result;
-                try
+                using (var req = CreateApiRequest(apiUri, update))
                 {
-                    result = await _client.SendAsync(asyncRequest);
-                }
-                catch (TaskCanceledException exp)
-                {
-                    return CreateTimeoutFailureResult("Update", exp);
-                }
-                catch (HttpRequestException exp)
-                {
-                    return CreateTransportFailureResult("Update", exp);
+                    result = await _client.SendAsync(req);
                 }
 
-                using (result)
+                if (!IsGatewayError(result.StatusCode) || attempt >= GatewayErrorRetryDelays.Length)
                 {
-                    if (ShouldFallbackToSync(result.StatusCode))
-                    {
-                        var syncApiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/request");
-                        return await SendManagedChallengeRequest(update, syncApiUri, "Update", $"Updated: {request.RecordName} :: {request.RecordValue}");
-                    }
-
-                    if (!result.IsSuccessStatusCode)
-                    {
-                        return await CreateApiFailureResult("Update", result, asyncApiUri);
-                    }
-
-                    var responseJson = await result.Content.ReadAsStringAsync();
-                    var operation = JsonConvert.DeserializeObject<ManagedChallengeOperation>(responseJson);
-
-                    if (operation == null || string.IsNullOrWhiteSpace(operation.Id))
-                    {
-                        return new ActionResult { IsSuccess = false, Message = "Update failed: Managed Challenge API did not return a valid operation id." };
-                    }
-
-                    return await PollManagedChallengeOperation(operation.Id, "Update", $"Updated: {request.RecordName} :: {request.RecordValue}");
+                    return result;
                 }
+
+                var delay = GatewayErrorRetryDelays[attempt];
+                _log?.Warning("Managed Challenge API returned {statusCode} {status} for {apiUri}, retrying in {delay}s.", (int)result.StatusCode, result.StatusCode, apiUri, delay.TotalSeconds);
+
+                result.Dispose();
+                await Task.Delay(delay);
             }
+        }
+
+        private static bool IsGatewayError(HttpStatusCode statusCode)
+        {
+            return statusCode == HttpStatusCode.BadGateway || statusCode == HttpStatusCode.ServiceUnavailable || statusCode == HttpStatusCode.GatewayTimeout;
         }
 
         private ManagedChallengeRequest CreateManagedChallengeRequest(DnsRecord request)
@@ -337,6 +375,16 @@ namespace Certify.Providers.DNS.CertifyManaged
             var errorMessage = string.IsNullOrWhiteSpace(responseJson)
                 ? "No additional error details available"
                 : responseJson;
+
+            // the hub's own errors are problem details, so this is a proxy in front of it answering in its place
+            if (IsGatewayError(result.StatusCode))
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"{action} failed [{result.StatusCode}]: The Management Hub did not respond, a proxy or load balancer in front of it returned this error instead. Check the hub is running and reachable at [{apiUri}], for example that it has not restarted, run out of memory or been stopped by a health check. Response: {errorMessage}"
+                };
+            }
 
             return new ActionResult
             {
