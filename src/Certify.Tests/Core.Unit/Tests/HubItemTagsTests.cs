@@ -268,6 +268,39 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task AddHubItemTags_ConcurrentAddsToSingleValueCategoryLeaveOneValue()
+        {
+            await _manager.AddOrUpdateTagCategory(new TagCategory { CategoryKey = "env", DisplayName = "Environment", IsSingleValue = true });
+            UseYieldingReadStore();
+
+            await Task.WhenAll(new[] { "prod", "test", "dev", "qa", "staging" }.Select(v => _manager.AddHubItemTags(new List<ItemTag>
+            {
+                new ItemTag("item1", "type1", "env", v)
+            })));
+
+            Assert.HasCount(1, await _manager.GetHubItemTags("type1", "item1"));
+        }
+
+        [TestMethod]
+        public async Task AddHubItemTags_SingleValueCategoryReplacesAllExistingValues()
+        {
+            await _manager.AddOrUpdateTagCategory(new TagCategory { CategoryKey = "env", DisplayName = "Environment" });
+            await _manager.AddHubItemTags(new List<ItemTag>
+            {
+                new ItemTag("item1", "type1", "env", "prod"),
+                new ItemTag("item1", "type1", "env", "test")
+            });
+
+            // an item can hold several values from before its category became single-value
+            await _manager.AddOrUpdateTagCategory(new TagCategory { CategoryKey = "env", DisplayName = "Environment", IsSingleValue = true });
+            await _manager.AddHubItemTags(new List<ItemTag> { new ItemTag("item1", "type1", "env", "dev") });
+
+            var itemTags = await _manager.GetHubItemTags("type1", "item1");
+            Assert.HasCount(1, itemTags);
+            Assert.AreEqual("dev", itemTags.Single().Value);
+        }
+
+        [TestMethod]
         public async Task EnsureDefaultTagCategories_MergesDuplicateTags()
         {
             await AddStoredWithRandomId(new TagCategory { CategoryKey = "managed-by", DisplayName = "Managed By" });

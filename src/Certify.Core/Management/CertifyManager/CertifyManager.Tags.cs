@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Hub;
@@ -14,6 +15,8 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         private static readonly Regex CategoryKeyRegex = new Regex(@"^[a-z][a-z0-9\-]*$", RegexOptions.Compiled);
+
+        private readonly SemaphoreSlim _itemTagAddSync = new SemaphoreSlim(1, 1);
 
         private static bool IsValidTagValue(string value)
         {
@@ -524,54 +527,64 @@ namespace Certify.Management
         /// </summary>
         public async Task<ActionResult> AddHubItemTags(ICollection<ItemTag> tags)
         {
-            foreach (var itemTag in tags)
+            // one add at a time, otherwise overlapping adds of different values to a single-value category each clear the
+            // item's existing value and then add their own, leaving the item with several
+            await _itemTagAddSync.WaitAsync();
+
+            try
             {
-                // Validate category exists
-                var category = await GetTagCategory(itemTag.CategoryKey);
-                if (category == null)
+                foreach (var itemTag in tags)
                 {
-                    continue; // Skip invalid categories
-                }
-
-                // Ensure the value exists
-                var tagValue = await GetOrCreateTagValue(itemTag.CategoryKey, itemTag.Value);
-                if (tagValue == null)
-                {
-                    continue; // Skip invalid values
-                }
-
-                // For single-value categories, remove existing tag in same category
-                if (category.IsSingleValue)
-                {
-                    var existingTags = await GetItemTagsInternal(itemTag.TaggedItemId, itemTag.TaggedItemType);
-                    var existingInCategory = existingTags.FirstOrDefault(t => t.CategoryKey == itemTag.CategoryKey);
-                    if (existingInCategory != null)
+                    // Validate category exists
+                    var category = await GetTagCategory(itemTag.CategoryKey);
+                    if (category == null)
                     {
-                        await _configStore.Delete<ItemTag>(nameof(ItemTag), existingInCategory.Id);
-                        await RecalculateTagValueUsageCount(existingInCategory.CategoryKey, existingInCategory.Value);
+                        continue; // Skip invalid categories
+                    }
+
+                    // Ensure the value exists
+                    var tagValue = await GetOrCreateTagValue(itemTag.CategoryKey, itemTag.Value);
+                    if (tagValue == null)
+                    {
+                        continue; // Skip invalid values
+                    }
+
+                    // For single-value categories, remove existing tags in same category
+                    if (category.IsSingleValue)
+                    {
+                        var existingTags = await GetItemTagsInternal(itemTag.TaggedItemId, itemTag.TaggedItemType);
+                        foreach (var existingInCategory in existingTags.Where(t => t.CategoryKey == itemTag.CategoryKey))
+                        {
+                            await _configStore.Delete<ItemTag>(nameof(ItemTag), existingInCategory.Id);
+                            await RecalculateTagValueUsageCount(existingInCategory.CategoryKey, existingInCategory.Value);
+                        }
+                    }
+
+                    // Check if this exact tag already exists
+                    var allTags = await GetAllHubItemTags(null, null, null);
+                    var duplicate = allTags.FirstOrDefault(t =>
+                        t.TaggedItemId == itemTag.TaggedItemId &&
+                        t.TaggedItemType == itemTag.TaggedItemType &&
+                        t.CategoryKey == itemTag.CategoryKey &&
+                        t.Value == itemTag.Value);
+
+                    if (duplicate == null)
+                    {
+                        itemTag.Id = GetItemTagId(itemTag);
+                        await _configStore.Add<ItemTag>(nameof(ItemTag), itemTag);
+
+                        // Update usage count
+                        tagValue.UsageCount++;
+                        await _configStore.Update<TagValue>(nameof(TagValue), tagValue);
                     }
                 }
 
-                // Check if this exact tag already exists
-                var allTags = await GetAllHubItemTags(null, null, null);
-                var duplicate = allTags.FirstOrDefault(t =>
-                    t.TaggedItemId == itemTag.TaggedItemId &&
-                    t.TaggedItemType == itemTag.TaggedItemType &&
-                    t.CategoryKey == itemTag.CategoryKey &&
-                    t.Value == itemTag.Value);
-
-                if (duplicate == null)
-                {
-                    itemTag.Id = GetItemTagId(itemTag);
-                    await _configStore.Add<ItemTag>(nameof(ItemTag), itemTag);
-
-                    // Update usage count
-                    tagValue.UsageCount++;
-                    await _configStore.Update<TagValue>(nameof(TagValue), tagValue);
-                }
+                return new ActionResult("Tags added", true);
             }
-
-            return new ActionResult("Tags added", true);
+            finally
+            {
+                _itemTagAddSync.Release();
+            }
         }
 
         /// <summary>
