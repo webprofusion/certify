@@ -11,18 +11,18 @@
         <UserSecretsId>c6402661-abaa-463e-ab79-e40d979f8b77</UserSecretsId>
         <DockerfileContext>..\..\..\..\certify-manager</DockerfileContext>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
-        <DisableScopedCssBundling>true</DisableScopedCssBundling>
+      
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.18.2" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.18.3" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
 
         <!-- included to prevent conflict with older versions in plugins-->
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
     </ItemGroup>
 
     <ItemGroup>
