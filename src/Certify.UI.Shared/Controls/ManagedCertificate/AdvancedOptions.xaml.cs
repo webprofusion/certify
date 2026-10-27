@@ -228,7 +228,9 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.CertificateAuthorityDescription));
 
-            if (ItemViewModel.SelectedItem != null && string.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificateAuthorityId) && ItemViewModel.SelectedItem.UseStagingMode == true)
+            // only the user choosing a CA changes staging mode, not the list showing the item's CA
+            if (ItemViewModel.SelectedItem != null && Utils.Helpers.IsUserSelectionChange(CertificateAuthorityList)
+                && string.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificateAuthorityId) && ItemViewModel.SelectedItem.UseStagingMode == true)
             {
                 ItemViewModel.SelectedItem.UseStagingMode = false;
             }

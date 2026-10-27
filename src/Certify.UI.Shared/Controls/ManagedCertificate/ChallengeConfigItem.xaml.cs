@@ -32,6 +32,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
+            // a control removed from the list (when the item is replaced) is disconnected from its view model, nothing to refresh
+            if (e.NewValue is not ChallengeConfigItemViewModel)
+            {
+                return;
+            }
+
             if (!AppViewModel.AccountDetails.Any())
             {
                 await AppViewModel.RefreshAccountsList();

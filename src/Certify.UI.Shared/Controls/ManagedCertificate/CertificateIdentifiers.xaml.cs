@@ -67,14 +67,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                     if (ItemViewModel.SelectedItem != null)
                     {
-                        ItemViewModel.EnsureExternalSourceConfiguration();
+                        // this runs after the item is shown with no unsaved changes, so it only displays the item and must not
+                        // write to it (external source defaults are applied by RaiseSelectedItemChanges before that point)
 
                         // if website previously selected, preselect in dropdown
-                        if (ItemViewModel.SelectedItem.GroupId == null)
-                        {
-                            ItemViewModel.SelectedItem.GroupId = "";
-                        }
-
                         var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.Id == ItemViewModel.SelectedItem.GroupId);
                         if (selectedWebsite != null)
                         {
@@ -125,6 +121,13 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (ItemViewModel.SelectedWebSite != null && ItemViewModel.SelectedItem != null)
             {
                 var siteId = ItemViewModel.SelectedWebSite.Id;
+
+                // ignore the dropdown showing the item's current site (when the item is displayed), only a different site
+                // re-populates the domains
+                if (siteId == ItemViewModel.SelectedItem.GroupId)
+                {
+                    return;
+                }
 
                 await ItemViewModel.PopulateManagedCertificateSettings(siteId);
             }

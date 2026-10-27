@@ -34,10 +34,15 @@ namespace Certify.UI.ViewModel
             get; set;
         }
 
-        public ManagedCertificate ParentManagedCertificate => _appViewModel.SelectedItem;
+        /// <summary>
+        /// The item this challenge config belongs to. Not the current selection: a view model for a copy of the item which has
+        /// since been replaced (saved, refreshed) must not change the item now being edited.
+        /// </summary>
+        public ManagedCertificate ParentManagedCertificate { get; }
 
-        public ChallengeConfigItemViewModel(CertRequestChallengeConfig item)
+        public ChallengeConfigItemViewModel(ManagedCertificate parentManagedCertificate, CertRequestChallengeConfig item)
         {
+            ParentManagedCertificate = parentManagedCertificate;
             SelectedItem = item;
 
             if (SelectedItem != null)
@@ -89,7 +94,7 @@ namespace Certify.UI.ViewModel
                     RaiseDnsPersistStateChanged();
                 }
 
-                if (SelectedItem.IsChanged && !_appViewModel.SelectedItem.IsChanged)
+                if (SelectedItem.IsChanged && !ParentManagedCertificate.IsChanged)
                 {
                     ParentManagedCertificate.ResetIsChanged(true);
                 }

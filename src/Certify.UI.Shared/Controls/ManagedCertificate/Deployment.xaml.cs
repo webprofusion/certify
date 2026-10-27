@@ -71,7 +71,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // if deployment mode changes, apply defaults for the mode
+            // if the user changes the deployment mode, apply defaults for the mode
+            if (!Utils.Helpers.IsUserSelectionChange(DeploymentSiteOptions))
+            {
+                return;
+            }
+
             ItemViewModel.SelectedItem?.RequestConfig?.ApplyDeploymentOptionDefaults();
 
         }

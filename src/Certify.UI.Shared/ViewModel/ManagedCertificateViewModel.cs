@@ -45,7 +45,7 @@ namespace Certify.UI.ViewModel
             }
 
             // start a new cache of challenge config models when item changes
-            challengeConfigViewModelCacheId = "none";
+            _challengeConfigViewModelsItem = null;
             _challengeConfigViewModels.Clear();
 
             RaisePropertyChangedEvent(nameof(HasInvalidPrimaryDomainConfig));
@@ -102,12 +102,9 @@ namespace Certify.UI.ViewModel
             {
                 if (SelectedItem != null)
                 {
-                    if (SelectedItem.CertificateAuthorityId == "")
-                    {
-                        SelectedItem.CertificateAuthorityId = null;
-                    }
-
-                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == SelectedItem.CertificateAuthorityId);
+                    // a blank CA id means the default CA, read here without writing to the item
+                    var caId = SelectedItem.CertificateAuthorityId.AsNullWhenBlank();
+                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == caId);
                     return ca?.Description.AsNullWhenBlank() ?? "(CA Unknown)";
                 }
                 else
@@ -123,12 +120,8 @@ namespace Certify.UI.ViewModel
             {
                 if (SelectedItem != null)
                 {
-                    if (SelectedItem.CertificateAuthorityId == "")
-                    {
-                        SelectedItem.CertificateAuthorityId = null;
-                    }
-
-                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == SelectedItem.CertificateAuthorityId);
+                    var caId = SelectedItem.CertificateAuthorityId.AsNullWhenBlank();
+                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == caId);
                     return ca?.Title.AsNullWhenBlank() ?? "(Default)";
                 }
                 else
@@ -249,7 +242,7 @@ namespace Certify.UI.ViewModel
         }
 
         private ObservableCollection<ChallengeConfigItemViewModel> _challengeConfigViewModels = new ObservableCollection<ChallengeConfigItemViewModel>();
-        private string challengeConfigViewModelCacheId = "none";
+        private ManagedCertificate? _challengeConfigViewModelsItem;
         public ObservableCollection<ChallengeConfigItemViewModel> ChallengeConfigViewModels
         {
             get
@@ -271,21 +264,21 @@ namespace Certify.UI.ViewModel
                                                                     };
                     }
 
-                    if (challengeConfigViewModelCacheId != SelectedItem.Id || _challengeConfigViewModels.Count != SelectedItem.RequestConfig.Challenges.Count())
+                    if (_challengeConfigViewModelsItem != SelectedItem || _challengeConfigViewModels.Count != SelectedItem.RequestConfig.Challenges.Count())
                     {
-                        challengeConfigViewModelCacheId = SelectedItem.Id;
+                        _challengeConfigViewModelsItem = SelectedItem;
                         _challengeConfigViewModels.Clear();
 
                         // setup view models for each existing challenge config
                         foreach (var conf in SelectedItem.RequestConfig.Challenges)
                         {
-                            _challengeConfigViewModels.Add(new ChallengeConfigItemViewModel(conf));
+                            _challengeConfigViewModels.Add(new ChallengeConfigItemViewModel(SelectedItem, conf));
                         }
                     }
                 }
                 else
                 {
-                    challengeConfigViewModelCacheId = "none";
+                    _challengeConfigViewModelsItem = null;
                     _challengeConfigViewModels.Clear();
                 }
 
@@ -490,9 +483,13 @@ namespace Certify.UI.ViewModel
             _selectedSubscribableCertificate = SubscribableManagedCertificates.FirstOrDefault(i =>
                 string.Equals($"{i.InstanceId}/{i.Id}", externalReference, StringComparison.OrdinalIgnoreCase));
 
-            if (_selectedSubscribableCertificate != null)
+            if (_selectedSubscribableCertificate != null && SelectedItem.ExternalSource.SourceItemName != _selectedSubscribableCertificate.Title)
             {
+                // refreshing the display name of the source certificate is not an edit
+                var isChanged = SelectedItem.IsChanged;
                 SelectedItem.ExternalSource.SourceItemName = _selectedSubscribableCertificate.Title;
+                SelectedItem.ResetIsChanged(isChanged);
+
                 RaisePropertyChangedEvent(nameof(SelectedItem));
             }
         }
