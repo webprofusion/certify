@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Certify.Models.Hub;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Protocols;
@@ -136,6 +137,47 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             return tokenRequest;
+        }
+
+        private const int MaxTokenErrorDescriptionLength = 1000;
+
+        /// <summary>
+        /// The error and error_description from a token endpoint error response (RFC 6749 section 5.2), for logging. Other
+        /// fields and non-JSON bodies are left out, so nothing else the provider returns ends up in the log.
+        /// </summary>
+        public static string? DescribeTokenError(string? responseBody)
+        {
+            if (string.IsNullOrWhiteSpace(responseBody))
+            {
+                return null;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+
+                if (doc.RootElement.ValueKind != JsonValueKind.Object
+                    || !doc.RootElement.TryGetProperty("error", out var error)
+                    || error.ValueKind != JsonValueKind.String)
+                {
+                    return null;
+                }
+
+                var description = doc.RootElement.TryGetProperty("error_description", out var desc) && desc.ValueKind == JsonValueKind.String
+                    ? desc.GetString()
+                    : null;
+
+                if (description?.Length > MaxTokenErrorDescriptionLength)
+                {
+                    description = description[..MaxTokenErrorDescriptionLength] + "...";
+                }
+
+                return string.IsNullOrWhiteSpace(description) ? error.GetString() : $"{error.GetString()}: {description}";
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
         }
 
         /// <summary>

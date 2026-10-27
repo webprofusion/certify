@@ -411,7 +411,8 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (!tokenResponse.IsSuccessStatusCode)
             {
-                _logger.LogError("Token exchange failed: {StatusCode}", tokenResponse.StatusCode);
+                var tokenError = OidcSignIn.DescribeTokenError(await tokenResponse.Content.ReadAsStringAsync(HttpContext.RequestAborted));
+                _logger.LogError("Token exchange failed: {StatusCode} {TokenError}", tokenResponse.StatusCode, tokenError ?? "(no OAuth error in response)");
                 return null;
             }
 

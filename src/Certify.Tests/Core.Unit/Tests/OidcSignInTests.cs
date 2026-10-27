@@ -181,6 +181,38 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        public void TokenError_DescribesOnlyTheErrorAndDescription()
+        {
+            var body = """{"error":"invalid_client","error_description":"AADSTS7000222: The provided client secret keys are expired.","error_codes":[7000222],"client_secret":"secret-1"}""";
+
+            Assert.AreEqual("invalid_client: AADSTS7000222: The provided client secret keys are expired.", OidcSignIn.DescribeTokenError(body));
+        }
+
+        [TestMethod]
+        public void TokenError_IsTheErrorAlone_WithoutADescription()
+        {
+            Assert.AreEqual("invalid_grant", OidcSignIn.DescribeTokenError("""{"error":"invalid_grant"}"""));
+        }
+
+        [TestMethod]
+        public void TokenError_IsNull_ForAnythingButAnOAuthError()
+        {
+            Assert.IsNull(OidcSignIn.DescribeTokenError(null));
+            Assert.IsNull(OidcSignIn.DescribeTokenError(""));
+            Assert.IsNull(OidcSignIn.DescribeTokenError("<html>Bad Request</html>"));
+            Assert.IsNull(OidcSignIn.DescribeTokenError("""{"message":"bad request"}"""));
+            Assert.IsNull(OidcSignIn.DescribeTokenError("""["invalid_grant"]"""));
+        }
+
+        [TestMethod]
+        public void TokenError_TruncatesALongDescription()
+        {
+            var description = OidcSignIn.DescribeTokenError($$"""{"error":"invalid_request","error_description":"{{new string('x', 5000)}}"}""");
+
+            Assert.IsTrue(description!.Length < 1100);
+        }
+
+        [TestMethod]
         public void IdToken_IsAccepted_FromTheDiscoveredIssuer()
         {
             var issuer = "https://idp.example.com/realms/test";
