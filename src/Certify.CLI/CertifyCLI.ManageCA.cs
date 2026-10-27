@@ -12,6 +12,9 @@ namespace Certify.CLI
 
         internal async Task AddACMEAccount(string[] args)
         {
+            var isStaging = args.Contains("--staging");
+            args = args.Where(a => a != "--staging").ToArray();
+
             if (args.Length < 4)
             {
                 Console.WriteLine("Not enough arguments");
@@ -24,7 +27,7 @@ namespace Certify.CLI
             var eabKeyId = args.Length >= 5 ? args[4] : null;
             var eabKey = args.Length >= 6 ? args[5] : null;
 
-            var result = await AddACMEAccount(certificateAuthorityId, email, eabKeyId, eabKey);
+            var result = await AddACMEAccount(certificateAuthorityId, email, eabKeyId, eabKey, isStaging);
 
             if (result.IsSuccess)
             {
@@ -36,7 +39,7 @@ namespace Certify.CLI
             }
         }
 
-        private async Task<Models.Config.ActionResult> AddACMEAccount(string certificateAuthorityId, string email, string eabKeyId, string eabKey)
+        private async Task<Models.Config.ActionResult> AddACMEAccount(string certificateAuthorityId, string email, string eabKeyId, string eabKey, bool isStaging)
         {
             var accountReg = new ContactRegistration
             {
@@ -44,7 +47,7 @@ namespace Certify.CLI
                 EmailAddress = email,
                 EabKeyId = eabKeyId,
                 EabKey = eabKey,
-                IsStaging = false,
+                IsStaging = isStaging,
                 AgreedToTermsAndConditions = true
             };
             var result = await _certifyClient.AddAccount(accountReg);

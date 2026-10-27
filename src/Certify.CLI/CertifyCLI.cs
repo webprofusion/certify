@@ -126,7 +126,7 @@ namespace Certify.CLI
             System.Console.WriteLine("certify importcsv : import managed certificates from a CSV file.");
             System.Console.WriteLine("certify add <managed cert id or new> <domain1;domain2> : add domains to a managed cert using the default validation, use --perform-request to immediately attempt cert request");
             System.Console.WriteLine("certify remove <managed cert id> <domain1;domain2> : remove domains from managed cert, use --perform-request to immediately attempt cert request");
-            System.Console.WriteLine("certify acmeaccount add  <ACME CA ID> <your contact email> <optional EAB key id> <optional EAB Key> : add a new ACME account");
+            System.Console.WriteLine("certify acmeaccount add  <ACME CA ID> <your contact email> <optional EAB key id> <optional EAB Key> : add a new ACME account, use --staging to add as a staging (test) account");
             System.Console.WriteLine("certify acmeaccount list : list registered acme accounts");
             System.Console.WriteLine("certify ca list : list available certificate authorities");
             System.Console.WriteLine("certify ca setpreferred <CA ID|any> : set the preferred certificate authority, or use 'any' to clear the preference");
