@@ -234,6 +234,12 @@ namespace Certify.Management
         /// Restricts changes made locally, only the management hub can change this setting
         /// </summary>
         public LocalChangeRestriction LocalChangeRestriction { get; set; }
+
+        /// <summary>
+        /// True when these are defaults standing in for a settings file which exists but could not be read. Not
+        /// serialized: it describes this copy in memory, not the instance's settings
+        /// </summary>
+        internal bool IsFallbackDefaults { get; set; }
     }
 
     public class SettingsManager
@@ -441,14 +447,29 @@ namespace Certify.Management
             return isCleanupEnabled ? CertificateCleanupMode.AfterExpiry : CertificateCleanupMode.None;
         }
 
-        public static void SaveAppSettings()
-        {
-            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(CoreAppSettings.Current, Newtonsoft.Json.Formatting.Indented);
+        public static void SaveAppSettings() => SaveAppSettings(Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), COREAPPSETTINGSFILE));
 
+        internal static void SaveAppSettings(string path)
+        {
             lock (settingsLocker)
             {
-                System.IO.File.WriteAllText(Path.Combine(appDataPath, COREAPPSETTINGSFILE), json);
+                var settings = CoreAppSettings.Current;
+
+                // saving defaults over settings which could not be read would replace them, including the instance id
+                // the license file is encrypted with and the hub knows the instance by
+                if (settings.IsFallbackDefaults && System.IO.File.Exists(path))
+                {
+                    throw new InvalidOperationException($"Settings file {path} could not be read, so settings cannot be saved over it.");
+                }
+
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(settings, Newtonsoft.Json.Formatting.Indented);
+
+                // write then swap in, so a reader (or an interrupted write) never sees a partially written file
+                var tempPath = path + ".tmp";
+                System.IO.File.WriteAllText(tempPath, json);
+                System.IO.File.Move(tempPath, path, overwrite: true);
+
+                settings.IsFallbackDefaults = false;
             }
         }
 
@@ -498,44 +519,70 @@ namespace Certify.Management
         {
             try
             {
-                var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
-                var path = Path.Combine(appDataPath, COREAPPSETTINGSFILE);
+                LoadAppSettings(Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), COREAPPSETTINGSFILE));
+            }
+            catch (Exception)
+            {
+                // the app data path could not be resolved or created, handled the same as a settings file which could not be read
+                KeepOrApplyFallbackDefaults();
+            }
+        }
 
+        internal static void LoadAppSettings(string path)
+        {
+            try
+            {
                 if (System.IO.File.Exists(path))
                 {
-                    //ensure permissions
-
-                    //load content
                     lock (settingsLocker)
                     {
                         var configData = System.IO.File.ReadAllText(path);
-                        CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);
+
+                        // an empty file deserializes to null rather than failing, and must not be taken as a new install
+                        var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData)
+                            ?? throw new InvalidDataException($"Settings file {path} is empty.");
 
                         // init new settings if not set
-                        CoreAppSettings.Current.CertificateCleanupMode ??= GetLegacyCertificateCleanupMode(CoreAppSettings.Current.EnableCertificateCleanup);
+                        settings.CertificateCleanupMode ??= GetLegacyCertificateCleanupMode(settings.EnableCertificateCleanup);
+
+                        CoreAppSettings.Current = settings;
                     }
                 }
                 else
                 {
-                    // no core app settings yet
+                    // no core app settings yet. Settings already in use (the file has since been removed) are written back as they are
+                    if (string.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
+                    {
+                        ApplyDefaults();
+                    }
 
-                    ApplyDefaults();
-                    SaveAppSettings();
+                    SaveAppSettings(path);
                 }
 
                 // if instance id not yet set, create it now and save
                 if (string.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
                 {
                     CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
-                    SaveAppSettings();
+                    SaveAppSettings(path);
                 }
             }
             catch (Exception)
             {
                 // failed to load app settings, settings may be corrupt or user may not have permission to read or write
-                // use defaults, but don't save
+                KeepOrApplyFallbackDefaults();
+            }
+        }
 
+        /// <summary>
+        /// Settings already in use are kept when the settings file cannot be read, since defaults would replace the
+        /// instance id the license and hub identity are bound to. With none in use yet, defaults are used but not saved.
+        /// </summary>
+        private static void KeepOrApplyFallbackDefaults()
+        {
+            if (string.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
+            {
                 ApplyDefaults();
+                CoreAppSettings.Current.IsFallbackDefaults = true;
             }
         }
 
