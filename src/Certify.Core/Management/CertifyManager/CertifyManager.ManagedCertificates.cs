@@ -619,20 +619,26 @@ namespace Certify.Management
                 return true;
             }
 
+            string failureReason;
+
             try
             {
-                await _dashboardClient.ReportRenewalStatusAsync(report);
+                if (await _dashboardClient.ReportRenewalStatusAsync(report))
+                {
+                    return true;
+                }
 
-                return true;
+                failureReason = "the reporting service could not be reached or did not accept the report";
             }
             catch (Exception exp)
             {
-                // failed to report status
-                _serviceLog?.Warning("Failed to send renewal status report for {itemId}: {msg}", report?.ManagedSite?.Id, exp.Message);
-                LogMessage(report?.ManagedSite?.Id, "Failed to send renewal status report.", LogItemType.GeneralWarning);
-
-                return false;
+                failureReason = exp.Message;
             }
+
+            _serviceLog?.Warning("Failed to send renewal status report for {itemId}: {msg}", report?.ManagedSite?.Id, failureReason);
+            LogMessage(report?.ManagedSite?.Id, "Failed to send renewal status report.", LogItemType.GeneralWarning);
+
+            return false;
         }
 
         private async Task SendQueuedStatusReports()
@@ -659,13 +665,17 @@ namespace Certify.Management
                         continue;
                     }
 
-                    // the report is already off the queue, so it goes back rather than losing the notification for the
-                    // item which most needed one - unless a newer report for the item was queued in the meantime, which
-                    // takes precedence. The rest of the queue is left for the next pass instead of being attempted
-                    // one by one against a service which has just failed to answer
-                    _statusReportQueue.TryAdd(k, report);
+                    // failed reports are dropped rather than retried, as outgoing https may be blocked permanently. The rest
+                    // of the queue is dropped too instead of being attempted one by one against a service which has just
+                    // failed to answer
+                    var itemsDropped = _statusReportQueue.Count;
+                    _statusReportQueue.Clear();
 
-                    _serviceLog?.Warning("A queued status report could not be sent. {count} report(s) remain queued and will be retried on the next pass.", _statusReportQueue.Count);
+                    if (itemsDropped > 0)
+                    {
+                        _serviceLog?.Warning("Status reporting failed, {count} other queued status report(s) were not sent.", itemsDropped);
+                    }
+
                     break;
                 }
 
