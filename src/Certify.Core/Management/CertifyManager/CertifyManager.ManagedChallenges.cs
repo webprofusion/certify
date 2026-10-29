@@ -402,9 +402,27 @@ namespace Certify.Management
             return Task.FromResult(state?.Operation);
         }
 
-        public Task<ManagedChallengeResult> PerformManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
+        /// <summary>
+        /// Perform a managed challenge for a caller of the managed challenge API, waiting for the record to propagate
+        /// before returning, as the caller submits the challenge to its CA as soon as this completes.
+        /// </summary>
+        public async Task<ManagedChallengeResult> PerformManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
-            return ExecuteManagedChallengeRequest(authorized);
+            var (result, propagationSeconds) = await ExecuteManagedChallengeRequest(authorized);
+
+            if (result.IsSuccess && propagationSeconds > 0)
+            {
+                var propagationDelayMilliseconds = Math.Min((long)propagationSeconds * 1000L, int.MaxValue);
+
+                if (propagationDelayMilliseconds != (long)propagationSeconds * 1000L)
+                {
+                    _serviceLog?.Warning($"Managed challenge propagation delay of {propagationSeconds} seconds exceeds the supported delay range. Using the maximum supported wait instead.");
+                }
+
+                await Task.Delay((int)propagationDelayMilliseconds);
+            }
+
+            return result;
         }
 
         private async Task RunManagedChallengeOperation(string operationId)
@@ -422,7 +440,7 @@ namespace Certify.Management
                 operation.DateStarted = DateTimeOffset.UtcNow;
                 operation.DateLastUpdated = operation.DateStarted.Value;
 
-                var result = await ExecuteManagedChallengeRequest(
+                var result = await PerformManagedChallengeRequest(
                     new AuthorizedManagedChallengeRequest { Request = operation.Request, Caller = state.Caller });
 
                 operation.Result = result;
@@ -560,14 +578,18 @@ namespace Certify.Management
             });
         }
 
-        private async Task<ManagedChallengeResult> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
+        /// <summary>
+        /// Perform a managed challenge, returning the result and the seconds the record needs to propagate, which the
+        /// caller waits for: once per request for the API, or once per order for this instance's own certificates.
+        /// </summary>
+        private async Task<(ManagedChallengeResult Result, int PropagationSeconds)> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
             var log = _serviceLog;
             var request = authorized.Request;
             var caller = authorized.Caller;
 
             // refused before any DNS update is attempted, which the hub reports differently from a failed update
-            static ManagedChallengeResult Refused(string message) => new() { IsSuccess = false, IsRefused = true, Message = message };
+            static (ManagedChallengeResult, int) Refused(string message) => (new() { IsSuccess = false, IsRefused = true, Message = message }, 0);
 
             var eligible = await ResolveEligibleChallenges(
                 caller,
@@ -587,7 +609,7 @@ namespace Certify.Management
             }
             else if (matchingChallenge.ChallengeConfig == null)
             {
-                return new ManagedChallengeResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" };
+                return (new ManagedChallengeResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" }, 0);
             }
             else if (!IsManagedChallengeTypeSupported(matchingChallenge.ChallengeConfig.ChallengeType)
                 || !IsManagedChallengeRequestTypeSupported(request.ChallengeType))
@@ -632,7 +654,7 @@ namespace Certify.Management
                         log?.Error($"DNS update failed: {dnsResult.Result.Message}");
                     }
 
-                    return new ManagedChallengeResult { IsSuccess = false, IsWarning = dnsResult.Result.IsWarning, Message = dnsResult.Result.Message };
+                    return (new ManagedChallengeResult { IsSuccess = false, IsWarning = dnsResult.Result.IsWarning, Message = dnsResult.Result.Message }, 0);
                 }
                 else
                 {
@@ -640,28 +662,17 @@ namespace Certify.Management
 
                 }
 
-                // apply propagation delay
                 var propagationSeconds = dnsResult.PropagationSeconds;
-                if (propagationSeconds > 0)
-                {
-                    var propagationDelayMilliseconds = Math.Min((long)propagationSeconds * 1000L, int.MaxValue);
-
-                    if (propagationDelayMilliseconds != (long)propagationSeconds * 1000L)
-                    {
-                        log?.Warning($"Managed challenge propagation delay of {propagationSeconds} seconds exceeds the supported delay range. Using the maximum supported wait instead.");
-                    }
-
-                    await Task.Delay((int)propagationDelayMilliseconds);
-                }
-                else if (propagationSeconds < 0)
+                if (propagationSeconds < 0)
                 {
                     log?.Warning($"Managed challenge provider returned an invalid propagation delay of {propagationSeconds} seconds. Skipping propagation wait.");
+                    propagationSeconds = 0;
                 }
 
                 request.DateTimePerformed = DateTimeOffset.UtcNow;
                 _managedChallengesPendingCleanup[CreateManagedChallengeCleanupKey(request)] = CloneAuthorizedRequest(authorized);
 
-                return new ManagedChallengeResult { IsSuccess = true, Message = $"Challenge response {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" };
+                return (new ManagedChallengeResult { IsSuccess = true, Message = $"Challenge response {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" }, propagationSeconds);
             }
         }
 

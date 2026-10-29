@@ -1766,7 +1766,7 @@ namespace Certify.Management
         /// <param name="config"></param>
         /// <param name="progress"></param>
         /// <returns></returns>
-        private async Task PrepareAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
+        internal async Task PrepareAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
         {
             EnterRequestStage(managedCertificate, RequestStage.Challenges);
 
@@ -1859,47 +1859,14 @@ namespace Certify.Management
 
                         // perform our challenge response (http or dns)
 
-                        var serverProvider = GetTargetServerProvider(managedCertificate);
-
                         if (challengeConfig.ChallengeProvider == "ManagedAcme" || challengeConfig.ChallengeProvider == "DNS01.ManagedChallengeHub")
                         {
                             // attempt to complete challenge using internal managed challenge provider
-                            var request = new Models.Hub.AuthorizedManagedChallengeRequest
-                            {
-                                Request = new Models.Hub.ManagedChallengeRequest
-                                {
-                                    ChallengeType = challengeConfig.ChallengeType,
-                                    Identifier = authorization.Identifier.Value,
-                                    ResponseKey = rc?.Key,
-                                    ResponseValue = rc?.Value,
-                                    ManagedCertId = managedCertificate.Id
-                                },
-                                Caller = new Models.Hub.ManagedChallengeCaller
-                                {
-                                    SecurityPrincipalId = managedCertificate.ManagedAcmeOrder?.SecurityPrincipalId,
-                                    ScopedAssignedRoles = managedCertificate.ManagedAcmeOrder?.ScopedAssignedRoles?.Count > 0
-                                        ? managedCertificate.ManagedAcmeOrder.ScopedAssignedRoles
-                                        : null,
-
-                                    // fulfilling an order which was already authorized as a whole, so the principal is
-                                    // checked against the managed ACME order action rather than the per-request ones
-                                    Origin = Models.Hub.ManagedChallengeRequestOrigins.ManagedAcme
-                                }
-                            };
-
-                            var challengeResponseResult = await PerformManagedChallengeRequest(request);
-                            if (!challengeResponseResult.IsSuccess)
-                            {
-                                result.IsSuccess = false;
-                                result.Message = $"Could not complete automated challenge response using managed challenge: {challengeResponseResult.Message}";
-
-                                ReportProgress(progress, new RequestProgressState(RequestState.Error, challengeResponseResult.Message, managedCertificate) { Result = result }, logThisEvent: true);
-                            }
-
-                            return;
+                            await PrepareManagedChallengeResponse(managedCertificate, challengeConfig, authorization, rc);
                         }
                         else
                         {
+                            var serverProvider = GetTargetServerProvider(managedCertificate);
 
                             authorization = await _challengeResponseService.PrepareAutomatedChallengeResponse(log, serverProvider, managedCertificate, authorization, _credentialsManager);
 
@@ -1961,6 +1928,51 @@ namespace Certify.Management
                     failureSummaryMessage = $"[{identifier}] : {authorization?.AuthorizationError}";
                 }
             }
+        }
+
+        /// <summary>
+        /// Perform the challenge response for one authorization using this instance's own managed challenges, recording
+        /// the outcome on the authorization as for any other challenge response. The propagation wait is left to the
+        /// request's Propagation stage, which waits once for all identifiers rather than once per identifier.
+        /// </summary>
+        private async Task PrepareManagedChallengeResponse(ManagedCertificate managedCertificate, CertRequestChallengeConfig challengeConfig, PendingAuthorization authorization, AuthorizationChallengeItem challenge)
+        {
+            if (challenge == null)
+            {
+                return;
+            }
+
+            var request = new Models.Hub.AuthorizedManagedChallengeRequest
+            {
+                Request = new Models.Hub.ManagedChallengeRequest
+                {
+                    ChallengeType = challengeConfig.ChallengeType,
+                    Identifier = authorization.Identifier.Value,
+                    ResponseKey = challenge.Key,
+                    ResponseValue = challenge.Value,
+                    ManagedCertId = managedCertificate.Id
+                },
+                Caller = new Models.Hub.ManagedChallengeCaller
+                {
+                    SecurityPrincipalId = managedCertificate.ManagedAcmeOrder?.SecurityPrincipalId,
+                    ScopedAssignedRoles = managedCertificate.ManagedAcmeOrder?.ScopedAssignedRoles?.Count > 0
+                        ? managedCertificate.ManagedAcmeOrder.ScopedAssignedRoles
+                        : null,
+
+                    // fulfilling an order which was already authorized as a whole, so the principal is
+                    // checked against the managed ACME order action rather than the per-request ones
+                    Origin = Models.Hub.ManagedChallengeRequestOrigins.ManagedAcme
+                }
+            };
+
+            var (challengeResult, propagationSeconds) = await ExecuteManagedChallengeRequest(request);
+
+            authorization.AttemptedChallenge = challenge;
+            challenge.IsFailure = !challengeResult.IsSuccess;
+            challenge.ChallengeResultMsg = challengeResult.Message;
+            challenge.PropagationSeconds = propagationSeconds;
+            authorization.IsFailure = !challengeResult.IsSuccess;
+            authorization.AuthorizationError = authorization.IsFailure ? $"Could not complete automated challenge response using managed challenge: {challengeResult.Message}" : "";
         }
 
         /// <summary>
