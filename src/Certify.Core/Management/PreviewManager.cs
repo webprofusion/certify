@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
+using Certify.Shared.Core.Utils.PKI;
 
 namespace Certify.Management
 {
@@ -259,13 +260,27 @@ namespace Certify.Management
                     preferredKeyType = StandardKeyTypes.RSA256; // MS Exchange etc do not support ECDSA key types so we default to RSA
                 }
 
-                var certRequest =
-                    $"A Certificate Signing Request (CSR) will be submitted to the Certificate Authority, using the **{preferredKeyType}** signing algorithm.";
+                var certRequest = new StringBuilder();
+
+                if (item.RequestConfig.IsCustomCSRUsedAsIs)
+                {
+                    certRequest.AppendLine("Your custom Certificate Signing Request (CSR) will be submitted to the Certificate Authority as-is, so the identifiers and key in the custom CSR decide what is requested.");
+                }
+                else
+                {
+                    certRequest.AppendLine($"A Certificate Signing Request (CSR) will be submitted to the Certificate Authority, using the **{preferredKeyType}** signing algorithm.");
+                }
+
+                if (!string.IsNullOrEmpty(item.RequestConfig.CustomCSR))
+                {
+                    AppendCustomCsrSummary(certRequest, item.RequestConfig);
+                }
+
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Certificate Request",
                     Category = "CertificateRequest",
-                    Description = certRequest
+                    Description = certRequest.ToString()
                 });
                 stepIndex++;
 
@@ -557,6 +572,62 @@ namespace Certify.Management
             });
 
             return stepIndex + 1;
+        }
+
+        /// <summary>
+        /// Describe what will be used from the custom CSR: its subject fields and identifiers when used as-is, or only the subject fields which are copied into the generated CSR
+        /// </summary>
+        private static void AppendCustomCsrSummary(StringBuilder summary, CertRequestConfig config)
+        {
+            summary.AppendLine();
+
+            List<KeyValuePair<string, string>> subjectFields;
+            List<string> csrIdentifiers;
+
+            try
+            {
+                subjectFields = CSRUtils.DescribeCsrSubjectFields(config.CustomCSR, includeCommonName: config.IsCustomCSRUsedAsIs);
+                csrIdentifiers = CSRUtils.DecodeCsrSubjects(config.CustomCSR).Where(i => !string.IsNullOrWhiteSpace(i)).ToList();
+            }
+            catch (Exception)
+            {
+                summary.AppendLine("**The custom CSR could not be read.** Check it is a PEM format CSR, or remove it.");
+                return;
+            }
+
+            if (config.IsCustomCSRUsedAsIs)
+            {
+                if (subjectFields.Any())
+                {
+                    summary.AppendLine("The custom CSR has the following subject fields:");
+                    summary.AppendLine();
+                    AppendMarkdownTable(summary, subjectFields);
+                    summary.AppendLine();
+                }
+
+                if (csrIdentifiers.Any())
+                {
+                    summary.AppendLine("The custom CSR includes the following identifiers:");
+
+                    foreach (var identifier in csrIdentifiers)
+                    {
+                        summary.AppendLine($"* {identifier}");
+                    }
+                }
+            }
+            else
+            {
+                if (subjectFields.Any())
+                {
+                    summary.AppendLine("The following subject fields will be copied from your custom CSR into the generated CSR. The identifiers, Common Name and key in the custom CSR are not used.");
+                    summary.AppendLine();
+                    AppendMarkdownTable(summary, subjectFields);
+                }
+                else
+                {
+                    summary.AppendLine("*The custom CSR has no subject fields other than its Common Name, so nothing will be copied from it.*");
+                }
+            }
         }
 
         private static void AppendMarkdownTable(StringBuilder summary, IEnumerable<KeyValuePair<string, string>> rows)

@@ -128,9 +128,9 @@
                         <StackPanel Visibility="{Binding IsExternalSourceItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                             <TextBlock Style="{StaticResource Subheading}">Certificate Signing Request (CSR)</TextBlock>
 
-                            <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+                            <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding SelectedItem.RequestConfig.IsCustomCSRUsedAsIs, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">By default a CSR (Certificate Signing Request) will be generated with a new Private Key every time the certificate is requested or renewed.</TextBlock>
 
-                                <TextBlock Style="{StaticResource Instructions}">By default a CSR (Certificate Signing Request) will be generated with a new Private Key every time the certificate is requested or renewed.</TextBlock>
+                            <StackPanel Visibility="{Binding SelectedItem.RequestConfig.IsCustomCSRUsedAsIs, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
                                 <CheckBox
                                     Margin="8,8,0,8"
                                     Content="Require OCSP Must-Staple extension (deprecated)"
@@ -139,8 +139,15 @@
                                     Margin="8,8,0,8"
                                     Content="Include CN in generated CSR"
                                     IsChecked="{Binding SelectedItem.RequestConfig.IncludeCN}" />
+                            </StackPanel>
 
-                                <TextBlock Style="{StaticResource Instructions}">You can optionally use a custom CSR:</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}">You can optionally use a custom CSR, either as-is or for its subject fields (e.g. Organization, Locality, Country) only. When only the subject fields are used, they are copied into the generated CSR, which keeps the identifiers and key set for this certificate.</TextBlock>
+                            <CheckBox
+                                Margin="8,8,0,8"
+                                Content="Only use the subject fields from the custom CSR"
+                                IsChecked="{Binding SelectedItem.RequestConfig.CustomCSRFieldsOnly}" />
+
+                            <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
                                 <Button
                                     x:Name="SelectCustomCSR"
                                     Width="160"
@@ -148,8 +155,6 @@
                                     HorizontalAlignment="Left"
                                     Click="SelectCustomCSR_Click"
                                     Content="Choose Custom CSR.." />
-
-
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
@@ -164,7 +169,7 @@
                                     Content="Clear Custom CSR" />
                             </StackPanel>
 
-                            <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+                            <StackPanel Visibility="{Binding SelectedItem.RequestConfig.IsCustomCSRUsedAsIs, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
                                 <TextBlock Style="{StaticResource SubheadingWithMargin}">CSR Signing Algorithm</TextBlock>
                                 <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomPrivateKey, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
 

@@ -271,6 +271,17 @@ namespace Certify.Models
         public string? CustomCSR { get; set; }
 
         /// <summary>
+        /// If enabled, only the subject fields (e.g. O, OU, L, ST, C) of the CustomCSR are used. They are copied into the generated CSR, which keeps its own identifiers and private key.
+        /// </summary>
+        public bool CustomCSRFieldsOnly { get; set; }
+
+        /// <summary>
+        /// True if the CustomCSR is used as-is, so its identifiers and key decide what is requested
+        /// </summary>
+        [JsonIgnore]
+        public bool IsCustomCSRUsedAsIs => !string.IsNullOrEmpty(CustomCSR) && !CustomCSRFieldsOnly;
+
+        /// <summary>
         /// If set, this is one or more custom JWT tokens used for TkAuth-01 : https://www.rfc-editor.org/rfc/rfc9448
         /// </summary>
         public ObservableCollection<TkAuthToken>? AuthorityTokens { get; set; }

@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Certify.UI.Controls.ManagedCertificate.CertificateIdentifiers"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -193,7 +193,7 @@
                         DockPanel.Dock="Top"
                         Orientation="Vertical"
                         Visibility="{Binding ShowStandardIdentifiersEditor, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
-                        <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+                        <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.IsCustomCSRUsedAsIs, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
 
                             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_DomainsIntro}" /></TextBlock>
 
@@ -466,7 +466,7 @@
                             </DockPanel>
                         </DockPanel>
 
-                        <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                        <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.IsCustomCSRUsedAsIs, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
                                 You have set a Custom Certificate Signing Request (CSR) which will include the following domains. To specify different domains you need to update your CSR or remove it, see the Advanced tab.
                             </TextBlock>

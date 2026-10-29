@@ -118,6 +118,67 @@ namespace Certify.Shared.Core.Utils.PKI
 
         }
 
+        /// <summary>
+        /// Get the subject fields of a CSR (e.g. O, OU, L, ST, C) as a distinguished name, excluding the Common Name
+        /// </summary>
+        /// <param name="csr">PEM encoded CSR</param>
+        /// <returns>The distinguished name, or null if the subject has no other fields</returns>
+        public static string GetCsrSubjectFields(string csr)
+        {
+            var fields = GetCsrSubjectAttributes(csr, includeCommonName: false);
+
+            if (!fields.Any())
+            {
+                return null;
+            }
+
+            return new X509Name(fields.Select(f => f.oid).ToList(), fields.Select(f => f.value).ToList()).ToString();
+        }
+
+        private static readonly Dictionary<string, string> _subjectFieldTitles = new Dictionary<string, string>
+        {
+            ["CN"] = "Common Name",
+            ["O"] = "Organization",
+            ["OU"] = "Organizational Unit",
+            ["L"] = "Locality",
+            ["ST"] = "State or Province",
+            ["C"] = "Country",
+            ["E"] = "Email Address",
+            ["STREET"] = "Street",
+            ["PostalCode"] = "Postal Code",
+            ["SERIALNUMBER"] = "Serial Number"
+        };
+
+        /// <summary>
+        /// Get the subject fields of a CSR with a display title for each (e.g. "Organization (O)")
+        /// </summary>
+        /// <param name="csr">PEM encoded CSR</param>
+        /// <param name="includeCommonName">If false, the Common Name is left out</param>
+        public static List<KeyValuePair<string, string>> DescribeCsrSubjectFields(string csr, bool includeCommonName)
+        {
+            return GetCsrSubjectAttributes(csr, includeCommonName)
+                .Select(f =>
+                {
+                    var symbol = X509Name.DefaultSymbols.TryGetValue(f.oid, out var s) ? s : f.oid.Id;
+                    var title = _subjectFieldTitles.TryGetValue(symbol, out var t) ? $"{t} ({symbol})" : symbol;
+                    return new KeyValuePair<string, string>(title, f.value);
+                })
+                .ToList();
+        }
+
+        private static List<(DerObjectIdentifier oid, string value)> GetCsrSubjectAttributes(string csr, bool includeCommonName)
+        {
+            var subject = DecodeCsr(csr).GetCertificationRequestInfo().Subject;
+
+            var oids = subject.GetOidList();
+            var values = subject.GetValueList();
+
+            return oids
+                .Select((oid, i) => (oid, value: values[i]))
+                .Where(f => includeCommonName || !f.oid.Equals(X509Name.CN))
+                .ToList();
+        }
+
         private static T GetAsn1ObjectRecursive<T>(DerSequence sequence, string id) where T : Asn1Object
         {
             if (sequence.OfType<DerObjectIdentifier>().Any(o => o.Id == id))

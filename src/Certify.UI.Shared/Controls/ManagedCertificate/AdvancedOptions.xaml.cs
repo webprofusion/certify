@@ -155,6 +155,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                         ItemViewModel.SelectedItem.RequestConfig.CustomCSR = csrContent;
 
+                        if (ItemViewModel.SelectedItem.RequestConfig.CustomCSRFieldsOnly)
+                        {
+                            // only the subject fields are used, so keep the identifiers already set
+                            return;
+                        }
+
                         var domainOptions = new System.Collections.ObjectModel.ObservableCollection<Models.DomainOption>();
                         foreach (var d in domains)
                         {

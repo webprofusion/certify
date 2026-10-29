@@ -1763,7 +1763,7 @@ namespace Certify.Providers.ACME.Anvil
             try
             {
 
-                if (!string.IsNullOrEmpty(config.CustomCSR))
+                if (config.IsCustomCSRUsedAsIs)
                 {
 
                     // read custom CSR as pem, convert to bytes/der
@@ -1807,6 +1807,12 @@ namespace Certify.Providers.ACME.Anvil
                         {
                             RequireOcspMustStaple = config.RequireOcspMustStaple
                         };
+
+                        if (!string.IsNullOrEmpty(config.CustomCSR))
+                        {
+                            // copy subject fields (O, L, C etc) from the custom CSR, our own identifiers and key are used
+                            csrInfo.SubjectFields = Certify.Shared.Core.Utils.PKI.CSRUtils.GetCsrSubjectFields(config.CustomCSR);
+                        }
 
                         if (config.IncludeCN == true || caRequiresCN)
                         {
