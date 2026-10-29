@@ -611,7 +611,7 @@ namespace Certify.Management
         /// Send a status report to the reporting dashboard, if reporting is enabled
         /// </summary>
         /// <param name="report"></param>
-        /// <returns>false if the report could not be sent</returns>
+        /// <returns>false if the report could not be sent after one retry</returns>
         private async Task<bool> SendStatusReport(RenewalStatusReport report)
         {
             if (!CoreAppSettings.Current.EnableStatusReporting || _dashboardClient == null)
@@ -619,20 +619,23 @@ namespace Certify.Management
                 return true;
             }
 
-            string failureReason;
+            var failureReason = string.Empty;
 
-            try
+            for (var attempt = 1; attempt <= 2; attempt++)
             {
-                if (await _dashboardClient.ReportRenewalStatusAsync(report))
+                try
                 {
-                    return true;
-                }
+                    if (await _dashboardClient.ReportRenewalStatusAsync(report))
+                    {
+                        return true;
+                    }
 
-                failureReason = "the reporting service could not be reached or did not accept the report";
-            }
-            catch (Exception exp)
-            {
-                failureReason = exp.Message;
+                    failureReason = "the reporting service could not be reached or did not accept the report";
+                }
+                catch (Exception exp)
+                {
+                    failureReason = exp.Message;
+                }
             }
 
             _serviceLog?.Warning("Failed to send renewal status report for {itemId}: {msg}", report?.ManagedSite?.Id, failureReason);
@@ -651,6 +654,7 @@ namespace Certify.Management
                 }
 
                 var itemsSent = 0;
+                var itemsDropped = 0;
 
                 foreach (var k in _statusReportQueue.Keys)
                 {
@@ -659,29 +663,26 @@ namespace Certify.Management
                         continue;
                     }
 
+                    // a report which still fails after its retry is dropped rather than requeued, as outgoing https may be
+                    // blocked permanently
                     if (await SendStatusReport(report))
                     {
                         itemsSent++;
-                        continue;
                     }
-
-                    // failed reports are dropped rather than retried, as outgoing https may be blocked permanently. The rest
-                    // of the queue is dropped too instead of being attempted one by one against a service which has just
-                    // failed to answer
-                    var itemsDropped = _statusReportQueue.Count;
-                    _statusReportQueue.Clear();
-
-                    if (itemsDropped > 0)
+                    else
                     {
-                        _serviceLog?.Warning("Status reporting failed, {count} other queued status report(s) were not sent.", itemsDropped);
+                        itemsDropped++;
                     }
-
-                    break;
                 }
 
                 if (itemsSent > 0)
                 {
                     _serviceLog?.Information($"Sent {itemsSent} queued status reports.");
+                }
+
+                if (itemsDropped > 0)
+                {
+                    _serviceLog?.Warning("{count} queued status report(s) could not be sent and were dropped.", itemsDropped);
                 }
             }
             catch (Exception exp)
