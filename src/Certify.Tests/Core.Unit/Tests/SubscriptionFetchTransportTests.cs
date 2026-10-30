@@ -233,6 +233,41 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.Contains("not permitted", result.Message, "The hub's own explanation is carried through");
         }
 
+        [TestMethod, Description("A hub explaining a failure in problem details reports that explanation rather than the raw response")]
+        public async Task ProblemDetailsReportTheHubExplanation()
+        {
+            var transport = Responding(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            {
+                Content = new StringContent(
+                    "{\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.6.4\",\"title\":\"Service Unavailable\",\"status\":503,"
+                    + "\"detail\":\"Instance instance-7 is not currently connected to the hub.\",\"traceId\":\"00-abc-def-01\"}",
+                    Encoding.UTF8,
+                    "application/problem+json")
+            });
+
+            var result = await Fetch(CreateManager(transport), CreateSubscription());
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("ManagementHub source returned 503: Instance instance-7 is not currently connected to the hub.", result.Message);
+        }
+
+        [TestMethod, Description("Problem details without an explanation are reported as returned, keeping the trace id")]
+        public async Task ProblemDetailsWithoutDetailReportTheRawResponse()
+        {
+            // what a hub which predates the explanations returns for a source it could not reach
+            const string body = "{\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.5\",\"title\":\"Not Found\",\"status\":404,\"traceId\":\"00-abc-def-01\"}";
+
+            var transport = Responding(() => new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/problem+json")
+            });
+
+            var result = await Fetch(CreateManager(transport), CreateSubscription());
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual($"ManagementHub source returned 404: {body}", result.Message, "The trace id is what finds the request in the hub log");
+        }
+
         [TestMethod, Description("A hub error reports the status rather than being taken as no update")]
         public async Task HubErrorIsAFailedFetch()
         {

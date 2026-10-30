@@ -453,6 +453,18 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>The deserialized result as type <typeparamref name="T"/> if available; otherwise, default.</returns>
         private async Task<T?> PerformInstanceCommandTaskWithResult<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType, TimeSpan? timeout = null)
         {
+            return (await QueryInstance<T>(instanceId, args, commandType, timeout)).Value;
+        }
+
+        /// <summary>
+        /// Send a query to an instance and await its reply. When there is none, the result says why: the instance is
+        /// not registered with the hub, is not connected, or did not answer in time
+        /// </summary>
+        private async Task<InstanceQueryResult<T>> QueryInstance<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType, TimeSpan? timeout = null)
+        {
+            // decided before sending, as an instance which disconnects while the reply is awaited was still sent the query
+            var isSent = IsInstanceConnected(instanceId);
+
             var cmd = new InstanceCommandRequest(commandType, args)
             {
                 IsResultAwaited = true
@@ -462,12 +474,22 @@ namespace Certify.Server.Hub.Api.Services
 
             if (result?.Value != null)
             {
-                return JsonSerializer.Deserialize<T>(result.Value, Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);
+                return new(InstanceQueryOutcome.Replied, JsonSerializer.Deserialize<T>(result.Value, Certify.Shared.JsonOptions.DefaultJsonSerializerOptions), result.Message);
             }
-            else
+
+            if (isSent)
             {
-                return default;
+                _log.LogWarning("Instance {instanceId} did not reply to command {cmdId} {cmdType} in time.", instanceId, cmd.CommandId, commandType);
+
+                return new(InstanceQueryOutcome.NoResponse, default, $"Instance {instanceId} is connected to the hub but did not respond in time. It may be busy, or its connection may have just dropped.");
             }
+
+            if (_certifyManager != null && await _certifyManager.GetHubManagedInstance(instanceId) == null)
+            {
+                return new(InstanceQueryOutcome.InstanceNotRegistered, default, $"Instance {instanceId} is not registered with this hub.");
+            }
+
+            return new(InstanceQueryOutcome.InstanceNotConnected, default, $"Instance {instanceId} is not currently connected to the hub. Check the Certify service is running on that instance and that it can reach the hub.");
         }
 
         /// <summary>
@@ -479,6 +501,17 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>A <see cref="ManagedCertificate"/> if found; otherwise, null.</returns>
         public async Task<ManagedCertificate?> GetManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
         {
+            return (await FetchManagedCertificate(instanceId, managedCertId)).Value;
+        }
+
+        /// <summary>
+        /// Fetches managed certificate details from the target instance, or why they could not be fetched.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="managedCertId">The managed certificate identifier.</param>
+        /// <returns>The <see cref="ManagedCertificate"/> when the instance holds it, otherwise the reason it was not returned.</returns>
+        public async Task<InstanceQueryResult<ManagedCertificate>> FetchManagedCertificate(string instanceId, string managedCertId)
+        {
             // get managed cert via local api or via management hub
 
             var args = new KeyValuePair<string, string>[] {
@@ -486,13 +519,25 @@ namespace Certify.Server.Hub.Api.Services
                         new("managedCertId", managedCertId)
                     };
 
-            var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.GetManagedItem);
+            var result = await QueryInstance<ManagedCertificate>(instanceId, args, ManagementHubCommands.GetManagedItem);
 
-            if (result != null)
+            if (!result.IsReplied)
             {
-                // update local cache
-                _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result);
+                return result;
             }
+
+            // the instance answers with nothing when it holds no item with this id
+            if (result.Value == null)
+            {
+                return result with
+                {
+                    Outcome = InstanceQueryOutcome.ItemNotFound,
+                    Message = $"Managed certificate {managedCertId} was not found on instance {instanceId}. It may have been removed from that instance."
+                };
+            }
+
+            // update local cache
+            _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result.Value);
 
             return result;
         }
@@ -581,8 +626,24 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="format">The export format (e.g. PFX, PEM).</param>
         /// <param name="strictExport"></param>
         /// <param name="authContext">The authentication context.</param>
-        /// <returns>An <see cref="ActionResult{T}"/> that wraps the exported certificate as a byte array.</returns>
+        /// <returns>An <see cref="ActionResult{T}"/> that wraps the exported certificate as a byte array, or why it was not exported.</returns>
         public async Task<ActionResult<byte[]?>> ExportCertificate(string instanceId, string managedCertId, string format, bool? strictExport, AuthContext authContext)
+        {
+            var result = await FetchCertificateExport(instanceId, managedCertId, format, strictExport);
+
+            return result.Value ?? new ActionResult<byte[]?>(result.Message ?? "The instance did not return the certificate export.", false);
+        }
+
+        /// <summary>
+        /// Exports a managed certificate from the target instance in the specified format, or says why the instance did
+        /// not answer.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="managedCertId">The managed certificate identifier.</param>
+        /// <param name="format">The export format (e.g. PFX, PEM).</param>
+        /// <param name="strictExport"></param>
+        /// <returns>The instance's export result, or the reason there is none.</returns>
+        public async Task<InstanceQueryResult<ActionResult<byte[]?>>> FetchCertificateExport(string instanceId, string managedCertId, string format, bool? strictExport)
         {
             // get managed cert via local api or via management hub
 
@@ -593,7 +654,7 @@ namespace Certify.Server.Hub.Api.Services
                         new("strictExport", strictExport.ToString())
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ActionResult<byte[]?>>(instanceId, args, ManagementHubCommands.ExportCertificate);
+            return await QueryInstance<ActionResult<byte[]?>>(instanceId, args, ManagementHubCommands.ExportCertificate);
         }
 
         /// <summary>

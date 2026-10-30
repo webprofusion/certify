@@ -33,6 +33,8 @@ namespace Certify.Core.Tests.Unit
     /// authorizes by signed request. Both are then subject to the domain restrictions on the roles of the principal
     /// they were authorized as. Whether each route applies the right ones of those is a property of the endpoint's
     /// wiring, so it is only visible from here.
+    ///
+    /// Also covers what an authorized caller is told when the instance holding the certificate cannot supply it.
     /// </summary>
     [TestClass]
     public class CertificateDownloadAuthTests
@@ -211,12 +213,85 @@ namespace Certify.Core.Tests.Unit
 
         #endregion
 
+        #region Source instance cannot supply the certificate
+
+        // A caller who may download the certificate is told why the instance holding it could not supply it, rather
+        // than given a bare 404 for every case - an instance which cannot be reached would otherwise look like a
+        // certificate which no longer exists
+
+        [TestMethod]
+        [Description("A certificate the instance does not hold is reported as not found on that instance")]
+        public async Task Download_CertificateNotOnInstance_ReportsNotFound()
+        {
+            var result = await DownloadFrom(SourceState.CertificateMissing);
+
+            AssertProblem(result, StatusCodes.Status404NotFound, $"Managed certificate {ManagedCertId} was not found on instance {InstanceId}");
+        }
+
+        [TestMethod]
+        [Description("A registered instance which is not connected is reported as unavailable")]
+        public async Task Download_InstanceNotConnected_ReportsServiceUnavailable()
+        {
+            var result = await DownloadFrom(SourceState.NotConnected);
+
+            AssertProblem(result, StatusCodes.Status503ServiceUnavailable, $"Instance {InstanceId} is not currently connected to the hub");
+        }
+
+        [TestMethod]
+        [Description("An instance id the hub has no registration for is reported as not registered")]
+        public async Task Download_InstanceNotRegistered_ReportsNotFound()
+        {
+            var result = await DownloadFrom(SourceState.NotRegistered);
+
+            AssertProblem(result, StatusCodes.Status404NotFound, $"Instance {InstanceId} is not registered with this hub");
+        }
+
+        [TestMethod]
+        [Description("A connected instance which does not reply is reported as timed out")]
+        public async Task Download_InstanceDoesNotRespond_ReportsGatewayTimeout()
+        {
+            var result = await DownloadFrom(SourceState.NoResponse);
+
+            AssertProblem(result, StatusCodes.Status504GatewayTimeout, "did not respond in time");
+        }
+
+        [TestMethod]
+        [Description("An instance which stops replying between the lookup and the export is reported as timed out")]
+        public async Task Download_InstanceDoesNotRespondToExport_ReportsGatewayTimeout()
+        {
+            var result = await DownloadFrom(SourceState.ExportNoResponse);
+
+            AssertProblem(result, StatusCodes.Status504GatewayTimeout, "did not respond in time");
+        }
+
+        private static async Task<IActionResult> DownloadFrom(SourceState source)
+        {
+            var client = CreateClient(domainRestriction: null, grantsDownload: true);
+            var controller = CreateController(client.Object, ApiTokenPrincipal(), source: source);
+
+            return await controller.Download(InstanceId, ManagedCertId, "pfx");
+        }
+
+        #endregion
+
         #region Fixtures
 
         private static void AssertCertificateReturned(IActionResult result)
         {
             Assert.IsInstanceOfType<FileContentResult>(result, $"expected the certificate, got {Describe(result)}");
             CollectionAssert.AreEqual(CertificateBytes, ((FileContentResult)result).FileContents);
+        }
+
+        private static void AssertProblem(IActionResult result, int expectedStatusCode, string expectedDetail)
+        {
+            Assert.IsInstanceOfType<ObjectResult>(result, $"expected a problem response, got {Describe(result)}");
+
+            var objectResult = (ObjectResult)result;
+            Assert.AreEqual(expectedStatusCode, objectResult.StatusCode, Describe(result));
+
+            var problem = objectResult.Value as ProblemDetails;
+            Assert.IsNotNull(problem);
+            StringAssert.Contains(problem!.Detail, expectedDetail);
         }
 
         private static void AssertUnauthorized(IActionResult result, string expectedDetail = null)
@@ -399,36 +474,83 @@ namespace Certify.Core.Tests.Unit
         private const string InstanceSecret = "instance-request-auth-secret";
 
         /// <summary>
-        /// The endpoint reaches the instance holding the certificate through ManagementAPI. Pointing the state
-        /// provider's hub instance id at the instance under test routes those commands to the in-process manager,
-        /// which is where the certificate is served from below.
+        /// What the instance holding the certificate is doing when the hub asks it for the certificate
+        /// </summary>
+        private enum SourceState
+        {
+            /// <summary>Connected and holds the certificate</summary>
+            Available,
+            /// <summary>Connected but holds no certificate with the requested id</summary>
+            CertificateMissing,
+            /// <summary>Registered with the hub but not connected</summary>
+            NotConnected,
+            /// <summary>Not registered with the hub at all</summary>
+            NotRegistered,
+            /// <summary>Connected, but does not reply</summary>
+            NoResponse,
+            /// <summary>Connected and returns the certificate details, but does not reply when asked for the export</summary>
+            ExportNoResponse
+        }
+
+        /// <summary>
+        /// The command result an instance holding the certificate gives
+        /// </summary>
+        private static InstanceCommandResult InstanceReply(InstanceCommandRequest cmd, bool holdsCertificate = true)
+        {
+            return new InstanceCommandResult
+            {
+                CommandId = cmd.CommandId,
+                CommandType = cmd.CommandType,
+                Value = cmd.CommandType switch
+                {
+                    ManagementHubCommands.GetManagedItem => Serialize(holdsCertificate ? TestCertificate() : null),
+                    ManagementHubCommands.ExportCertificate => Serialize(
+                        new Models.Config.ActionResult<byte[]>("OK", true) { Result = CertificateBytes }),
+                    _ => null
+                }
+            };
+        }
+
+        /// <summary>
+        /// The endpoint reaches the instance holding the certificate through ManagementAPI. For an available source,
+        /// pointing the state provider's hub instance id at the instance under test routes those commands to the
+        /// in-process manager, which is where the certificate is served from below. Any other source is a remote
+        /// instance, reached (or not) through its hub connection.
         /// </summary>
         private static CertificateController CreateController(
             ICertifyInternalApiClient client,
             ClaimsPrincipal caller,
-            bool signRequest = false)
+            bool signRequest = false,
+            SourceState source = SourceState.Available)
         {
+            var isInProcess = source is SourceState.Available or SourceState.CertificateMissing;
+
             var certifyManager = new Mock<Certify.Management.ICertifyManager>();
             certifyManager.Setup(m => m.PerformHubCommandWithResult(It.IsAny<InstanceCommandRequest>()))
-                .ReturnsAsync((InstanceCommandRequest cmd) => new InstanceCommandResult
-                {
-                    CommandId = cmd.CommandId,
-                    CommandType = cmd.CommandType,
-                    Value = cmd.CommandType switch
-                    {
-                        ManagementHubCommands.GetManagedItem => Serialize(TestCertificate()),
-                        ManagementHubCommands.ExportCertificate => Serialize(
-                            new Models.Config.ActionResult<byte[]>("OK", true) { Result = CertificateBytes }),
-                        _ => null
-                    }
-                });
+                .ReturnsAsync((InstanceCommandRequest cmd) => InstanceReply(cmd, holdsCertificate: source != SourceState.CertificateMissing));
+            certifyManager.Setup(m => m.GetHubManagedInstance(InstanceId))
+                .ReturnsAsync(source == SourceState.NotRegistered ? null : new ManagedInstanceInfo { Id = InstanceId, InstanceId = InstanceId });
 
             var stateProvider = new Mock<IInstanceManagementStateProvider>();
-            stateProvider.Setup(s => s.GetManagementHubInstanceId()).Returns(InstanceId);
+            stateProvider.Setup(s => s.GetManagementHubInstanceId()).Returns(isInProcess ? InstanceId : "hub-instance");
+
+            var isConnected = source is SourceState.NoResponse or SourceState.ExportNoResponse;
+            stateProvider.Setup(s => s.GetConnectionIdForInstance(InstanceId)).Returns(isConnected ? "conn-1" : null);
+            stateProvider.Setup(s => s.ConsumeAwaitedCommandResult(It.IsAny<InstanceCommandRequest>(), It.IsAny<TimeSpan?>()))
+                .ReturnsAsync((InstanceCommandRequest cmd, TimeSpan? _) =>
+                    source == SourceState.ExportNoResponse && cmd.CommandType == ManagementHubCommands.GetManagedItem
+                        ? InstanceReply(cmd)
+                        : null);
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            hubClients.Setup(c => c.Client("conn-1")).Returns(Mock.Of<IInstanceManagementHub>());
+
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(h => h.Clients).Returns(hubClients.Object);
 
             var mgmtApi = new ManagementAPI(
                 stateProvider.Object,
-                new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>().Object,
+                hubContext.Object,
                 certifyManager.Object,
                 NullLogger<ManagementAPI>.Instance);
 

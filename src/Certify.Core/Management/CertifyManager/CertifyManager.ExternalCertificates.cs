@@ -837,6 +837,35 @@ namespace Certify.Management
             };
         }
 
+        /// <summary>
+        /// Describe a failed hub API call by the reason the hub gave in its problem details. A hub which gave none
+        /// (an older hub reports a source it could not reach as a bare 404) is described by its raw response, which
+        /// carries the trace id to find the request in the hub log
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <returns></returns>
+        internal static string? DescribeHubApiFailure(ApiException ex)
+        {
+            if (!string.IsNullOrWhiteSpace(ex.Response))
+            {
+                try
+                {
+                    var problemDetails = JsonSerializer.Deserialize<Microsoft.AspNetCore.Mvc.ProblemDetails>(ex.Response, JsonOptions.DefaultJsonSerializerOptions);
+
+                    if (!string.IsNullOrWhiteSpace(problemDetails?.Detail))
+                    {
+                        return problemDetails.Detail;
+                    }
+                }
+                catch (JsonException)
+                {
+                    // not problem details, so the response is reported as it is
+                }
+            }
+
+            return ex.Response;
+        }
+
         private async Task<ExternalCertificateFetchResult> FetchFromManagementHub(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, CancellationToken cancellationToken, bool ignoreCurrentVersion = false)
         {
             if (!ManagedCertificate.TryParseManagementHubReference(sourceConfig.ExternalReference, out var sourceInstanceId, out var sourceManagedCertificateId))
@@ -910,7 +939,7 @@ namespace Certify.Management
                 return new ExternalCertificateFetchResult
                 {
                     IsSuccess = false,
-                    Message = $"ManagementHub source returned {ex.StatusCode}: {ex.Response}"
+                    Message = $"ManagementHub source returned {ex.StatusCode}: {DescribeHubApiFailure(ex)}"
                 };
             }
             catch (System.Net.Http.HttpRequestException ex)

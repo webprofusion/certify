@@ -79,11 +79,12 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             // fetch managed cert info an check if we have a cert available and if any of our caching headers are applicable
-            var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
+            var lookup = await _mgmtAPI.FetchManagedCertificate(instanceId, managedCertId);
+            var managedCert = lookup.Value;
 
             if (managedCert == null)
             {
-                return new NotFoundResult();
+                return InstanceQueryProblem(lookup);
             }
 
             // A role assignment scoped to tags reaches only the certificates carrying them, and one restricted to
@@ -129,7 +130,14 @@ namespace Certify.Server.Hub.Api.Controllers
 
             // perform the export from the instance holding the cert
             var strictExport = Request.Query["strictExport"].ToString() == "true";
-            var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, format, strictExport, CurrentAuthContext);
+            var export = await _mgmtAPI.FetchCertificateExport(instanceId, managedCertId, format, strictExport);
+
+            if (!export.IsReplied)
+            {
+                return InstanceQueryProblem(export);
+            }
+
+            var exportResult = export.Value;
 
             //return the cert or cert component as a file
             if (exportResult?.IsSuccess == true && exportResult.Result != null)
@@ -153,6 +161,22 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 return Problem(detail: exportResult?.Message ?? "The instance did not return the certificate export.", statusCode: (int)HttpStatusCode.BadRequest);
             }
+        }
+
+        /// <summary>
+        /// The response when the instance holding a certificate gave no usable answer, saying why: an instance which
+        /// cannot be reached is reported as unavailable or timed out, so it is not mistaken for a missing certificate
+        /// </summary>
+        private ObjectResult InstanceQueryProblem<T>(InstanceQueryResult<T> result)
+        {
+            var statusCode = result.Outcome switch
+            {
+                InstanceQueryOutcome.InstanceNotConnected => HttpStatusCode.ServiceUnavailable,
+                InstanceQueryOutcome.NoResponse => HttpStatusCode.GatewayTimeout,
+                _ => HttpStatusCode.NotFound
+            };
+
+            return Problem(detail: result.Message, statusCode: (int)statusCode);
         }
 
         /// <summary>
