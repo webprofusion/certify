@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -741,6 +742,17 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Most status reports sent per diagnostic problem while the service is running, so that a forgotten machine
+        /// (e.g. a VM clone nobody uses) does not notify forever.
+        /// </summary>
+        internal const int MaxDiagnosticReportsPerProblem = 10;
+
+        /// <summary>
+        /// Reports sent per diagnostic problem. Held in memory only, so a service restart starts reporting again.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, (int Count, DateTimeOffset LastSent)> _diagnosticReportLog = new();
+
+        /// <summary>
         /// Perform a subset of diagnostics, report failures if status reporting is enabled.
         /// </summary>
         /// <returns></returns>
@@ -759,29 +771,7 @@ namespace Certify.Management
                     {
                         _serviceLog.Warning("Diagnostic Check Failed: " + d.Message);
 
-                        // report diagnostic failures (if enabled). The email is optional, the API falls back to the dashboard owner of this instance
-                        if (CoreAppSettings.Current.EnableStatusReporting && _dashboardClient != null)
-                        {
-
-                            try
-                            {
-                                await _dashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
-                                {
-                                    InstanceId = CoreAppSettings.Current.InstanceId,
-                                    ManagedItemId = null,
-                                    ItemTitle = "Diagnostic Check Failed",
-                                    ActionType = "diagnostic:" + d.Result.ToString(),
-                                    InstanceTitle = Environment.MachineName,
-                                    Message = d.Message,
-                                    NotificationEmail = reportingEmail,
-                                    AppVersion = Util.GetAppVersion().ToString() + ";" + Environment.OSVersion.ToString()
-                                });
-                            }
-                            catch (Exception)
-                            {
-                                _serviceLog.Warning("Failed to send diagnostic status report to API.");
-                            }
-                        }
+                        await ReportDiagnosticFailure(d, reportingEmail);
                     }
                 }
                 else
@@ -792,6 +782,56 @@ namespace Certify.Management
             catch (Exception ex)
             {
                 _serviceLog.Error(ex, "Diagnostics Error");
+            }
+        }
+
+        /// <summary>
+        /// Report a failed diagnostic check (if status reporting is enabled), up to <see cref="MaxDiagnosticReportsPerProblem"/>
+        /// times per problem. The email is optional, the API falls back to the dashboard owner of this instance.
+        /// </summary>
+        internal async Task ReportDiagnosticFailure(ActionResult diagnostic, string reportingEmail)
+        {
+            if (!CoreAppSettings.Current.EnableStatusReporting || _dashboardClient == null)
+            {
+                return;
+            }
+
+            var problem = diagnostic.Result.ToString();
+
+            _diagnosticReportLog.TryGetValue(problem, out var lastReport);
+
+            if (lastReport.Count >= MaxDiagnosticReportsPerProblem)
+            {
+                _serviceLog?.Information($"Diagnostic status report limit reached for {problem}, last sent {lastReport.LastSent:u}. Reports resume after a service restart.");
+                return;
+            }
+
+            try
+            {
+                var reported = await _dashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
+                {
+                    InstanceId = CoreAppSettings.Current.InstanceId,
+                    ManagedItemId = null,
+                    ItemTitle = "Diagnostic Check Failed",
+                    ActionType = "diagnostic:" + problem,
+                    InstanceTitle = Environment.MachineName,
+                    Message = diagnostic.Message,
+                    NotificationEmail = reportingEmail,
+                    AppVersion = Util.GetAppVersion().ToString() + ";" + Environment.OSVersion.ToString()
+                });
+
+                if (reported)
+                {
+                    _diagnosticReportLog[problem] = (lastReport.Count + 1, DateTimeOffset.UtcNow);
+                }
+                else
+                {
+                    _serviceLog?.Warning("Failed to send diagnostic status report to API.");
+                }
+            }
+            catch (Exception)
+            {
+                _serviceLog?.Warning("Failed to send diagnostic status report to API.");
             }
         }
 
