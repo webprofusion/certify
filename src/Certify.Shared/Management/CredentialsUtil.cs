@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -6,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Providers;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -34,7 +36,46 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Get protected version of a secret 
+        /// The most likely reason a stored credential cannot be decrypted on this platform
+        /// </summary>
+        public static string GetDecryptFailureReason()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return "It was most likely created by a different user account.";
+            }
+
+            var keyDirectory = EnvironmentUtil.EnsuredAppDataPath("credentials", skipCreation: true);
+
+            return $"The key it was encrypted with is most likely missing from {keyDirectory}, or that folder cannot be read. Restore the folder from a backup, or enter the credential again.";
+        }
+
+        /// <summary>
+        /// Find stored credentials which exist but cannot be decrypted. Any other failure, such as the credential store being
+        /// unavailable, says nothing about the credentials and is left to the caller.
+        /// </summary>
+        public static async Task<List<StoredCredential>> GetUnreadableCredentials(ICredentialsManager credentialsManager)
+        {
+            var unreadable = new List<StoredCredential>();
+
+            foreach (var credential in await credentialsManager.GetCredentials())
+            {
+                try
+                {
+                    await credentialsManager.GetUnlockedCredential(credential.StorageKey);
+                }
+                catch (AggregateException)
+                {
+                    // credential stores raise this when a stored value cannot be decrypted
+                    unreadable.Add(credential);
+                }
+            }
+
+            return unreadable;
+        }
+
+        /// <summary>
+        /// Get protected version of a secret
         /// </summary>
         /// <param name="clearText"></param>
         /// <param name="optionalEntropy"></param>

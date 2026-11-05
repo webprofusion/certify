@@ -380,6 +380,8 @@ namespace Certify.Management
 
             await UpgradeSettings();
 
+            await CheckStoredCredentials();
+
             // Ensure default tag categories exist (only when running as a hub)
             if (!IsInDegradedMode && (_isMgtmHubBackend || _isDirectMgmtHubBackend))
             {
@@ -389,6 +391,52 @@ namespace Certify.Management
             _ = RefreshCachedLicenseCheck();
 
             _serviceLog?.Information("Certify Manager Started");
+        }
+
+        /// <summary>
+        /// Report stored credentials which cannot be decrypted. Otherwise, losing the key for them only shows up later, as
+        /// failed renewals and deployments.
+        /// </summary>
+        private async Task CheckStoredCredentials()
+        {
+            if (IsInDegradedMode)
+            {
+                return;
+            }
+
+            try
+            {
+                var unreadable = await CredentialsUtil.GetUnreadableCredentials(_credentialsManager);
+
+                if (unreadable.Count > 0)
+                {
+                    var reason = CredentialsUtil.GetDecryptFailureReason();
+
+                    _serviceLog?.Error("Stored credentials could not be decrypted: {titles}. {reason}", string.Join(", ", unreadable.Select(c => c.Title)), reason);
+
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_CREDENTIALS,
+                        title: "Stored Credentials",
+                        description: $"{unreadable.Count} stored credential(s) could not be decrypted, so renewals and deployments using them will fail. See the service log for which ones. {reason}",
+                        hasWarning: true
+                    );
+                }
+                else
+                {
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_CREDENTIALS,
+                        title: "Stored Credentials",
+                        description: "Stored credentials can be decrypted."
+                    );
+                }
+            }
+            catch (Exception exp)
+            {
+                // the store itself is unavailable, which says nothing about the credentials and is reported by data store status
+                _serviceLog?.Warning("Could not check stored credentials: {msg}", exp.Message);
+            }
         }
 
         private async Task RefreshCachedLicenseCheck()

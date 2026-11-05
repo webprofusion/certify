@@ -212,6 +212,8 @@ namespace Certify.Management
                 // perform diagnostics and status notifications if required
                 await PerformScheduledDiagnostics();
 
+                await CheckStoredCredentials();
+
                 // perform item db maintenance
                 await _itemManager.PerformMaintenance();
 

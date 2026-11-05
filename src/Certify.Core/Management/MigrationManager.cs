@@ -198,7 +198,7 @@ namespace Certify.Core.Management
                 {
                     // decryption failed - add to errors list without modifying the credential title
                     var originalTitle = c.Title;
-                    export.Errors.Add($"Stored Credential [{originalTitle}] could not be decrypted for export. It may be owned by a different user.");
+                    export.Errors.Add($"Stored Credential [{originalTitle}] could not be decrypted for export. {CredentialsUtil.GetDecryptFailureReason()}");
                     c.Secret = "";
                 }
             }
