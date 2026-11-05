@@ -2,12 +2,14 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Claims;
 using System.Security.Principal;
+using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Server.Core;
 using Certify.Server.Hub.Api.Services.LocalAdmin;
 using Certify.Service.Controllers;
 using Certify.Shared;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace Certify.Server.HubService.LocalAdmin
 {
@@ -55,6 +57,10 @@ namespace Certify.Server.HubService.LocalAdmin
             // nothing from the hub's own configuration (Kestrel endpoints, urls) may apply to this host
             builder.Configuration.Sources.Clear();
             builder.Services.AddSingleton(loggerFactory);
+
+            // AddAuthentication below also adds data protection, which creates a key on start, so keep it with the hub's keys
+            builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(EnvironmentUtil.EnsuredAppDataPath("keys")));
 
             string endpointDescription;
             string? socketPath = null;
