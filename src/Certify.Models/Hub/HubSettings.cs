@@ -58,6 +58,11 @@ namespace Certify.Models.Hub
         /// upgraded hub until an administrator enables it.
         /// </summary>
         public bool EnforceSignedJoiningChecks { get; set; }
+
+        /// <summary>
+        /// If true, the hub UI offers Add Joining Key on the managed instances page. Default is false.
+        /// </summary>
+        public bool ShowAddJoiningKey { get; set; }
     }
 
     /// <summary>

@@ -102,6 +102,61 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(ManagedInstanceRequestAuth.DeriveSecretHash(joining.RequestAuthSecret), harness.StoredSecretHash);
         }
 
+        [TestMethod]
+        [Description("Which key an instance is using is recorded once it has shown it is that instance, so a rejoin can send the same key")]
+        public async Task CheckJoining_SignedByTheInstance_RecordsTheJoiningPrincipal()
+        {
+            var harness = new JoinHarness(hasSecret: true);
+
+            Joined(await harness.Controller(signed: true).CheckJoining());
+
+            Assert.AreEqual(JoiningPrincipalId, harness.StoredJoiningPrincipalId);
+        }
+
+        [TestMethod]
+        [Description("An instance with no secret, as after a rejoin, records the key it came back with")]
+        public async Task CheckJoining_InstanceWithoutSecret_RecordsTheJoiningPrincipal()
+        {
+            var harness = new JoinHarness(hasSecret: false);
+
+            Joined(await harness.Controller().CheckJoining());
+
+            Assert.AreEqual(JoiningPrincipalId, harness.StoredJoiningPrincipalId);
+        }
+
+        [TestMethod]
+        [Description("An unsigned joincheck does not show the caller is the instance, so must not change which key a rejoin sends it")]
+        public async Task CheckJoining_UnsignedNotEnforced_DoesNotRecordTheJoiningPrincipal()
+        {
+            var harness = new JoinHarness(hasSecret: true, enforceSignedJoiningChecks: false);
+
+            Joined(await harness.Controller().CheckJoining());
+
+            Assert.IsNull(harness.StoredJoiningPrincipalId);
+        }
+
+        [TestMethod]
+        [Description("The joining principal is written only when it has changed, as the joincheck is repeated for each hub connection token")]
+        public async Task CheckJoining_AlreadyRecordedPrincipal_IsNotWrittenAgain()
+        {
+            var harness = new JoinHarness(hasSecret: true, joiningPrincipalId: JoiningPrincipalId);
+
+            Joined(await harness.Controller(signed: true).CheckJoining());
+
+            Assert.IsNull(harness.StoredJoiningPrincipalId);
+        }
+
+        [TestMethod]
+        [Description("A new registration records the principal it joined with")]
+        public async Task CheckJoining_NewRegistration_RecordsTheJoiningPrincipal()
+        {
+            var harness = new JoinHarness(hasSecret: false, isKnownInstance: false);
+
+            Joined(await harness.Controller().CheckJoining());
+
+            Assert.AreEqual(JoiningPrincipalId, harness.AddedInstance?.JoiningSecurityPrincipalId);
+        }
+
         private static HubJoiningInfo Joined(IActionResult result)
         {
             Assert.IsInstanceOfType<OkObjectResult>(result, (result as ObjectResult)?.Value?.ToString());
@@ -116,8 +171,10 @@ namespace Certify.Core.Tests.Unit
             private readonly string _secret = ManagedInstanceRequestAuth.GenerateSecret();
 
             public string? StoredSecretHash { get; private set; }
+            public string? StoredJoiningPrincipalId { get; private set; }
+            public ManagedInstanceInfo? AddedInstance { get; private set; }
 
-            public JoinHarness(bool hasSecret, bool enforceSignedJoiningChecks = true)
+            public JoinHarness(bool hasSecret, bool enforceSignedJoiningChecks = true, string joiningPrincipalId = "", bool isKnownInstance = true)
             {
                 _client.Setup(c => c.CheckSecurityPrincipalHasAccess(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
                     .ReturnsAsync(true);
@@ -126,16 +183,24 @@ namespace Certify.Core.Tests.Unit
                     .ReturnsAsync(new HubSettings { InstanceConnections = new InstanceConnectionSettings { EnforceSignedJoiningChecks = enforceSignedJoiningChecks } });
 
                 _client.Setup(c => c.GetHubManagedInstance(InstanceId, It.IsAny<AuthContext>()))
-                    .ReturnsAsync(() => new ManagedInstanceInfo
+                    .ReturnsAsync(() => !isKnownInstance ? null! : new ManagedInstanceInfo
                     {
                         Id = InstanceId,
                         InstanceId = InstanceId,
-                        RequestAuthSecretHash = hasSecret ? ManagedInstanceRequestAuth.DeriveSecretHash(_secret) : string.Empty
+                        RequestAuthSecretHash = hasSecret ? ManagedInstanceRequestAuth.DeriveSecretHash(_secret) : string.Empty,
+                        JoiningSecurityPrincipalId = joiningPrincipalId
                     });
+
+                _client.Setup(c => c.AddHubManagedInstance(It.IsAny<ManagedInstanceInfo>(), It.IsAny<AuthContext>()))
+                    .Callback((ManagedInstanceInfo item, AuthContext _) => AddedInstance = item)
+                    .ReturnsAsync((ManagedInstanceInfo item, AuthContext _) => new Certify.Models.Config.ActionResult<ManagedInstanceInfo>("Added", true, item));
 
                 var certifyManager = new Mock<ICertifyManager>();
                 certifyManager.Setup(m => m.SetHubManagedInstanceRequestAuthSecretHash(InstanceId, It.IsAny<string?>()))
                     .Callback((string _, string? hash) => StoredSecretHash = hash)
+                    .ReturnsAsync(new Certify.Models.Config.ActionResult("Updated", true));
+                certifyManager.Setup(m => m.SetHubManagedInstanceJoiningPrincipal(InstanceId, It.IsAny<string>()))
+                    .Callback((string _, string principalId) => StoredJoiningPrincipalId = principalId)
                     .ReturnsAsync(new Certify.Models.Config.ActionResult("Updated", true));
 
                 _mgmtApi = new ManagementAPI(

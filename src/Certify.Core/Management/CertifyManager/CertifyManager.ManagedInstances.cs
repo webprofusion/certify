@@ -159,6 +159,25 @@ namespace Certify.Management
             return new ActionResult("Updated", true);
         }
 
+        /// <summary>
+        /// Record the security principal whose joining key a managed instance is using.
+        /// </summary>
+        public async Task<ActionResult> SetHubManagedInstanceJoiningPrincipal(string id, string securityPrincipalId)
+        {
+            var existing = string.IsNullOrWhiteSpace(id) ? null : await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), id);
+
+            if (existing == null)
+            {
+                return new ActionResult("Item Not found. Cannot update.", false);
+            }
+
+            existing.JoiningSecurityPrincipalId = securityPrincipalId;
+
+            await _configStore.Update(nameof(ManagedInstanceInfo), existing);
+
+            return new ActionResult("Updated", true);
+        }
+
         public async Task<ManagedInstanceInfo> GetHubManagedInstance(string id)
         {
             var item = await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), id);

@@ -85,7 +85,7 @@ namespace Certify.Server.Hub.Api.Services
                 };
             }
 
-            var joiningCredential = await ResolveLatestJoiningCredential(currentAuthContext);
+            var joiningCredential = await ResolveLatestJoiningCredential(instanceId, currentAuthContext);
             if (!joiningCredential.IsSuccess || joiningCredential.Result == null)
             {
                 return new ActionResult(joiningCredential.Message, false);
@@ -128,12 +128,6 @@ namespace Certify.Server.Hub.Api.Services
 
         public async Task<ActionResult> RejoinAllManagedInstances(AuthContext? currentAuthContext)
         {
-            var joiningCredential = await ResolveLatestJoiningCredential(currentAuthContext);
-            if (!joiningCredential.IsSuccess || joiningCredential.Result == null)
-            {
-                return new ActionResult(joiningCredential.Message, false);
-            }
-
             var hubInstanceId = _mgmtStateProvider.GetManagementHubInstanceId();
             var connectedInstances = _mgmtStateProvider
                 .GetConnectedInstances()
@@ -166,6 +160,15 @@ namespace Certify.Server.Hub.Api.Services
 
                 try
                 {
+                    // resolved per instance, as each one rejoins with the key it joined with
+                    var joiningCredential = await ResolveLatestJoiningCredential(instance.InstanceId, currentAuthContext);
+                    if (!joiningCredential.IsSuccess || joiningCredential.Result == null)
+                    {
+                        failed++;
+                        _log.LogWarning("Could not resolve a joining key for instance {instanceId}: {message}", instance.InstanceId, joiningCredential.Message);
+                        continue;
+                    }
+
                     // cleared first so the instance is issued a new request auth secret, as for a single rejoin
                     var cleared = await SetManagedInstanceRequestAuthSecretHash(instance.InstanceId, null);
                     if (!cleared.IsSuccess)
@@ -274,6 +277,20 @@ namespace Certify.Server.Hub.Api.Services
 
             return await _certifyManager.SetHubManagedInstanceRequestAuthSecretHash(instanceId, requestAuthSecretHash)
                 ?? new ActionResult("The managed instance request auth secret could not be updated.", false);
+        }
+
+        /// <summary>
+        /// Record the security principal whose joining key a managed instance is using.
+        /// </summary>
+        public async Task<ActionResult> SetManagedInstanceJoiningPrincipal(string instanceId, string securityPrincipalId)
+        {
+            if (_certifyManager == null)
+            {
+                return new ActionResult("The hub backend is not available to update the managed instance.", false);
+            }
+
+            return await _certifyManager.SetHubManagedInstanceJoiningPrincipal(instanceId, securityPrincipalId)
+                ?? new ActionResult("The managed instance joining principal could not be updated.", false);
         }
 
         public async Task<ActionResult> RefreshExternalManagedCertificates(string instanceId, AuthContext? currentAuthContext)
@@ -409,27 +426,21 @@ namespace Certify.Server.Hub.Api.Services
             };
         }
 
-        private async Task<ActionResult<HubJoiningClientSecret>> ResolveLatestJoiningCredential(AuthContext? currentAuthContext)
+        private async Task<ActionResult<HubJoiningClientSecret>> ResolveLatestJoiningCredential(string instanceId, AuthContext? currentAuthContext)
         {
             if (_certifyManager == null)
             {
                 return new ActionResult<HubJoiningClientSecret>("Management hub instance is unavailable.", false);
             }
 
+            var instance = await _certifyManager.GetHubManagedInstance(instanceId);
+
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? StandardSecurityPrincipals.System, includeSecrets: true);
-            var latestToken = assignedTokens
-                .Where(t => string.Equals(t.Title, "Managed Instance Hub Joining Key", StringComparison.OrdinalIgnoreCase))
-                .SelectMany(t => t.AccessTokens ?? [])
-                .Where(t => !string.IsNullOrWhiteSpace(t.ClientId) && !string.IsNullOrWhiteSpace(t.Secret))
-                .Where(t => !t.DateExpiry.HasValue || t.DateExpiry > DateTimeOffset.UtcNow)
-                .Where(t => !t.DateRevoked.HasValue)
-                .OrderByDescending(t => t.DateCreated ?? DateTimeOffset.MinValue)
-                .FirstOrDefault();
+            var latestToken = await accessControl.GetLatestManagedInstanceJoiningKey(currentAuthContext?.UserId ?? StandardSecurityPrincipals.System, instance?.JoiningSecurityPrincipalId);
 
             if (latestToken == null)
             {
-                return new ActionResult<HubJoiningClientSecret>("No active management hub joining key could be resolved.", false);
+                return new ActionResult<HubJoiningClientSecret>("No active management hub joining key could be resolved for this instance.", false);
             }
 
             return new ActionResult<HubJoiningClientSecret>(

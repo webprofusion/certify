@@ -93,6 +93,18 @@ namespace Certify.Core.Management.Access
         /// </summary>
         Task<Models.Config.ActionResult> UpdateAssignedAccessToken(string contextUserId, AssignedAccessToken token, bool bypassIntegrityCheck = false);
 
+        /// <summary>
+        /// Issue a joining key for a set of managed instances. The caller names the key and nothing else: its security
+        /// principal and role are decided here, so being able to call this cannot produce a key which does more than join.
+        /// </summary>
+        Task<AssignedAccessTokenAddResult> AddManagedInstanceJoiningKey(string contextUserId, ManagedInstanceJoiningKeyRequest request);
+
+        /// <summary>
+        /// The newest usable joining key for the given joining principal, including its secret. With no joining principal,
+        /// or the built-in one, this is the hub's shared joining key.
+        /// </summary>
+        Task<AccessToken?> GetLatestManagedInstanceJoiningKey(string contextUserId, string? joiningPrincipalId);
+
         Task<bool> DeleteAssignedAccessToken(string contextUserId, string id);
         Task<bool> IsInitialized();
     }

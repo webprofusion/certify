@@ -115,6 +115,7 @@ namespace Certify.Server.HubService.Services
         public Task<RoleStatus> GetSecurityPrincipalRoleStatus(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipalRoleStatus(id);
         public Task<ICollection<SecurityPrincipal>> GetSecurityPrincipals(AuthContext authContext) => _accessController(authContext).GetSecurityPrincipals();
         public Task<AssignedAccessTokenAddResult> AddAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).AddAssignedccessToken(token);
+        public Task<AssignedAccessTokenAddResult> AddManagedInstanceJoiningKey(ManagedInstanceJoiningKeyRequest request, AuthContext authContext) => _accessController(authContext).AddManagedInstanceJoiningKey(request);
         public Task<AccessTokenUnlockResult> UnlockAccessToken(string accessTokenId, AuthContext authContext) => _accessController(authContext).UnlockAccessToken(accessTokenId);
         public Task<ActionResult> UpdateAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).UpdateAssignedAccessToken(token);
         public Task<ActionResult> RemoveAssignedAccessToken(string id, AuthContext authContext) => _accessController(authContext).RemoveAssignedAccessToken(id);

@@ -6,6 +6,12 @@
         public VersionInfo Version { get; set; } = default!;
 
         public bool IsLicensed { get; set; }
+
+        /// <summary>
+        /// Whether the hub UI offers Add Joining Key. Reported here because users who can add joining keys may not be
+        /// able to read the hub settings.
+        /// </summary>
+        public bool ShowAddJoiningKey { get; set; }
     }
 
     public class HubJoiningInfo

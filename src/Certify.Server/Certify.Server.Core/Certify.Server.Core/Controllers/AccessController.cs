@@ -165,6 +165,15 @@ namespace Certify.Service.Controllers
             };
         }
 
+        [HttpPost, Route("joiningkey")]
+        [RestrictedLocalChange]
+        public async Task<AssignedAccessTokenAddResult> AddManagedInstanceJoiningKey([FromBody] ManagedInstanceJoiningKeyRequest request)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            return await accessControl.AddManagedInstanceJoiningKey(GetContextUserId(), request);
+        }
+
         [HttpPost, Route("assignedtoken/update")]
         [RestrictedLocalChange]
         public async Task<Models.Config.ActionResult> UpdateAssignedAccessToken([FromBody] AssignedAccessToken token)

@@ -504,6 +504,7 @@ namespace Certify.Management
 
                 var instanceInfo = GetManagedInstanceInfo();
                 hubInfo.IsLicensed = instanceInfo.License?.StatusCode == LicenseCheckStatusCode.Licensed;
+                hubInfo.ShowAddJoiningKey = (await GetHubSettings()).InstanceConnections.ShowAddJoiningKey;
 
                 var versionInfo = Util.GetAppVersion().ToString();
 

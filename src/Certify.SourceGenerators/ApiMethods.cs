@@ -164,6 +164,18 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "AddManagedInstanceJoiningKey",
+                    OperationMethod = HttpPost,
+                    Comment = "Add a joining key for a set of managed instances, the result includes the generated secret",
+                    PublicAPIController = "Access",
+                    PublicAPIRoute = "joiningkey",
+                    ServiceAPIRoute = "access/joiningkey",
+                    ReturnType = nameof(AssignedAccessTokenAddResult),
+                    Params = new Dictionary<string, string> { { "request", "Certify.Models.Hub.ManagedInstanceJoiningKeyRequest" } },
+                    RequiredPermissions = [new(ResourceTypes.AccessToken, StandardResourceActions.ManagedInstanceJoiningKeyAdd)]
+                },
+                new()
+                {
                     OperationName = "UpdateAssignedAccessToken",
                     OperationMethod = HttpPost,
                     Comment = "Update the title, description and role scope of an assigned access token, keeping the issued token",

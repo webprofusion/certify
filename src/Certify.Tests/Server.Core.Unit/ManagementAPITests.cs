@@ -370,6 +370,95 @@ namespace Certify.Tests.Server.Core.Unit
             Assert.AreEqual("eab-1", account.EabKeyId);
         }
 
+        [TestMethod]
+        public async Task RejoinAllManagedInstances_SendsEachInstanceTheKeyItJoinedWith()
+        {
+            var (managementApi, hubClients, manager) = CreateConnectedInstances("remote-1", "remote-2");
+
+            manager.Setup(x => x.GetHubManagedInstance("remote-2"))
+                .ReturnsAsync(new ManagedInstanceInfo { Id = "remote-2", InstanceId = "remote-2", JoiningSecurityPrincipalId = "environment-principal" });
+
+            var accessControl = Mock.Get(await manager.Object.GetCurrentAccessControl());
+            accessControl
+                .Setup(x => x.GetLatestManagedInstanceJoiningKey(It.IsAny<string>(), "environment-principal"))
+                .ReturnsAsync(new AccessToken { ClientId = "environment-principal", Secret = "environment-secret" });
+
+            var result = await managementApi.RejoinAllManagedInstances(null);
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+
+            hubClients["remote-1"].Verify(x => x.SendCommandRequest(It.Is<InstanceCommandRequest>(cmd => HasExpectedRejoinPayload(cmd, "join-client", "join-secret"))), Times.Once);
+            hubClients["remote-2"].Verify(x => x.SendCommandRequest(It.Is<InstanceCommandRequest>(cmd => HasExpectedRejoinPayload(cmd, "environment-principal", "environment-secret"))), Times.Once);
+        }
+
+        [TestMethod]
+        [Description("An instance whose key has gone is left alone, rather than being moved to the shared key or losing its request auth secret")]
+        public async Task RejoinAllManagedInstances_SkipsAnInstanceWhoseKeyHasGone()
+        {
+            var (managementApi, hubClients, manager) = CreateConnectedInstances("remote-1", "remote-2");
+
+            manager.Setup(x => x.GetHubManagedInstance("remote-2"))
+                .ReturnsAsync(new ManagedInstanceInfo { Id = "remote-2", InstanceId = "remote-2", JoiningSecurityPrincipalId = "environment-principal" });
+
+            var accessControl = Mock.Get(await manager.Object.GetCurrentAccessControl());
+            accessControl
+                .Setup(x => x.GetLatestManagedInstanceJoiningKey(It.IsAny<string>(), "environment-principal"))
+                .ReturnsAsync((AccessToken?)null);
+
+            var result = await managementApi.RejoinAllManagedInstances(null);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.IsTrue(result.IsWarning);
+            StringAssert.Contains(result.Message, "Rejoin requested for 1 managed instance.");
+            StringAssert.Contains(result.Message, "Failed to send 1 command.");
+
+            hubClients["remote-1"].Verify(x => x.SendCommandRequest(It.IsAny<InstanceCommandRequest>()), Times.Once);
+            hubClients["remote-2"].Verify(x => x.SendCommandRequest(It.IsAny<InstanceCommandRequest>()), Times.Never);
+            manager.Verify(x => x.SetHubManagedInstanceRequestAuthSecretHash("remote-2", It.IsAny<string?>()), Times.Never);
+        }
+
+        [TestMethod]
+        public async Task RejoinManagedInstance_ReturnsFailure_WhenTheInstancesKeyHasGone()
+        {
+            var (managementApi, hubClients, manager) = CreateConnectedInstances("remote-1");
+
+            var accessControl = Mock.Get(await manager.Object.GetCurrentAccessControl());
+            accessControl
+                .Setup(x => x.GetLatestManagedInstanceJoiningKey(It.IsAny<string>(), It.IsAny<string?>()))
+                .ReturnsAsync((AccessToken?)null);
+
+            var result = await managementApi.RejoinManagedInstance("remote-1", null);
+
+            Assert.IsFalse(result.IsSuccess);
+            hubClients["remote-1"].Verify(x => x.SendCommandRequest(It.IsAny<InstanceCommandRequest>()), Times.Never);
+            manager.Verify(x => x.SetHubManagedInstanceRequestAuthSecretHash("remote-1", It.IsAny<string?>()), Times.Never);
+        }
+
+        private static (ManagementAPI Api, Dictionary<string, Mock<IInstanceManagementHub>> HubClients, Mock<ICertifyManager> Manager) CreateConnectedInstances(params string[] instanceIds)
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetConnectedInstances())
+                .Returns(instanceIds.Select(id => new ManagedInstanceInfo { Id = id, InstanceId = id, Title = id }).ToList());
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            var instanceClients = new Dictionary<string, Mock<IInstanceManagementHub>>();
+
+            foreach (var id in instanceIds)
+            {
+                instanceClients[id] = new Mock<IInstanceManagementHub>();
+                stateProvider.Setup(x => x.GetConnectionIdForInstance(id)).Returns($"conn-{id}");
+                hubClients.Setup(x => x.Client($"conn-{id}")).Returns(instanceClients[id].Object);
+            }
+
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var manager = CreateManagerMock();
+
+            return (new ManagementAPI(stateProvider.Object, hubContext.Object, manager.Object, Mock.Of<ILogger<ManagementAPI>>()), instanceClients, manager);
+        }
+
         private static bool HasExpectedRejoinPayload(InstanceCommandRequest command, string clientId, string secret)
         {
             var payload = JsonSerializer.Deserialize<ManagementHubRejoinRequest>(command.Value ?? "{}", Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);
@@ -382,22 +471,13 @@ namespace Certify.Tests.Server.Core.Unit
         {
             var accessControl = new Mock<IAccessControl>();
             accessControl
-                .Setup(x => x.GetAssignedAccessTokens(It.IsAny<string>(), true))
-                .ReturnsAsync([
-                    new AssignedAccessToken
-                    {
-                        Title = "Managed Instance Hub Joining Key",
-                        AccessTokens =
-                        [
-                            new AccessToken
-                            {
-                                ClientId = "join-client",
-                                Secret = "join-secret",
-                                DateCreated = DateTimeOffset.UtcNow
-                            }
-                        ]
-                    }
-                ]);
+                .Setup(x => x.GetLatestManagedInstanceJoiningKey(It.IsAny<string>(), It.IsAny<string?>()))
+                .ReturnsAsync(new AccessToken
+                {
+                    ClientId = "join-client",
+                    Secret = "join-secret",
+                    DateCreated = DateTimeOffset.UtcNow
+                });
 
             var manager = new Mock<ICertifyManager>();
             manager.Setup(x => x.GetCurrentAccessControl()).ReturnsAsync(accessControl.Object);

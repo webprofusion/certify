@@ -217,6 +217,19 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
+    /// A joining key to issue for a set of managed instances, such as a customer environment
+    /// </summary>
+    public class ManagedInstanceJoiningKeyRequest
+    {
+        /// <summary>
+        /// Name of the environment the key is for, which identifies the key and its security principal
+        /// </summary>
+        public string Title { get; set; } = default!;
+
+        public string? Description { get; set; }
+    }
+
+    /// <summary>
     /// Result of unlocking an access token, including its secret
     /// </summary>
     public class AccessTokenUnlockResult : Config.ActionResult<AccessToken>

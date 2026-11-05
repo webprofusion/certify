@@ -68,6 +68,15 @@ namespace Certify.Models.Hub
         [System.Text.Json.Serialization.JsonIgnore]
         public string RequestAuthSecretHash { get; set; } = string.Empty;
 
+        /// <summary>
+        /// The security principal whose joining key this instance last joined with, so a rejoin sends that same key
+        /// rather than moving the instance to a key which outlives revoking its own. Empty until the instance next
+        /// checks in. It is set by the hub only, as for <see cref="RequestAuthSecretHash"/>, through
+        /// <c>SetHubManagedInstanceJoiningPrincipal</c>.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string JoiningSecurityPrincipalId { get; set; } = string.Empty;
+
         public LicenseCheckResult License { get; set; } = new LicenseCheckResult();
 
         public StatusSummary? Summary { get; set; }

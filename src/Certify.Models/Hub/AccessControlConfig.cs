@@ -44,6 +44,7 @@ namespace Certify.Models.Hub
                      StandardPolicies.CertificateConsumer,
                      StandardPolicies.ManagedInstanceSystemExport,
                      StandardPolicies.ManagedInstanceSystemImport,
+                     StandardPolicies.ManagedInstanceOnboarding,
                      StandardPolicies.TagAdmin,
                      StandardPolicies.ManagedLicenseAdmin,
                      StandardPolicies.SystemUser
@@ -71,6 +72,12 @@ namespace Certify.Models.Hub
 
         public static Role ManagedInstance { get; } = new Role("managedinstance_role", "Hub Managed Instance", "Can join the hub and be managed via the hub.", policies: [StandardPolicies.ManagedInstance]);
         public static Role ManagedAcmeConsumer { get; } = new Role("managedacme_consumer_role", "Managed ACME Consumer", "Can use managed ACME services via the hub.", policies: [StandardPolicies.ManagedAcmeConsumer]);
+
+        public static Role InstanceOnboarding { get; } = new Role("instance_onboarding_role", "Instance Onboarding", "Can view managed instances and create joining keys so new instances can join the hub.",
+            policies: [
+                StandardPolicies.ManagedInstanceOnboarding,
+                StandardPolicies.SystemUser
+            ]);
     }
 
     public class StandardIdentityProviders
@@ -184,6 +191,8 @@ namespace Certify.Models.Hub
         public const string AccessTokenDelete = "accesstoken_delete_action";
         public const string AccessTokenReadSecret = "accesstoken_readsecret_action";
 
+        public const string ManagedInstanceJoiningKeyAdd = "managedinstance_joiningkey_add_action";
+
         public const string SystemStatusList = "system_status_list_action";
         public const string SystemLogList = "system_log_list_action";
         public const string SystemServiceConfigList = "system_serviceconfig_list_action";
@@ -244,6 +253,7 @@ namespace Certify.Models.Hub
         public const string ManagedInstance = "managementhub_managedinstance_policy";
         public const string ManagedInstanceSystemImport = "system_import_policy";
         public const string ManagedInstanceSystemExport = "system_export_policy";
+        public const string ManagedInstanceOnboarding = "managedinstance_onboarding_policy";
         public const string ManagedLicenseAdmin = "managedlicense_admin_policy";
         public const string ManagedAcmeConsumer = "managedacme_consumer_policy";
         public const string ManagedAcmeAdmin = "managedacme_admin_policy";
@@ -267,7 +277,8 @@ namespace Certify.Models.Hub
                 StandardRoles.ManagedAcmeConsumer,
                 StandardRoles.HubViewer,
                 StandardRoles.ManagedInstance,
-                StandardRoles.BackupOperator
+                StandardRoles.BackupOperator,
+                StandardRoles.InstanceOnboarding
             ];
         }
 
@@ -304,6 +315,7 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.SecurityPrincipalPasswordValidate, "Validate Security Principal Passwords", ResourceTypes.SecurityPrincipal),
 
                 new(StandardResourceActions.AccessTokenAdd, "Add Access Token", ResourceTypes.AccessToken),
+                new(StandardResourceActions.ManagedInstanceJoiningKeyAdd, "Add Managed Instance Joining Key", ResourceTypes.AccessToken),
                 new(StandardResourceActions.AccessTokenDelete, "Delete Access Token", ResourceTypes.AccessToken),
                 new(StandardResourceActions.AccessTokenList, "List Access Tokens", ResourceTypes.AccessToken),
                 new(StandardResourceActions.AccessTokenUpdate, "Update Access Token", ResourceTypes.AccessToken),
@@ -673,6 +685,17 @@ namespace Certify.Models.Hub
                  IsResourceSpecific = true,
                  ResourceActions = [
                      StandardResourceActions.ManagementHubInstanceExport
+                 ]
+              },
+              new() {
+                 Id = StandardPolicies.ManagedInstanceOnboarding,
+                 Title = "Managed Instance Onboarding",
+                 Description = "View managed instances and create joining keys for new instances",
+                 SecurityPermissionType = SecurityPermissionType.ALLOW,
+                 ResourceActions = [
+                     StandardResourceActions.ManagementHubInstancesList,
+                     StandardResourceActions.TagList,
+                     StandardResourceActions.ManagedInstanceJoiningKeyAdd
                  ]
               },
               new() {

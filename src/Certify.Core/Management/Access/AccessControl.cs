@@ -1012,6 +1012,132 @@ namespace Certify.Core.Management.Access
         }
 
         /// <summary>
+        /// Issue a joining key on a security principal of its own, holding only the managed instance role.
+        ///
+        /// This is the only route to a key for a non-administrator, which is why the request carries no principal or
+        /// role scope: AddAssignedAccessToken takes both from the caller and returns the secret, so opening that to
+        /// anyone else would let them issue themselves a key for an administrator.
+        /// </summary>
+        public async Task<AssignedAccessTokenAddResult> AddManagedInstanceJoiningKey(string contextUserId, ManagedInstanceJoiningKeyRequest request)
+        {
+            var check = new AccessCheck(contextUserId, ResourceTypes.AccessToken, StandardResourceActions.ManagedInstanceJoiningKeyAdd);
+
+            if (!await IsSecurityPrincipalAuthorised(check))
+            {
+                await AuditWarning("User {contextUserId} attempted to add a managed instance joining key without being in required role.", contextUserId);
+                return new AssignedAccessTokenAddResult { IsSuccess = false, Message = "Not authorized to add joining keys." };
+            }
+
+            var title = request?.Title?.Trim();
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return new AssignedAccessTokenAddResult { IsSuccess = false, Message = "A title is required to identify the joining key." };
+            }
+
+            // the shared key is found by this title, so a key using it would be sent to instances on a rejoin
+            if (string.Equals(title, AccessControlConfig.ManagedInstanceJoiningTokenTitle, StringComparison.OrdinalIgnoreCase))
+            {
+                return new AssignedAccessTokenAddResult { IsSuccess = false, Message = "This title is reserved for the hub's shared joining key." };
+            }
+
+            var principal = new SecurityPrincipal
+            {
+                Id = Guid.NewGuid().ToString(),
+                Title = title,
+                Description = request.Description?.Trim(),
+                PrincipalType = SecurityPrincipalType.Application,
+                Provider = StandardIdentityProviders.INTERNAL
+            };
+
+            var principalAdded = await AddSecurityPrincipal(contextUserId, principal, bypassIntegrityCheck: true);
+
+            if (!principalAdded.IsSuccess)
+            {
+                return new AssignedAccessTokenAddResult { IsSuccess = false, Message = principalAdded.Message };
+            }
+
+            var assignedRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedInstance.Id,
+                SecurityPrincipalId = principal.Id
+            };
+
+            await AddAssignedRole(contextUserId, assignedRole, bypassIntegrityCheck: true);
+
+            var joiningKey = new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                SecurityPrincipalId = principal.Id,
+                Title = title,
+                Description = principal.Description,
+                ScopedAssignedRoles = [assignedRole.Id],
+                AccessTokens = [
+                    new AccessToken
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        ClientId = principal.Id,
+                        Description = principal.Description,
+                        Secret = Guid.NewGuid().ToString().ToLowerInvariant(),
+                        TokenType = AccessTokenTypes.Simple,
+                        DateCreated = DateTime.UtcNow
+                    }
+                ]
+            };
+
+            await AddAssignedAccessToken(contextUserId, joiningKey, bypassIntegrityCheck: true);
+
+            await AuditInformation("User {contextUserId} added managed instance joining key [{tokenId}] {title}", contextUserId, joiningKey.Id, title);
+
+            return new AssignedAccessTokenAddResult { IsSuccess = true, Message = "Added", Result = joiningKey };
+        }
+
+        /// <summary>
+        /// Find the key to send an instance on a rejoin. A principal which is not the built-in one only yields keys
+        /// scoped to nothing but its managed instance role: the principal is whichever one the instance joined with,
+        /// so it need not be a dedicated one, and a rejoin must not hand an instance a key which can do more than join.
+        /// A principal with no such key yields nothing rather than the shared key, as that would undo revoking it.
+        /// </summary>
+        public async Task<AccessToken?> GetLatestManagedInstanceJoiningKey(string contextUserId, string? joiningPrincipalId)
+        {
+            var assignedTokens = await GetAssignedAccessTokens(contextUserId, includeSecrets: true);
+
+            if (assignedTokens == null)
+            {
+                return null;
+            }
+
+            IEnumerable<AssignedAccessToken> candidates;
+
+            if (string.IsNullOrWhiteSpace(joiningPrincipalId) || joiningPrincipalId == AccessControlConfig.ManagedInstanceSecurityPrincipalId)
+            {
+                candidates = assignedTokens.Where(t => string.Equals(t.Title, AccessControlConfig.ManagedInstanceJoiningTokenTitle, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
+
+                var joinOnlyAssignments = assignedRoles
+                    .Where(a => a.SecurityPrincipalId == joiningPrincipalId && a.RoleId == StandardRoles.ManagedInstance.Id)
+                    .Select(a => a.Id)
+                    .ToList();
+
+                candidates = assignedTokens.Where(t => t.SecurityPrincipalId == joiningPrincipalId
+                    && t.ScopedAssignedRoles?.Count > 0
+                    && t.ScopedAssignedRoles.All(joinOnlyAssignments.Contains));
+            }
+
+            return candidates
+                .SelectMany(t => t.AccessTokens ?? [])
+                .Where(t => !string.IsNullOrWhiteSpace(t.ClientId) && !string.IsNullOrWhiteSpace(t.Secret))
+                .Where(t => !t.DateExpiry.HasValue || t.DateExpiry > DateTimeOffset.UtcNow)
+                .Where(t => !t.DateRevoked.HasValue)
+                .OrderByDescending(t => t.DateCreated ?? DateTimeOffset.MinValue)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
         /// Update the title, description and role scope of an assigned access token, keeping the token itself.
         /// The access tokens and the owning security principal are deliberately not updatable here: re-issuing a
         /// secret or moving a live credential to another identity are separate operations, and the whole point of

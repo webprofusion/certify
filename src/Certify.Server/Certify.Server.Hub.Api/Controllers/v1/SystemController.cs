@@ -311,7 +311,8 @@ namespace Certify.Server.Hub.Api.Controllers
                         IsAuthenticated = false,
                         Title = instanceTitle,
                         IsPendingConnection = true,
-                        RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty
+                        RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty,
+                        JoiningSecurityPrincipalId = CurrentAuthContext!.UserId
                     };
 
                     var addResult = await _client.AddHubManagedInstance(newInstance, CurrentAuthContext);
@@ -387,6 +388,19 @@ namespace Certify.Server.Hub.Api.Controllers
                         requestAuthSecretReissued = true;
                     }
 
+                    // recorded only for a caller shown to be this instance, as the rest of this path treats the joining
+                    // credentials as saying nothing about which instance is calling. This also picks up instances which
+                    // joined before the principal was recorded.
+                    if ((!hasSecret || isSignedByInstance) && instanceInfo.JoiningSecurityPrincipalId != CurrentAuthContext!.UserId)
+                    {
+                        var recorded = await _mgmtAPI.SetManagedInstanceJoiningPrincipal(hubAssignedInstanceId, CurrentAuthContext!.UserId);
+
+                        if (!recorded.IsSuccess)
+                        {
+                            _logger.LogWarning("Could not record the joining principal for managed instance {instanceId}: {message}", hubAssignedInstanceId, recorded.Message);
+                        }
+                    }
+
                     isKnownInstance = true;
                 }
             }
@@ -403,7 +417,8 @@ namespace Certify.Server.Hub.Api.Controllers
                     ConnectionStatus = ConnectionStatus.Disconnected,
                     IsAuthenticated = false,
                     IsPendingConnection = true,
-                    RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty
+                    RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty,
+                    JoiningSecurityPrincipalId = CurrentAuthContext!.UserId
                 };
                 var r = await _client.AddHubManagedInstance(instanceInfo, CurrentAuthContext);
                 hubAssignedInstanceId = r.Result!.InstanceId;
