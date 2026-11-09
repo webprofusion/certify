@@ -443,6 +443,118 @@ namespace Certify.Core.Tests
             StringAssert.Contains(result.Message, "debug-stream-marker");
         }
 
+        [TestMethod, Description("Script warnings set IsWarning on a successful result when warning reporting is enabled")]
+        [DataRow(PowerShellExecutionMode.InProcess)]
+        [DataRow(PowerShellExecutionMode.SystemProcess)]
+        public async Task TestReportWarningsSetsWarningResult(PowerShellExecutionMode executionMode)
+        {
+            var result = await RunWarningScript(executionMode, "Write-Warning 'script-warning-marker'; Write-Output 'after-warning'", reportWarnings: true);
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            Assert.IsTrue(result.IsWarning, result.Message);
+            StringAssert.Contains(result.Message, "WARNING: script-warning-marker");
+            StringAssert.Contains(result.Message, "after-warning");
+            Assert.IsFalse(result.Message.Contains("##certify-warning##"), result.Message);
+        }
+
+        [TestMethod, Description("Script warnings are reported when script parameters use the secure payload wrapper")]
+        public async Task TestReportWarningsWithPayloadParameters()
+        {
+            var result = await RunWarningScript(
+                PowerShellExecutionMode.SystemProcess,
+                "param($message) Write-Warning \"warning: $message\"",
+                reportWarnings: true,
+                new Dictionary<string, object> { ["message"] = "from-payload" });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            Assert.IsTrue(result.IsWarning, result.Message);
+            StringAssert.Contains(result.Message, "WARNING: warning: from-payload");
+        }
+
+        [TestMethod, Description("Warnings written by a script file with no parameters are reported")]
+        public async Task TestReportWarningsFromScriptFile()
+        {
+            var scriptPath = CreateTempScript("ps1", "Write-Warning 'script-file-warning'");
+
+            try
+            {
+                var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+                {
+                    PowerShellExecutionPolicy = "Unrestricted",
+                    ScriptFile = scriptPath,
+                    ExecutionMode = PowerShellExecutionMode.SystemProcess,
+                    ReportWarnings = true
+                });
+
+                Assert.IsTrue(result.IsSuccess, result.Message);
+                Assert.IsTrue(result.IsWarning, result.Message);
+                StringAssert.Contains(result.Message, "WARNING: script-file-warning");
+            }
+            finally
+            {
+                DeleteTempScript(scriptPath);
+            }
+        }
+
+        [TestMethod, Description("A script's non-zero exit code still fails the task when warning reporting is enabled")]
+        public async Task TestReportWarningsKeepsScriptExitCode()
+        {
+            var scriptPath = CreateTempScript("ps1", "Write-Warning 'before-exit'; exit 3");
+
+            try
+            {
+                var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+                {
+                    PowerShellExecutionPolicy = "Unrestricted",
+                    ScriptFile = scriptPath,
+                    ExecutionMode = PowerShellExecutionMode.SystemProcess,
+                    ReportWarnings = true
+                });
+
+                Assert.IsFalse(result.IsSuccess, result.Message);
+                Assert.IsFalse(result.IsWarning, result.Message);
+                StringAssert.Contains(result.Message, "ExitCode: 3");
+            }
+            finally
+            {
+                DeleteTempScript(scriptPath);
+            }
+        }
+
+        [TestMethod, Description("Script warnings do not change the result unless warning reporting is enabled")]
+        [DataRow(PowerShellExecutionMode.InProcess)]
+        [DataRow(PowerShellExecutionMode.SystemProcess)]
+        public async Task TestScriptWarningsIgnoredByDefault(PowerShellExecutionMode executionMode)
+        {
+            var result = await RunWarningScript(executionMode, "Write-Warning 'script-warning-marker'", reportWarnings: false);
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            Assert.IsFalse(result.IsWarning, result.Message);
+            StringAssert.Contains(result.Message, "script-warning-marker");
+        }
+
+        [TestMethod, Description("A script with no warnings is not reported as a warning")]
+        [DataRow(PowerShellExecutionMode.InProcess)]
+        [DataRow(PowerShellExecutionMode.SystemProcess)]
+        public async Task TestReportWarningsNoWarningWritten(PowerShellExecutionMode executionMode)
+        {
+            var result = await RunWarningScript(executionMode, "Write-Output 'no-warning'", reportWarnings: true);
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            Assert.IsFalse(result.IsWarning, result.Message);
+        }
+
+        [TestMethod, Description("A script error takes precedence over a script warning")]
+        [DataRow(PowerShellExecutionMode.InProcess)]
+        [DataRow(PowerShellExecutionMode.SystemProcess)]
+        public async Task TestReportWarningsErrorTakesPrecedence(PowerShellExecutionMode executionMode)
+        {
+            var result = await RunWarningScript(executionMode, "Write-Warning 'script-warning-marker'; Write-Error 'script-error-marker'", reportWarnings: true);
+
+            Assert.IsFalse(result.IsSuccess, result.Message);
+            Assert.IsFalse(result.IsWarning, result.Message);
+        }
+
         [TestMethod, Description("In-process mode reports parse errors")]
         public async Task TestInProcessModeReportsParseErrors()
         {
@@ -785,6 +897,18 @@ namespace Certify.Core.Tests
             Assert.IsTrue(File.Exists(TestOutputPath), "Powershell output file should exist");
 
             return result;
+        }
+
+        private static Task<Certify.Models.Config.ActionResult> RunWarningScript(PowerShellExecutionMode executionMode, string scriptContent, bool reportWarnings, Dictionary<string, object> parameters = null)
+        {
+            return PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = scriptContent,
+                Parameters = parameters,
+                ExecutionMode = executionMode,
+                ReportWarnings = reportWarnings
+            });
         }
 
         private static async Task<string> RunSimpleScriptAndGetPowerShellVersion(PowerShellExecutionMode executionMode)

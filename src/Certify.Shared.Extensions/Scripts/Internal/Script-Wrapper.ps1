@@ -2,6 +2,7 @@
 param(
     $scriptFile, 
     $payloadFile,
+    [switch]$reportWarnings,
     [Parameter(ValueFromRemainingArguments)]
     $additionalParams
 )
@@ -184,9 +185,37 @@ if ($additionalParams.Count -gt 0) {
 # restore the caller's error preference so the target script keeps its normal (non-terminating) error semantics
 $ErrorActionPreference = $__certifyOriginalErrorActionPreference
 
+# when requested, mark warnings so the task can report them. The console host's own warning prefix is localized.
+function Invoke-WrappedScript {
+    param(
+        [scriptblock]$invocation
+    )
+
+    if ($reportWarnings) {
+        & $invocation 3>&1 | ForEach-Object {
+            if ($_ -is [System.Management.Automation.WarningRecord]) {
+                "##certify-warning##$($_.Message)"
+            }
+            else {
+                $_
+            }
+        }
+    }
+    else {
+        & $invocation
+    }
+}
+
+$wrappedExitCode = 0
+
 # invoke wrapped script, with all optional arguments as a splatted hashtable
 try {
-    & $scriptFile @wrappedArguments
+    Invoke-WrappedScript {
+        & $scriptFile @wrappedArguments
+        if (-not $?) {
+            $script:wrappedExitCode = $LASTEXITCODE
+        }
+    }
 }
 catch {
     if ($_.Exception.Message -notlike '*different language mode*') {
@@ -194,5 +223,12 @@ catch {
     }
 
     $scriptBlock = [scriptblock]::Create((Get-Content -Raw -Path $scriptFile))
-    & $scriptBlock @wrappedArguments
+    Invoke-WrappedScript {
+        & $scriptBlock @wrappedArguments
+    }
+}
+
+# reporting warnings runs scripts through this wrapper even when they have no parameters, so a script's own exit code must still fail the task
+if ($reportWarnings -and $wrappedExitCode) {
+    exit $wrappedExitCode
 }

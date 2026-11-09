@@ -58,6 +58,12 @@ namespace Certify.Management
         /// detailed request/response information (including headers) to them.
         /// </summary>
         public bool VerboseStreamLogging { get; set; }
+
+        /// <summary>
+        /// When true, a script which completes without error but writes to the PowerShell warning stream
+        /// (e.g. Write-Warning) returns a successful result with IsWarning set.
+        /// </summary>
+        public bool ReportWarnings { get; set; }
     }
 
     /// <summary>
@@ -71,6 +77,10 @@ namespace Certify.Management
         private const string PowerShellTelemetryOptOutEnvVar = "POWERSHELL_TELEMETRY_OPTOUT";
         private const string PowerShellTelemetryOptOutValue = "true";
         private const string PowerShellPayloadSecretEnvVar = "CERTIFY_POWERSHELL_PAYLOAD_SECRET";
+
+        // written by Script-Wrapper.ps1 in place of the console host's warning prefix, which is localized and so can't be matched
+        private const string ProcessWarningMarker = "##certify-warning##";
+        private const string WarningPrefix = "WARNING: ";
 
         public static PowerShellExecutionMode GetDefaultExecutionMode()
         {
@@ -166,12 +176,16 @@ namespace Certify.Management
 
                 if (executionMode == PowerShellExecutionMode.SystemProcess)
                 {
-                    return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage, impersonationMode: settings.ImpersonationMode, loadUserProfile: ShouldLoadUserProfile(settings.ImpersonationMode));
+                    var processResult = await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage, impersonationMode: settings.ImpersonationMode, loadUserProfile: ShouldLoadUserProfile(settings.ImpersonationMode), reportWarnings: settings.ReportWarnings);
+
+                    return ApplyScriptWarnings(processResult, settings.ReportWarnings);
                 }
 
                 if (executionMode == PowerShellExecutionMode.InProcess)
                 {
-                    return await Task.FromResult(RunScriptInProcess(settings.PowerShellExecutionPolicy, settings.Result, settings.ScriptFile, settings.Parameters, settings.ScriptContent, settings.Credentials, settings.LogonType, settings.IgnoredCommandExceptions, settings.TimeoutMinutes, scriptInfo, executionModeMessage, settings.VerboseStreamLogging));
+                    var inProcessResult = await Task.FromResult(RunScriptInProcess(settings.PowerShellExecutionPolicy, settings.Result, settings.ScriptFile, settings.Parameters, settings.ScriptContent, settings.Credentials, settings.LogonType, settings.IgnoredCommandExceptions, settings.TimeoutMinutes, scriptInfo, executionModeMessage, settings.VerboseStreamLogging));
+
+                    return ApplyScriptWarnings(inProcessResult, settings.ReportWarnings);
                 }
 
                 return new ActionResult($"Unknown PowerShell execution mode: {executionMode}", false);
@@ -180,6 +194,20 @@ namespace Certify.Management
             {
                 Environment.SetEnvironmentVariable(PowerShellTelemetryOptOutEnvVar, priorTelemetryOptOut);
             }
+        }
+
+        private static ActionResult ApplyScriptWarnings(ActionResult result, bool reportWarnings)
+        {
+            var hasProcessWarning = result.Message?.Contains(ProcessWarningMarker, StringComparison.Ordinal) == true;
+
+            if (hasProcessWarning)
+            {
+                result.Message = result.Message.Replace(ProcessWarningMarker, WarningPrefix, StringComparison.Ordinal);
+            }
+
+            result.IsWarning = reportWarnings && result.IsSuccess && (result.IsWarning || hasProcessWarning);
+
+            return result;
         }
 
         private static PowerShellExecutionMode ResolveExecutionMode(PowerShellScriptSettings settings, out string executionModeMessage)
@@ -502,7 +530,7 @@ namespace Certify.Management
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null, PowerShellImpersonationMode impersonationMode = PowerShellImpersonationMode.Default, bool loadUserProfile = false)
+        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null, PowerShellImpersonationMode impersonationMode = PowerShellImpersonationMode.Default, bool loadUserProfile = false, bool reportWarnings = false)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var _log = new StringBuilder();
@@ -524,7 +552,7 @@ namespace Certify.Management
             }
 
             var payloadParameters = BuildProcessPayloadParameters(parameters, autoConvertBoolean);
-            var useWrapperScript = resultObj != null || payloadParameters.Any();
+            var useWrapperScript = resultObj != null || payloadParameters.Any() || reportWarnings;
 
             string payloadTempPath = null;
             string payloadSecret = null;
@@ -668,6 +696,11 @@ namespace Certify.Management
             if (!string.IsNullOrWhiteSpace(payloadTempPath))
             {
                 arguments += $" -payloadFile \"{payloadTempPath}\"";
+            }
+
+            if (reportWarnings)
+            {
+                arguments += " -reportWarnings";
             }
 
             var scriptProcessInfo = new ProcessStartInfo()
@@ -1360,7 +1393,7 @@ namespace Certify.Management
 
             // TODO: one of these streams may be causing ssh hang when ssh spawned as part of script..
 
-            shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Warning[args.Index].Message);
+            shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(WarningPrefix + shell.Streams.Warning[args.Index].Message);
 
             // The Verbose and Debug streams are very noisy for some providers (e.g. Posh-ACME emits full
             // HTTP request/response detail including headers), so only capture them when verbose stream
@@ -1457,7 +1490,7 @@ namespace Certify.Management
                     }
                 }
 
-                return new ActionResult(output.ToString().TrimEnd('\n'), !errors.Any());
+                return new ActionResult(output.ToString().TrimEnd('\n'), !errors.Any()) { IsWarning = shell.Streams.Warning.Count > 0 };
             }
             catch (ParseException ex)
             {
