@@ -496,10 +496,12 @@ namespace Certify.Core.Tests
             }
         }
 
-        [TestMethod, Description("A script's non-zero exit code still fails the task when warning reporting is enabled")]
-        public async Task TestReportWarningsKeepsScriptExitCode()
+        [TestMethod, Description("A script's non-zero exit code fails the task when the script runs through the wrapper")]
+        [DataRow(true)]
+        [DataRow(false)]
+        public async Task TestWrappedScriptKeepsExitCode(bool reportWarnings)
         {
-            var scriptPath = CreateTempScript("ps1", "Write-Warning 'before-exit'; exit 3");
+            var scriptPath = CreateTempScript("ps1", "param($result) Write-Warning 'before-exit'; exit 3");
 
             try
             {
@@ -507,8 +509,9 @@ namespace Certify.Core.Tests
                 {
                     PowerShellExecutionPolicy = "Unrestricted",
                     ScriptFile = scriptPath,
+                    Result = new CertificateRequestResult(new ManagedCertificate()),
                     ExecutionMode = PowerShellExecutionMode.SystemProcess,
-                    ReportWarnings = true
+                    ReportWarnings = reportWarnings
                 });
 
                 Assert.IsFalse(result.IsSuccess, result.Message);

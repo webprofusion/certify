@@ -228,7 +228,7 @@ catch {
     }
 }
 
-# reporting warnings runs scripts through this wrapper even when they have no parameters, so a script's own exit code must still fail the task
-if ($reportWarnings -and $wrappedExitCode) {
+# pass the script's own non-zero exit code back so it fails the task, as it would if the script ran without this wrapper
+if ($wrappedExitCode) {
     exit $wrappedExitCode
 }
