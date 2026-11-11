@@ -10,6 +10,9 @@ using Certify.Models.API;
 #if NET6_0_OR_GREATER
 using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
+// .NET 11 adds System.Net types with the same names
+using CNameRecord = ARSoft.Tools.Net.Dns.CNameRecord;
+using TxtRecord = ARSoft.Tools.Net.Dns.TxtRecord;
 #endif
 using Certify.Models.Config;
 using Certify.Models.Providers;

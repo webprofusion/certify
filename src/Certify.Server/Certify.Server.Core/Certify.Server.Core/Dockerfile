@@ -7,7 +7,7 @@ WORKDIR /app
 ENV ASPNETCORE_URLS=http://+:9696
 EXPOSE 9696
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 ARG BUILD_CONFIGURATION=Debug
 WORKDIR /src
 
@@ -20,6 +20,7 @@ RUN dotnet restore "certify/src/Certify.Server/Certify.Server.Core/Certify.Serve
 
 RUN dotnet publish "certify/src/Certify.Server/Certify.Server.Core/Certify.Server.Core/Certify.Server.Core.csproj" \
     -c ${BUILD_CONFIGURATION} \
+    -f net10.0 \
     -o /app/publish \
     /p:UseAppHost=false
 

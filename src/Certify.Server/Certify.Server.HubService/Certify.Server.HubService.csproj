@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFrameworks>net10.0;</TargetFrameworks>
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
@@ -11,6 +11,7 @@
         <UserSecretsId>c6402661-abaa-463e-ab79-e40d979f8b77</UserSecretsId>
         <DockerfileContext>..\..\..\..\certify-manager</DockerfileContext>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <EnableHotReloadInRuntimeConfigDevFile>false</EnableHotReloadInRuntimeConfigDevFile>
       
     </PropertyGroup>
 
@@ -35,6 +36,12 @@
         <ProjectReference Include="..\Certify.Server.Hub.Api\Certify.Server.Hub.Api.csproj">
             <PrivateAssets>all</PrivateAssets>
         </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

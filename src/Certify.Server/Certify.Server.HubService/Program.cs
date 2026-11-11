@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -122,7 +122,6 @@ void ConfigureKestrelCertificateReloadWatchers(IConfiguration configuration, str
         );
     }
 }
-
 
 var hubServiceAssembly = typeof(Certify.Server.HubService.Services.CertifyDirectHubService).Assembly;
 
