@@ -65,7 +65,7 @@ No .NET runtime prerequisite: the app ships self-contained.
 * Certify Certificate Manager and Certify Management Hub cannot be installed on the same machine. Setup will stop if the Hub is present.
 * Upgrading from v6 or earlier is blocked when the legacy `Certify.Service` runs under a custom (non LocalSystem) account, because the service account is tied to the encryption of stored credentials. Those installs must be upgraded manually - see https://docs.certifytheweb.com
 
-The app is free to download and evaluate, with no feature restrictions and no time limit. License keys are available for commercial organisations and for users who require support.
+The app is free to download and evaluate, with no feature restrictions. License keys are available for commercial organisations and for users who require support.
 ]]></description>
   </metadata>
   <files>
