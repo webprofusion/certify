@@ -17,7 +17,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.19.0" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.20.0" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />

@@ -7,9 +7,9 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="4.0.102.20" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.101.10" />
-    <PackageReference Include="AWSSDK.Route53" Version="4.0.100.24" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.103" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.101.11" />
+    <PackageReference Include="AWSSDK.Route53" Version="4.0.100.25" />
   </ItemGroup>
 
   <ItemGroup>
