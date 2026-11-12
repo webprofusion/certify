@@ -389,7 +389,7 @@ namespace Certify.Core.Tests
                 System.Console.WriteLine(a.Description);
             }
             // get cert info to compare hash
-            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+            var certInfo = CertificateManager.LoadCertificateWithoutKey(managedCertificate.CertificatePath);
 
             // check IIS site bindings
             site = await iisManager.GetIISSiteById(site.Id.ToString());

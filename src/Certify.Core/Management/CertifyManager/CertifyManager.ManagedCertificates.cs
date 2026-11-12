@@ -1281,7 +1281,7 @@ namespace Certify.Management
             {
                 try
                 {
-                    using var cert = CertificateManager.LoadCertificate(item.CertificatePath, await GetPfxPassword(item), throwOnError: true, ephemeralKeySet: true);
+                    using var cert = CertificateManager.LoadCertificateWithoutKey(item.CertificatePath, await GetPfxPassword(item));
 
                     RecordCurrentCertificateDetails(item, cert);
 

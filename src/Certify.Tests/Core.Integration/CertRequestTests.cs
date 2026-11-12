@@ -133,7 +133,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(fileExists);
 
             //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+            var certInfo = CertificateManager.LoadCertificateWithoutKey(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
             var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -210,7 +210,7 @@ namespace Certify.Core.Tests
                 Assert.IsTrue(fileExists);
 
                 //check cert is correct
-                var certInfo = CertificateManager.LoadCertificate(dummyManagedCertificate.CertificatePath);
+                var certInfo = CertificateManager.LoadCertificateWithoutKey(dummyManagedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
                 var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -413,7 +413,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(fileExists);
 
             //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+            var certInfo = CertificateManager.LoadCertificateWithoutKey(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
             var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -482,7 +482,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(fileExists);
 
             //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+            var certInfo = CertificateManager.LoadCertificateWithoutKey(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
             var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -582,7 +582,7 @@ namespace Certify.Core.Tests
                 Assert.IsTrue(fileExists);
 
                 //check cert is correct
-                certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+                certInfo = CertificateManager.LoadCertificateWithoutKey(managedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
                 var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -708,7 +708,7 @@ namespace Certify.Core.Tests
                 Assert.IsTrue(fileExists);
 
                 //check cert is correct
-                certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+                certInfo = CertificateManager.LoadCertificateWithoutKey(managedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
                 var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;

@@ -1461,17 +1461,19 @@ namespace Certify.Management
                     {
 
                         X509Certificate2 certInfo = null;
+                        string certFriendlyName = null;
                         if (!string.IsNullOrWhiteSpace(primaryCertFilePath) && primaryCertFilePath.EndsWith(".pfx", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd, throwOnError: true, ephemeralKeySet: true);
+                            certInfo = CertificateManager.LoadCertificateWithoutKey(primaryCertFilePath, pfxPwd, out certFriendlyName);
                         }
                         else if (certRequestResult.SupportingData is X509Certificate2)
                         {
                             certInfo = certRequestResult.SupportingData as X509Certificate2;
+                            certFriendlyName = certInfo.FriendlyName;
                         }
 
                         // PFX only has friendly name in the exported file version, if available this is then used for the cleanup later
-                        certCleanupName = CertificateManager.GetCertificateCleanupName(certInfo.FriendlyName, managedCertificate.RequestConfig.PrimaryDomain);
+                        certCleanupName = CertificateManager.GetCertificateCleanupName(certFriendlyName, managedCertificate.RequestConfig.PrimaryDomain);
 
                         managedCertificate.DateStart = new DateTimeOffset(certInfo.NotBefore);
                         managedCertificate.DateExpiry = new DateTimeOffset(certInfo.NotAfter);

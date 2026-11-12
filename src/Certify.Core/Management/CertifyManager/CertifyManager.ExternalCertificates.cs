@@ -1321,7 +1321,7 @@ namespace Certify.Management
             try
             {
                 var certPwd = await GetPfxPassword(item);
-                using var certInfo = CertificateManager.LoadCertificate(assetPath, certPwd, throwOnError: true);
+                using var certInfo = CertificateManager.LoadCertificateWithoutKey(assetPath, certPwd);
 
                 var dateStart = new DateTimeOffset(certInfo.NotBefore);
                 var dateExpiry = new DateTimeOffset(certInfo.NotAfter);
@@ -1419,12 +1419,12 @@ namespace Certify.Management
             try
             {
                 var certPwd = await GetPfxPassword(item);
-                var certInfo = CertificateManager.LoadCertificate(assetPath, certPwd, throwOnError: true);
+                var certInfo = CertificateManager.LoadCertificateWithoutKey(assetPath, certPwd, out var certFriendlyName);
 
                 item.CertificatePath = assetPath;
                 item.CertificatePreviousThumbprintHash = item.CertificateThumbprintHash;
                 item.CertificateThumbprintHash = certInfo.Thumbprint;
-                item.CertificateFriendlyName = certInfo.FriendlyName;
+                item.CertificateFriendlyName = certFriendlyName;
                 RecordCurrentCertificateDetails(item, certInfo);
                 item.CertificatePEM = null;
 

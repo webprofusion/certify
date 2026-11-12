@@ -53,7 +53,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 X509Certificate2 cert = null;
                 try
                 {
-                    cert = CertificateManager.LoadCertificate(certPath, pwd: ItemViewModel.PfxUnlockPassword ?? "");
+                    cert = CertificateManager.LoadCertificateWithoutKey(certPath, ItemViewModel.PfxUnlockPassword ?? "");
                 }
                 catch
                 { }

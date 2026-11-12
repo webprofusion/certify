@@ -326,7 +326,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateTimeOffset.UtcNow.AddDays(89),
                 dnsNames: new[] { "primary.example.com", "www.example.com", "api.example.com" });
 
-            using var cert = CertificateManager.LoadCertificate(assetPath, throwOnError: true);
+            using var cert = CertificateManager.LoadCertificateWithoutKey(assetPath);
 
             var identifiers = InvokeExtractIdentifiers(cert);
             var dnsValues = identifiers.Where(i => i.IdentifierType == CertIdentifierType.Dns).Select(i => i.Value).ToList();
@@ -347,7 +347,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 dnsNames: new[] { "primary.example.com" },
                 ipAddresses: new[] { "192.0.2.10" });
 
-            using var cert = CertificateManager.LoadCertificate(assetPath, throwOnError: true);
+            using var cert = CertificateManager.LoadCertificateWithoutKey(assetPath);
 
             var identifiers = InvokeExtractIdentifiers(cert);
 
@@ -361,7 +361,7 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             var assetPath = WriteCertificateAsset("legacy.example.com", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(89));
 
-            using var cert = CertificateManager.LoadCertificate(assetPath, throwOnError: true);
+            using var cert = CertificateManager.LoadCertificateWithoutKey(assetPath);
 
             var identifiers = InvokeExtractIdentifiers(cert);
 
@@ -379,7 +379,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateTimeOffset.UtcNow.AddDays(89),
                 ipAddresses: new[] { "192.0.2.20" });
 
-            using var cert = CertificateManager.LoadCertificate(assetPath, throwOnError: true);
+            using var cert = CertificateManager.LoadCertificateWithoutKey(assetPath);
 
             var identifiers = InvokeExtractIdentifiers(cert);
 

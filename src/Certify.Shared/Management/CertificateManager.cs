@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
+using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -232,16 +233,6 @@ namespace Certify.Management
         /// </summary>
         /// <param name="cert"></param>
         /// <returns></returns>
-        public static string[] CheckCertChain(string filename)
-        {
-            var cert = LoadCertificate(filename);
-            return CheckCertChain(cert);
-        }
-        /// <summary>
-        /// Check validity and revocation status of a certificate chain
-        /// </summary>
-        /// <param name="cert"></param>
-        /// <returns></returns>
         public static string[] CheckCertChain(X509Certificate2 cert)
         {
             var chain = new X509Chain();
@@ -274,6 +265,7 @@ namespace Certify.Management
             return results.ToArray();
         }
 
+#if NET9_0_OR_GREATER
         /// <summary>
         /// Load certificate as PFX from file, extract issuer cert and End Entity cert, then query Ocsp status
         /// </summary>
@@ -288,7 +280,7 @@ namespace Certify.Management
 
             try
             {
-                using var cert = LoadCertificate(filename, pwd, ephemeralKeySet: true);
+                using var cert = LoadCertificateWithoutKey(filename, pwd);
 
                 var chain = new X509Chain();
                 chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
@@ -317,53 +309,87 @@ namespace Certify.Management
             }
         }
 
-        public static X509Certificate2 LoadCertificate(string filename, string pwd = "", bool throwOnError = false, bool ephemeralKeySet = false)
-        {
-#if NET9_0_OR_GREATER
-            try
-            {
-                var pfxBytes = File.ReadAllBytes(filename);
-                if (ephemeralKeySet)
-                {
-                    return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.EphemeralKeySet);
-                }
-                else
-                {
-                    return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-                }
-            }
-            catch (Exception exp)
-            {
-                if (throwOnError)
-                {
-                    throw;
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"LoadCertificate: Failed to load certificate: {filename}" + exp.Message);
-                    return null;
-                }
-            }
-#else
-            try
-            {
-                return new X509Certificate2(filename, pwd);
-            }
-            catch (Exception exp)
-            {
-                if (throwOnError)
-                {
-                    throw;
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"LoadCertificate: Failed to load certificate: {filename}" + exp.Message);
-                    return null;
-                }
-            }
-#endif
+        private const string LocalKeyIdOid = "1.2.840.113549.1.9.21";
+        private const string FriendlyNameOid = "1.2.840.113549.1.9.20";
 
+        /// <summary>
+        /// Read the end entity certificate from a PFX file without its private key, which is neither decrypted nor imported
+        /// into the OS key store
+        /// </summary>
+        public static X509Certificate2 LoadCertificateWithoutKey(string filename, string pwd = "") => LoadCertificateWithoutKey(filename, pwd, out _);
+
+        /// <summary>
+        /// Read the end entity certificate from a PFX file without its private key, which is neither decrypted nor imported
+        /// into the OS key store
+        /// </summary>
+        /// <param name="friendlyName">The friendly name stored with the certificate in the PFX, if any</param>
+        public static X509Certificate2 LoadCertificateWithoutKey(string filename, string pwd, out string friendlyName)
+        {
+            var pfx = Pkcs12Info.Decode(File.ReadAllBytes(filename), out _);
+
+            if (pfx.IntegrityMode == Pkcs12IntegrityMode.Password && !pfx.VerifyMac(pwd))
+            {
+                // an empty password may have been applied as either an empty or an absent password
+                var alternatePwd = pwd == null ? "" : null;
+
+                if (!string.IsNullOrEmpty(pwd) || !pfx.VerifyMac(alternatePwd))
+                {
+                    throw new CryptographicException("The certificate file password is not correct.");
+                }
+
+                pwd = alternatePwd;
+            }
+
+            var certBags = new List<Pkcs12CertBag>();
+            var keyIds = new HashSet<string>();
+
+            foreach (var contents in pfx.AuthenticatedSafe)
+            {
+                // keys are encrypted individually within their bags, so this only decrypts the certificates
+                if (contents.ConfidentialityMode == Pkcs12ConfidentialityMode.Password)
+                {
+                    contents.Decrypt(pwd);
+                }
+                else if (contents.ConfidentialityMode != Pkcs12ConfidentialityMode.None)
+                {
+                    continue;
+                }
+
+                foreach (var bag in contents.GetBags())
+                {
+                    if (bag is Pkcs12CertBag certBag && certBag.IsX509Certificate)
+                    {
+                        certBags.Add(certBag);
+                    }
+                    else if ((bag is Pkcs12ShroudedKeyBag || bag is Pkcs12KeyBag) && GetBagAttribute(bag, LocalKeyIdOid) is byte[] keyId)
+                    {
+                        keyIds.Add(Convert.ToBase64String(keyId));
+                    }
+                }
+            }
+
+            // the end entity certificate is the one sharing a local key id with the key
+            var endEntity = certBags.FirstOrDefault(b => GetBagAttribute(b, LocalKeyIdOid) is byte[] id && keyIds.Contains(Convert.ToBase64String(id)))
+                ?? certBags.FirstOrDefault(b => GetBagAttribute(b, LocalKeyIdOid) != null)
+                ?? certBags.FirstOrDefault()
+                ?? throw new CryptographicException("The certificate file does not contain a certificate.");
+
+            var friendlyNameValue = GetBagAttribute(endEntity, FriendlyNameOid);
+            friendlyName = friendlyNameValue != null ? (Asn1Object.FromByteArray(friendlyNameValue) as DerBmpString)?.GetString() : null;
+
+            return endEntity.GetCertificate();
         }
+
+        private static byte[] GetBagAttribute(Pkcs12SafeBag bag, string oid)
+        {
+            return bag.Attributes
+                .Cast<CryptographicAttributeObject>()
+                .FirstOrDefault(a => a.Oid.Value == oid)?
+                .Values.Cast<AsnEncodedData>()
+                .FirstOrDefault()?
+                .RawData;
+        }
+#endif
 
         public static Org.BouncyCastle.X509.X509Certificate ReadCertificateFromPem(string pemFile)
         {

@@ -17,7 +17,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var pfxPath = "Assets/dummycert.pfx";
             Assert.IsTrue(File.Exists(pfxPath), $"Test PFX file not found: {pfxPath}");
 
-            using var certificate = CertificateManager.LoadCertificate(pfxPath, TestPassword, throwOnError: true, ephemeralKeySet: true);
+            using var certificate = CertificateManager.LoadCertificateWithoutKey(pfxPath, TestPassword);
 
             var intermediates = CertificateManager.GetIntermediateCertificatesFromPfx(pfxPath, TestPassword, certificate.Thumbprint);
 
@@ -35,7 +35,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var pfxPath = "Assets/dummycert.pfx";
             Assert.IsTrue(File.Exists(pfxPath), $"Test PFX file not found: {pfxPath}");
 
-            using var certificate = CertificateManager.LoadCertificate(pfxPath, TestPassword, throwOnError: true, ephemeralKeySet: true);
+            using var certificate = CertificateManager.LoadCertificateWithoutKey(pfxPath, TestPassword);
 
             var intermediates = CertificateManager.GetIntermediateCertificatesFromPfx(pfxPath, TestPassword, certificate.Thumbprint);
 
@@ -59,7 +59,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var pfxPath = "Assets/dummycert.pfx";
             Assert.IsTrue(File.Exists(pfxPath), $"Test PFX file not found: {pfxPath}");
 
-            using var certificate = CertificateManager.LoadCertificate(pfxPath, TestPassword, throwOnError: true, ephemeralKeySet: true);
+            using var certificate = CertificateManager.LoadCertificateWithoutKey(pfxPath, TestPassword);
 
             var intermediates = CertificateManager.GetIntermediateCertificatesFromPfx(pfxPath, TestPassword, certificate.Thumbprint);
 
