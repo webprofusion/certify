@@ -24,6 +24,16 @@ namespace Certify.Client
     {
         public bool IsAccessDenied { get; set; } = false;
 
+        /// <summary>
+        /// The HTTP status the service responded with, if it responded
+        /// </summary>
+        public HttpStatusCode? StatusCode { get; set; }
+
+        /// <summary>
+        /// The service did not accept the caller's credentials, or the caller is not a service admin
+        /// </summary>
+        public bool IsAuthFailure => !IsAccessDenied && (StatusCode == HttpStatusCode.Unauthorized || StatusCode == HttpStatusCode.Forbidden);
+
         public ServiceCommsException()
         {
         }
@@ -223,7 +233,7 @@ namespace Certify.Client
                     else
                     {
                         var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        throw new ServiceCommsException($"Internal Service Error: {endpointURI}: {error} ");
+                        throw ServiceError(endpointURI.ToString(), response, error);
                     }
                 }
             }
@@ -237,8 +247,14 @@ namespace Certify.Client
         /// The service refused the request, e.g. a change only the management hub can make or a save while a certificate
         /// request is in progress, the message is shown to the user
         /// </summary>
-        private static ServiceCommsException ChangeRefused(string endpoint, string error)
-            => new ServiceCommsException(string.IsNullOrWhiteSpace(error) ? $"API Access Denied: {endpoint}" : error) { IsAccessDenied = true };
+        private static ServiceCommsException ChangeRefused(string endpoint, HttpResponseMessage response, string error)
+            => new ServiceCommsException(string.IsNullOrWhiteSpace(error) ? $"API Access Denied: {endpoint}" : error) { IsAccessDenied = true, StatusCode = response.StatusCode };
+
+        /// <summary>
+        /// The service responded with an error status, the status is included as the response body is often empty (e.g. an auth failure)
+        /// </summary>
+        private static ServiceCommsException ServiceError(string endpoint, HttpResponseMessage response, string error)
+            => new ServiceCommsException($"Service Error ({(int)response.StatusCode} {response.ReasonPhrase}): {endpoint}: {error}") { StatusCode = response.StatusCode };
 
         public class ServerErrorMsg
         {
@@ -269,33 +285,25 @@ namespace Certify.Client
                         {
                             var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-                            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                            if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Conflict)
                             {
-                                throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
+                                throw ChangeRefused(endpoint, response, error);
                             }
-                            else if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Conflict)
+                            else if (response.StatusCode == HttpStatusCode.InternalServerError && error.Contains("\"message\""))
                             {
-                                throw ChangeRefused(endpoint, error);
+                                var err = JsonConvert.DeserializeObject<ServerErrorMsg>(error);
+                                throw ServiceError(endpoint, response, err.Message);
                             }
                             else
                             {
-
-                                if (response.StatusCode == HttpStatusCode.InternalServerError && error.Contains("\"message\""))
-                                {
-                                    var err = JsonConvert.DeserializeObject<ServerErrorMsg>(error);
-                                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {err.Message}");
-                                }
-                                else
-                                {
-                                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
-                                }
+                                throw ServiceError(endpoint, response, error);
                             }
                         }
                     }
                 }
                 catch (HttpRequestException exp)
                 {
-                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {exp}");
+                    throw new ServiceCommsException($"Failed to communicate with service: {_baseUri}{endpoint}: {exp}");
                 }
             }
             else
@@ -308,7 +316,7 @@ namespace Certify.Client
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                    throw ServiceError(endpoint, response, error);
                 }
             }
         }
@@ -331,10 +339,10 @@ namespace Certify.Client
 
                     if (response.StatusCode == HttpStatusCode.Forbidden)
                     {
-                        throw ChangeRefused(endpoint, error);
+                        throw ChangeRefused(endpoint, response, error);
                     }
 
-                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                    throw ServiceError(endpoint, response, error);
                 }
             }
         }
@@ -360,7 +368,7 @@ namespace Certify.Client
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                    throw ServiceError(endpoint, response, error);
                 }
             }
         }

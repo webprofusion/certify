@@ -230,10 +230,29 @@ namespace Certify.UI.Windows
 
             _appViewModel.Log.Information("Service connection init process took {total}ms.", sw.ElapsedMilliseconds);
 
+            string serviceAuthFaultMsg = null;
+
             if (_appViewModel.IsServiceAvailable)
             {
-                await _appViewModel.LoadSettingsAsync();
+                try
+                {
+                    await _appViewModel.LoadSettingsAsync();
+                }
+                catch (Certify.Client.ServiceCommsException exp) when (exp.IsAuthFailure)
+                {
+                    // the service is running but did not accept our windows sign in, this is the first call which needs it
+                    _appViewModel.Log.Error("Service refused the app's Windows sign in: {msg}", exp.Message);
 
+                    _appViewModel.IsServiceAvailable = false;
+
+                    serviceAuthFaultMsg = $"The service did not accept your Windows sign in ({(int)exp.StatusCode} {exp.StatusCode}). "
+                        + "Only members of the local Administrators group can use the app, and the app signs in to the service using Windows authentication (NTLM) on the local connection. "
+                        + "Check your account is a member of the local Administrators group and that NTLM is not restricted by group policy on this machine.";
+                }
+            }
+
+            if (_appViewModel.IsServiceAvailable)
+            {
                 // service host diagnostics
 
                 var svcDiag = await _appViewModel.PerformServiceDiagnostics();
@@ -262,7 +281,11 @@ namespace Certify.UI.Windows
 
                 var config = _appViewModel.GetAppServiceConfig();
 
-                if (!string.IsNullOrEmpty(config.ServiceFaultMsg))
+                if (!string.IsNullOrEmpty(serviceAuthFaultMsg))
+                {
+                    MessageBox.Show("Could not connect to Certify Management Agent service. " + serviceAuthFaultMsg);
+                }
+                else if (!string.IsNullOrEmpty(config.ServiceFaultMsg))
                 {
                     MessageBox.Show("Could not connect to Certify Management Agent service. " + config.ServiceFaultMsg);
                 }
