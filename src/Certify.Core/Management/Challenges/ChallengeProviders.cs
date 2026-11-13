@@ -223,7 +223,18 @@ namespace Certify.Core.Management.Challenges
 
         public static async Task<List<ChallengeProviderDefinition>> GetChallengeAPIProviders()
         {
-            var result = PluginManager.CurrentInstance.DnsProviderProviders.SelectMany(pp => pp.GetProviders(pp.GetType())).ToList();
+            var pluginManager = PluginManager.CurrentInstance;
+            var result = pluginManager.DnsProviderProviders.SelectMany(pp => pp.GetProviders(pp.GetType())).ToList();
+
+            // add stored credential types defined by deployment task plugins
+            var credentialTypes = pluginManager.DeploymentTaskProviders?.OfType<ICredentialTypeProviderPlugin>().SelectMany(p => p.GetCredentialTypes()) ?? [];
+            foreach (var credentialType in credentialTypes)
+            {
+                if (!result.Any(r => r.Id == credentialType.Id))
+                {
+                    result.Add(credentialType);
+                }
+            }
 
 #if DEBUG
             // output list of providers which require credentials plus list of potential stored credential parameters

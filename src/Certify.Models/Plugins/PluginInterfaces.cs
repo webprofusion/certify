@@ -65,6 +65,15 @@ namespace Certify.Models.Plugins
     }
 
     /// <summary>
+    /// Optionally implemented by deployment task plugins which define their own stored credential types (e.g. for a task's ExternalCredentialType).
+    /// These are listed alongside the standard credential types.
+    /// </summary>
+    public interface ICredentialTypeProviderPlugin
+    {
+        List<ChallengeProviderDefinition> GetCredentialTypes();
+    }
+
+    /// <summary>
     /// Plugins which implement certificate managers implement this interface for dynamic login loading
     /// </summary>
     public interface ICertificateManagerProviderPlugin : IProviderPlugin<ICertificateManager, ProviderDefinition>
