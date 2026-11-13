@@ -76,7 +76,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
                 }
 
                 // 3. Retrieve the EAB secret key using the Key ID
-                var eabMapping = await GetEabMappedAccessToken(eabHeader.Kid);
+                var eabMapping = await GetMappedAccessToken(eabHeader.Kid);
                 if (eabMapping == null)
                 {
                     _logger.LogError("EAB Key ID not found or invalid: {KeyId}", eabHeader.Kid);
@@ -129,6 +129,61 @@ namespace Certify.Server.Hub.Api.Services.Acme
             {
                 _logger.LogError(ex, "Error validating External Account Binding");
                 return EabValidationResult.Failed("An unexpected error occurred while validating the external account binding");
+            }
+        }
+
+        /// <summary>
+        /// Validates a Managed ACME directory key, which is supplied in the directory url by ACME clients without
+        /// External Account Binding support. Unlike an EAB key it is not consumed by registering an account: the url is
+        /// configured once on the client, which may register again with a new account key, so it stays valid until the
+        /// access token is revoked or expires. Only accepted when enabled in the hub's Managed ACME settings.
+        /// </summary>
+        /// <param name="key">The key from the directory url, see <see cref="ManagedAcmeDirectoryKey"/></param>
+        /// <returns>Validation result, including the internal id of the matching access token and the owning security principal, or the reason for failure</returns>
+        public async Task<EabValidationResult> ValidateDirectoryKey(string key)
+        {
+            if (!ManagedAcmeDirectoryKey.TryParse(key, out var tokenId, out var secretHash))
+            {
+                _logger.LogWarning("ACME directory key is not in the expected format");
+                return EabValidationResult.Failed("Invalid ACME directory key");
+            }
+
+            try
+            {
+                var settings = await _client.GetHubSettings(new AuthContext { UserId = StandardSecurityPrincipals.System });
+                if (settings?.ManagedAcme?.AllowKeyedDirectoryUrls != true)
+                {
+                    _logger.LogWarning("ACME directory key for access token {KeyId} refused, keyed directory urls are not enabled in hub settings", tokenId);
+                    return EabValidationResult.Failed("Keyed ACME directory urls are not enabled on this hub");
+                }
+
+                var mapping = await GetMappedAccessToken(tokenId);
+                if (mapping == null)
+                {
+                    return EabValidationResult.Failed("Invalid ACME directory key");
+                }
+
+                // the same base64url SHA256 hash the hub UI uses to show the key
+                var expectedHash = Management.Util.ToUrlSafeBase64String(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(ManagedAcmeDirectoryKey.GetHashInput(mapping.Value.Token.Secret))));
+
+                if (!CryptographicOperations.FixedTimeEquals(System.Text.Encoding.UTF8.GetBytes(secretHash), System.Text.Encoding.UTF8.GetBytes(expectedHash)))
+                {
+                    _logger.LogError("ACME directory key for access token {KeyId} did not match", tokenId);
+                    return EabValidationResult.Failed("Invalid ACME directory key");
+                }
+
+                if (!await HasManagedAcmeAccess(mapping.Value.SecurityPrincipalId, mapping.Value.ScopedAssignedRoles))
+                {
+                    _logger.LogError("Security principal {PrincipalId} mapped to ACME directory key {KeyId} is not authorised to perform managed ACME orders", mapping.Value.SecurityPrincipalId, tokenId);
+                    return EabValidationResult.Failed("The account associated with this ACME directory key is not authorised to perform managed ACME orders");
+                }
+
+                return EabValidationResult.Success(mapping.Value.Token.Id, mapping.Value.SecurityPrincipalId, mapping.Value.ScopedAssignedRoles);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating ACME directory key");
+                return EabValidationResult.Failed("An unexpected error occurred while validating the ACME directory key");
             }
         }
 
@@ -234,9 +289,9 @@ namespace Certify.Server.Hub.Api.Services.Acme
         }
 
         /// <summary>
-        /// Retrieve EAB secret key for the given Key ID, along with the security principal it is assigned to
+        /// Retrieve the access token (with its secret) for the given id, along with the security principal it is assigned to
         /// </summary>
-        private async Task<(AccessToken Token, string SecurityPrincipalId, List<string> ScopedAssignedRoles)?> GetEabMappedAccessToken(string keyId)
+        private async Task<(AccessToken Token, string SecurityPrincipalId, List<string> ScopedAssignedRoles)?> GetMappedAccessToken(string keyId)
         {
             var authContext = new AuthContext
             {
@@ -253,14 +308,14 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
             if (matches.Count == 0)
             {
-                _logger.LogError("EAB Key ID not found: {KeyId}", keyId);
+                _logger.LogError("Access token not found: {KeyId}", keyId);
                 return null;
             }
 
             if (matches.Count > 1)
             {
                 // ambiguous mapping, we cannot determine the owning principal so fail closed
-                _logger.LogError("EAB Key ID {KeyId} is assigned to more than one security principal", keyId);
+                _logger.LogError("Access token {KeyId} is assigned to more than one security principal", keyId);
                 return null;
             }
 
@@ -268,13 +323,13 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
             if (string.IsNullOrWhiteSpace(match.SecurityPrincipalId))
             {
-                _logger.LogError("EAB Key ID {KeyId} has no associated security principal", keyId);
+                _logger.LogError("Access token {KeyId} has no associated security principal", keyId);
                 return null;
             }
 
             if (match.Token.DateRevoked != null || (match.Token.DateExpiry != null && match.Token.DateExpiry <= DateTimeOffset.UtcNow))
             {
-                _logger.LogError("EAB Key ID {KeyId} refers to a revoked or expired access token", keyId);
+                _logger.LogError("Access token {KeyId} is revoked or expired", keyId);
                 return null;
             }
 
@@ -283,7 +338,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
             if (unlocked?.IsSuccess != true || unlocked.Result == null || string.IsNullOrEmpty(unlocked.Result.Secret))
             {
-                _logger.LogError("EAB Key ID {KeyId} secret could not be retrieved", keyId);
+                _logger.LogError("Access token {KeyId} secret could not be retrieved", keyId);
                 return null;
             }
 

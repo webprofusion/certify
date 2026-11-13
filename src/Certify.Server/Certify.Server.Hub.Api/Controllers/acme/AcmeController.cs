@@ -64,19 +64,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <summary>
         /// ACME Directory endpoint - RFC 8555 Section 7.1.1
         /// </summary>
+        /// <param name="key">Optional Managed ACME directory key, for ACME clients without External Account Binding support</param>
         /// <returns>Directory object with endpoint URLs</returns>
-        [HttpGet("{key?}/directory")]
+        [HttpGet("{key}/directory")]
         [HttpGet("directory")]
-        public IActionResult GetDirectory(string key = default!)
+        public async Task<IActionResult> GetDirectory(string key = default!)
         {
-            _acmeHelper.ValidateKeyIfSupplied(key);
+            if (!string.IsNullOrEmpty(key))
+            {
+                // fail early, so a client configured with a bad key reports it before registering
+                var keyResult = await _eabValidator.ValidateDirectoryKey(key);
+                if (keyResult?.IsValid != true)
+                {
+                    return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, keyResult?.FailureReason ?? "Invalid ACME directory key");
+                }
+            }
 
-            var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
+            var baseUrl = AcmeHelper.BuildBaseUrl(Request);
 
             var directory = new AcmeDirectory
             {
                 NewNonce = $"{baseUrl}/new-nonce",
-                NewAccount = $"{baseUrl}/new-account",
+                // only account registration needs the key, the account then authenticates every later request
+                NewAccount = string.IsNullOrEmpty(key) ? $"{baseUrl}/new-account" : $"{baseUrl}/{key}/new-account",
                 NewOrder = $"{baseUrl}/new-order",
                 RevokeCert = $"{baseUrl}/revoke-cert",
                 KeyChange = $"{baseUrl}/key-change",
@@ -92,13 +102,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <summary>
         /// Issue new anti-replay nonce - RFC 8555 Section 6.5.1
         /// </summary>
-        /// <param name="key"></param>
         /// <returns></returns>
         [HttpHead("new-nonce")]
         [HttpGet("new-nonce")]
-        [HttpHead("{key?}/new-nonce")]
-        [HttpGet("{key?}/new-nonce")]
-        public IActionResult NewNonce(string key = default!)
+        public IActionResult NewNonce()
         {
             // the replay nonce itself is added to every response by AcmeReplayNonceFilter
             Response.Headers.Append("Cache-Control", "no-store");
@@ -110,14 +117,12 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// New account endpoint with EAB support - RFC 8555 Section 7.3
         /// </summary>
         /// <param name="payload">JWS payload containing account creation request</param>
-        /// <param name="key"></param>
+        /// <param name="key">Managed ACME directory key, when the client registers without External Account Binding</param>
         /// <returns>Account object</returns>
-        [HttpPost("{key?}/new-account")]
+        [HttpPost("{key}/new-account")]
         [HttpPost("new-account")]
         public async Task<IActionResult> NewAccount([FromBody] JwsPayload payload, string key = default!)
         {
-            _acmeHelper.ValidateKeyIfSupplied(key);
-
             var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
 
             // Decode the JWS payload
@@ -160,37 +165,25 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.AccountDoesNotExist, "No account exists for this key");
             }
 
-            // Validate External Account Binding if required
-            string validatedEabKeyInternalId;
-            string owningSecurityPrincipalId;
-            List<string> owningScopedAssignedRoles = [];
+            // the account is bound to an access token, by External Account Binding or by the directory key in the url
+            var binding = string.IsNullOrEmpty(key)
+                ? await _eabValidator.ValidateExternalAccountBinding(request.ExternalAccountBinding, newAccountKey, requestUrl)
+                : await _eabValidator.ValidateDirectoryKey(key);
 
-            if (string.IsNullOrEmpty(key))
+            if (binding?.IsValid != true)
             {
-                var eabResult = await _eabValidator.ValidateExternalAccountBinding(request.ExternalAccountBinding, newAccountKey, requestUrl);
-                if (eabResult?.IsValid != true)
-                {
-                    var failureReason = eabResult?.FailureReason ?? "Invalid external account binding";
-                    return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ExternalAccountRequired, failureReason);
-                }
-
-                validatedEabKeyInternalId = eabResult.TokenInternalId!;
-                owningSecurityPrincipalId = eabResult.SecurityPrincipalId!;
-                owningScopedAssignedRoles = eabResult.ScopedAssignedRoles ?? [];
-            }
-            else
-            {
-                // Validate access key instead
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ExternalAccountRequired, "Invalid external account binding (key supplied but not supported)");
+                return string.IsNullOrEmpty(key)
+                    ? AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ExternalAccountRequired, binding?.FailureReason ?? "Invalid external account binding")
+                    : AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, binding?.FailureReason ?? "Invalid ACME directory key");
             }
 
             var accountId = AcmeHelper.GenerateAccountId();
-            var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
+            var baseUrl = AcmeHelper.BuildBaseUrl(Request);
             var account = new AcmeAccount
             {
-                internalId = validatedEabKeyInternalId,
-                SecurityPrincipalId = owningSecurityPrincipalId,
-                ScopedAssignedRoles = owningScopedAssignedRoles,
+                internalId = binding.TokenInternalId!,
+                SecurityPrincipalId = binding.SecurityPrincipalId!,
+                ScopedAssignedRoles = binding.ScopedAssignedRoles ?? [],
                 Status = AccountStatus.Valid,
                 Contact = request.Contact,
                 TermsOfServiceAgreed = request.TermsOfServiceAgreed,
@@ -215,7 +208,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="payload"></param>
         /// <param name="accountId"></param>
         /// <returns></returns>
-        // [HttpPost("{key}/account/{accountId}")]
         [HttpPost("account/{accountId}")]
         public async Task<IActionResult> Account([FromBody] JwsPayload payload, string accountId)
         {
@@ -266,14 +258,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// New order endpoint - RFC 8555 Section 7.4
         /// </summary>
         /// <param name="payload">JWS payload containing order creation request</param>
-        /// <param name="key"></param>
         /// <returns>Order object</returns>
         [HttpPost("new-order")]
-        [HttpPost("{key?}/new-order")]
-        public async Task<IActionResult> NewOrder([FromBody] JwsPayload payload, string key = default!)
+        public async Task<IActionResult> NewOrder([FromBody] JwsPayload payload)
         {
-            _acmeHelper.ValidateKeyIfSupplied(key);
-
             var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
 
             // Decode the JWS payload. Signature is verified against the registered account key referenced by 'kid'.
@@ -343,7 +331,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             var authorizationIds = new List<string>();
             var createdAt = DateTime.UtcNow;
 
-            var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
+            var baseUrl = AcmeHelper.BuildBaseUrl(Request);
 
             // Create authorizations for each identifier
             foreach (var identifier in request.Identifiers)
@@ -420,14 +408,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         /// <param name="orderId">Order identifier</param>
         /// <param name="payload">JWS payload containing finalization request with CSR</param>
-        /// <param name="key"></param>
         /// <returns>Updated order object</returns>
         [HttpPost("order/{orderId}/finalize")]
-        [HttpPost("{key?}/order/{orderId}/finalize")]
-        public async Task<IActionResult> FinalizeOrder(string orderId, [FromBody] JwsPayload payload, string key = default!)
+        public async Task<IActionResult> FinalizeOrder(string orderId, [FromBody] JwsPayload payload)
         {
-            _acmeHelper.ValidateKeyIfSupplied(key);
-
             var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
 
             // Decode and verify the JWS payload before touching any order state
@@ -481,7 +465,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             // the order keeps its internal status for the background tasks, a repeated finalize is not queued again
             if (order.TryMarkFinalizeRequested())
             {
-                var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
+                var baseUrl = AcmeHelper.BuildBaseUrl(Request);
 
                 // Enqueue background task for order finalization
                 var taskEnqueued = await _backgroundTaskService.EnqueueOrderFinalizationTask(
@@ -507,14 +491,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         /// <param name="certId">Certificate identifier</param>
         /// <param name="payload"></param>
-        /// <param name="key"></param>
         /// <returns>Certificate in PEM format</returns>
         [HttpPost("cert/{certId}")]
-        [HttpPost("{key?}/cert/{certId}")]
-        public async Task<IActionResult> DownloadCertificate(string certId, [FromBody] JwsPayload payload, string key = default!)
+        public async Task<IActionResult> DownloadCertificate(string certId, [FromBody] JwsPayload payload)
         {
-            _acmeHelper.ValidateKeyIfSupplied(key);
-
             var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
 
             try
@@ -527,7 +507,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
-            var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
+            var baseUrl = AcmeHelper.BuildBaseUrl(Request);
             var certUri = AcmeHelper.BuildCertificateUrl(baseUrl, certId);
             var order = await _config.GetAcmeOrderByCertificateUri(certUri);
             if (order == null)
@@ -562,14 +542,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         /// <param name="orderId">Order identifier</param>
         /// <param name="payload"></param>
-        /// <param name="key"></param>
         /// <returns>Order object</returns>
         [HttpPost("order/{orderId}")]
-        [HttpPost("{key?}/order/{orderId}")]
-        public async Task<IActionResult> GetOrder(string orderId, [FromBody] JwsPayload payload, string key = default!)
+        public async Task<IActionResult> GetOrder(string orderId, [FromBody] JwsPayload payload)
         {
-            _acmeHelper.ValidateKeyIfSupplied(key);
-
             var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
 
             try
@@ -609,14 +585,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         /// <param name="authId">Authorization identifier</param>
         /// <param name="payload"></param>
-        /// <param name="key"></param>
         /// <returns>Authorization object</returns>
         [HttpPost("authz/{authId}")]
-        [HttpPost("{key?}/authz/{authId}")]
-        public async Task<IActionResult> GetAuthorization(string authId, [FromBody] JwsPayload payload, string key = default!)
+        public async Task<IActionResult> GetAuthorization(string authId, [FromBody] JwsPayload payload)
         {
-            _acmeHelper.ValidateKeyIfSupplied(key);
-
             var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
 
             try

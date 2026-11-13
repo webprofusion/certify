@@ -133,5 +133,11 @@ namespace Certify.Models.Hub
     /// </summary>
     public class ManagedAcmeSettings
     {
+        /// <summary>
+        /// If true, ACME clients without External Account Binding support may register using a keyed directory url
+        /// ({hub}/acme/{key}/directory, see <see cref="ManagedAcmeDirectoryKey"/>). The url is a credential which can
+        /// register accounts until its access token is revoked or expires. Default is false.
+        /// </summary>
+        public bool AllowKeyedDirectoryUrls { get; set; }
     }
 }

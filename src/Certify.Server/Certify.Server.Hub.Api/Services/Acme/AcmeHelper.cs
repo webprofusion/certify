@@ -54,8 +54,8 @@ namespace Certify.Server.Hub.Api.Services.Acme
         /// <summary>
         /// Builds the base URL for ACME endpoints
         /// </summary>
-        public static string BuildBaseUrl(HttpRequest request, string? key = null) =>
-            $"{request.Scheme}://{request.Host}/acme{(key != null ? $"/{key}" : "")}";
+        public static string BuildBaseUrl(HttpRequest request) =>
+            $"{request.Scheme}://{request.Host}/acme";
 
         /// <summary>
         /// Builds an account URL
@@ -189,12 +189,6 @@ namespace Certify.Server.Hub.Api.Services.Acme
         /// <summary>
         /// Validates if a key is properly formatted (placeholder implementation)
         /// </summary>
-        public bool ValidateKeyIfSupplied(string key)
-        {
-            // TODO: Implement key validation logic if needed
-            return true;
-        }
-
         /// <summary>
         /// Creates an ACME error response
         /// </summary>
