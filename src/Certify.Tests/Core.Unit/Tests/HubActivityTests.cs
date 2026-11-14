@@ -426,6 +426,107 @@ namespace Certify.Core.Tests.Unit
     }
 
     /// <summary>
+    /// An instance only reports a problem with itself resolved when it clears within the same run of its service. A
+    /// problem fixed by a restart (e.g. plugins failing to load mid upgrade, then loading on the next start) was never
+    /// reported resolved, so the hub kept showing it. The hub now asks an instance with open problems for its current
+    /// status and resolves those its status shows healthy.
+    /// </summary>
+    [TestClass]
+    public class InstanceProblemRecheckTests
+    {
+        private const string LoadPlugins = "service.core.loadplugins";
+        private const string DataStore = "service.core.datastore";
+
+        private string _dbPath = default!;
+        private ActivityStore _store = default!;
+        private ActivityRecorder _recorder = default!;
+
+        [TestInitialize]
+        public async Task Init()
+        {
+            _dbPath = Path.Combine(Path.GetTempPath(), $"certify-activity-{Guid.NewGuid():N}.db");
+            _store = new ActivityStore(_dbPath);
+            await _store.InitAsync();
+
+            _recorder = new ActivityRecorder(_store, new Mock<IInstanceManagementStateProvider>().Object);
+            _recorder.NoteInstanceTitle("app", "APP");
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
+            foreach (var file in new[] { _dbPath, _dbPath + "-wal", _dbPath + "-shm" })
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        private Task Raise(string key, DateTimeOffset at) => _store.AddEventAsync(new ActivityEvent
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Timestamp = at,
+            InstanceId = "app",
+            Category = ActivityCategory.Instance,
+            EventType = ActivityEventTypes.InstanceProblemRaised,
+            Status = RequestState.Error,
+            Key = key,
+            Title = "Problem: Core Service Load Plugins"
+        });
+
+        private static ActionStep Status(string key, bool hasError = false) => new(key, "service.core", "Core Service Load Plugins", hasError ? "Failed" : "Plugins loaded with no errors.", hasError, false);
+
+        [TestMethod]
+        public async Task HealthyStatus_ResolvesOpenProblem_AndOthersStayOpen()
+        {
+            await Raise(LoadPlugins, DateTimeOffset.UtcNow.AddDays(-14));
+            await Raise(DataStore, DateTimeOffset.UtcNow.AddDays(-1));
+            await Raise("service.core.retired", DateTimeOffset.UtcNow.AddDays(-1));
+
+            await _recorder.InstanceStatusReceivedAsync("app", [Status(LoadPlugins), Status(DataStore, hasError: true)]);
+
+            var open = await _store.GetOpenInstanceProblemsAsync(DateTimeOffset.UtcNow, "app");
+
+            CollectionAssert.AreEquivalent(new[] { DataStore, "service.core.retired" }, open.Select(p => p.Key).ToArray(), "a problem still failing, or not in the status at all, stays open");
+
+            var resolved = (await _store.QueryEventsAsync(new ActivityQuery())).Results.Single(e => e.EventType == ActivityEventTypes.InstanceProblemCleared);
+            Assert.AreEqual("Resolved: Core Service Load Plugins", resolved.Title);
+            Assert.AreEqual(LoadPlugins, resolved.Key);
+        }
+
+        [TestMethod]
+        public async Task HealthyStatus_WithNothingOpen_RecordsNothing()
+        {
+            await _recorder.InstanceStatusReceivedAsync("app", [Status(LoadPlugins)]);
+
+            Assert.AreEqual(0, (await _store.QueryEventsAsync(new ActivityQuery())).Total);
+        }
+
+        [TestMethod]
+        public async Task Recheck_OnlyWithOpenProblems_AtMostEveryFewMinutes_AndAgainOnConnect()
+        {
+            Assert.IsFalse(await _recorder.ShouldRecheckOpenProblemsAsync("app"), "nothing open, nothing to ask");
+
+            await _recorder.InstanceConnectedAsync("app");
+            await Raise(LoadPlugins, DateTimeOffset.UtcNow.AddMinutes(-1));
+
+            Assert.IsTrue(await _recorder.ShouldRecheckOpenProblemsAsync("app"));
+            Assert.IsFalse(await _recorder.ShouldRecheckOpenProblemsAsync("app"), "heartbeats are every 30 seconds, so the next is not asked again");
+
+            await _recorder.InstanceConnectedAsync("app");
+
+            Assert.IsTrue(await _recorder.ShouldRecheckOpenProblemsAsync("app"), "a restarted service is asked as soon as it connects");
+        }
+    }
+
+    /// <summary>
     /// Changes made through the hub are titled with who made them: the hub itself (e.g. for managed ACME orders) is
     /// "System", and a principal without a display title is named by its username rather than by nothing.
     /// </summary>

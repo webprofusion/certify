@@ -669,15 +669,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
             }
 
             // problems instances have reported with themselves and not yet reported resolved
-            var problemEvents = await _store.GetEventsAsync(
-                now.AddDays(-30), now.AddMinutes(1),
-                [ActivityEventTypes.InstanceProblemRaised, ActivityEventTypes.InstanceProblemCleared],
-                instanceId);
-
-            var openProblems = problemEvents
-                .GroupBy(e => $"{e.InstanceId}|{e.Key}")
-                .Select(g => g.Last())
-                .Where(e => e.EventType == ActivityEventTypes.InstanceProblemRaised && e.InstanceId != null);
+            var openProblems = await _store.GetOpenInstanceProblemsAsync(now, instanceId);
 
             var knownIds = knownInstances.Select(i => i.InstanceId).ToHashSet(StringComparer.OrdinalIgnoreCase);
 

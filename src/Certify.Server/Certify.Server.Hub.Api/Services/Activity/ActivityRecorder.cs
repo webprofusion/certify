@@ -21,6 +21,11 @@ namespace Certify.Server.Hub.Api.Services.Activity
         /// </summary>
         internal static readonly TimeSpan RequestedByExpiry = TimeSpan.FromMinutes(10);
 
+        /// <summary>
+        /// How often an instance with open problems is asked whether they have gone
+        /// </summary>
+        internal static readonly TimeSpan ProblemRecheckInterval = TimeSpan.FromMinutes(5);
+
         private readonly ActivityStore _store;
         private readonly UserInterfaceStatusBroadcaster? _broadcaster;
         private readonly IInstanceManagementStateProvider _stateProvider;
@@ -29,6 +34,7 @@ namespace Certify.Server.Hub.Api.Services.Activity
 
         private readonly ConcurrentDictionary<string, (string Actor, DateTimeOffset Noted)> _requestedBy = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, string> _instanceTitles = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, DateTimeOffset> _problemsCheckedAt = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, string> _principalNames = new(StringComparer.OrdinalIgnoreCase);
         private DateTimeOffset _principalNamesLoaded = DateTimeOffset.MinValue;
 
@@ -174,10 +180,77 @@ namespace Certify.Server.Hub.Api.Services.Activity
         }
 
         /// <summary>
+        /// Whether to ask an instance for its current status, to find out if problems it reported have gone. An instance
+        /// only reports a problem resolved when it clears within the same run of its service, so a problem fixed by a
+        /// restart would otherwise stay open. Asked at most every few minutes for each instance, and straight away after
+        /// it connects.
+        /// </summary>
+        public async Task<bool> ShouldRecheckOpenProblemsAsync(string instanceId)
+        {
+            var now = DateTimeOffset.UtcNow;
+
+            if (_problemsCheckedAt.TryGetValue(instanceId, out var lastChecked) && now - lastChecked < ProblemRecheckInterval)
+            {
+                return false;
+            }
+
+            _problemsCheckedAt[instanceId] = now;
+
+            try
+            {
+                return (await _store.GetOpenInstanceProblemsAsync(now, instanceId)).Count > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to read open problems for instance {instanceId}.", instanceId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// An instance reported its current status: resolve each open problem it reported earlier which its status now
+        /// shows as healthy
+        /// </summary>
+        public async Task InstanceStatusReceivedAsync(string instanceId, IEnumerable<ActionStep> statusItems)
+        {
+            try
+            {
+                var healthy = statusItems
+                    .Where(s => !string.IsNullOrWhiteSpace(s.Key) && !s.HasError && !s.HasWarning)
+                    .GroupBy(s => s.Key, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.Last(), StringComparer.OrdinalIgnoreCase);
+
+                foreach (var problem in await _store.GetOpenInstanceProblemsAsync(DateTimeOffset.UtcNow, instanceId))
+                {
+                    if (problem.Key != null && healthy.TryGetValue(problem.Key, out var status))
+                    {
+                        await RecordAsync(new ActivityEvent
+                        {
+                            InstanceId = instanceId,
+                            Category = ActivityCategory.Instance,
+                            EventType = ActivityEventTypes.InstanceProblemCleared,
+                            Status = RequestState.Success,
+                            Key = problem.Key,
+                            Title = $"Resolved: {status.Title}",
+                            Detail = status.Description
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to resolve open problems for instance {instanceId}.", instanceId);
+            }
+        }
+
+        /// <summary>
         /// An instance connected to the hub
         /// </summary>
         public async Task InstanceConnectedAsync(string instanceId)
         {
+            // a new connection is often a restarted service, which may have fixed what was wrong before
+            _problemsCheckedAt.TryRemove(instanceId, out _);
+
             var title = await GetInstanceTitleAsync(instanceId);
 
             await RecordAsync(new ActivityEvent

@@ -244,6 +244,29 @@ namespace Certify.Server.Hub.Api.Services.Activity
         }
 
         /// <summary>
+        /// How far back a problem an instance reported with itself is still treated as open, if never reported resolved
+        /// </summary>
+        public static readonly TimeSpan OpenProblemWindow = TimeSpan.FromDays(30);
+
+        /// <summary>
+        /// Problems instances have reported with themselves and not since reported resolved: the last raised event for
+        /// each instance and status key
+        /// </summary>
+        public async Task<List<ActivityEvent>> GetOpenInstanceProblemsAsync(DateTimeOffset now, string? instanceId = null)
+        {
+            var problemEvents = await GetEventsAsync(
+                now - OpenProblemWindow, now.AddMinutes(1),
+                [ActivityEventTypes.InstanceProblemRaised, ActivityEventTypes.InstanceProblemCleared],
+                instanceId);
+
+            return problemEvents
+                .GroupBy(e => $"{e.InstanceId}|{e.Key}", StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.Last())
+                .Where(e => e.EventType == ActivityEventTypes.InstanceProblemRaised && e.InstanceId != null)
+                .ToList();
+        }
+
+        /// <summary>
         /// Get the most recent event of each of the given types for each instance, e.g. the last connection change
         /// </summary>
         public async Task<List<ActivityEvent>> GetLatestEventsByInstanceAsync(IEnumerable<string> eventTypes, DateTimeOffset? before = null)

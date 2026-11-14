@@ -291,6 +291,17 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
                 _stateProvider.UpdateInstanceStatusSummary(instanceId, val!);
             }
+            else if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetSystemStatusItems && result.Value != null)
+            {
+                _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
+
+                var val = System.Text.Json.JsonSerializer.Deserialize<List<ActionStep>>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
+
+                if (val != null && _activity != null)
+                {
+                    await _activity.InstanceStatusReceivedAsync(instanceId, val);
+                }
+            }
             else if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
             {
                 // the instance's reply to the identify request issued when it connected, or its heartbeat
@@ -728,6 +739,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 if (!_stateProvider.HasStatusSummaryForManagedInstance(instanceInfo.InstanceId))
                 {
                     await IssueInstanceCommand(instanceInfo.InstanceId, ManagementHubCommands.GetStatusSummary);
+                }
+
+                // problems the instance reported before may have gone without it reporting them resolved (e.g. fixed by a
+                // restart), so ask for its current status to check
+                if (_activity != null && await _activity.ShouldRecheckOpenProblemsAsync(instanceInfo.InstanceId))
+                {
+                    await IssueInstanceCommand(instanceInfo.InstanceId, ManagementHubCommands.GetSystemStatusItems);
                 }
             }
         }
