@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Shared;
 using Newtonsoft.Json;
@@ -100,44 +101,50 @@ namespace Certify.Providers.Internal
             return false;
         }
 
-        public async Task<bool> RegisterInstance(RegisteredInstance instance, string email, string pwd, bool createAccount)
+        public Task<ActionResult> RegisterInstance(RegisteredInstance instance, string email, string pwd, bool createAccount)
         {
-            try
+            return PostInstanceRequestAsync("status/register", new
             {
-                //_baseUri = "http://localhost:57248/v1/";
-                var response = await PostAsync("status/register", new
-                {
-                    Instance = instance,
-                    Email = email,
-                    Password = pwd,
-                    CreateAccount = createAccount
-                });
-
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+                Instance = instance,
+                Email = email,
+                Password = pwd,
+                CreateAccount = createAccount
+            },
+            "The Certify The Web API did not accept the dashboard account email and password.");
         }
 
-        public async Task<bool> RemoveInstance(RegisteredInstance instance, string email, string pwd)
+        public Task<ActionResult> RemoveInstance(RegisteredInstance instance, string email, string pwd)
+        {
+            return PostInstanceRequestAsync("status/remove", new
+            {
+                Instance = instance,
+                Email = email,
+                Password = pwd,
+                CreateAccount = false
+            },
+            "The Certify The Web API did not accept the removal. The dashboard account email and password may be wrong, or the instance is not registered on that account.");
+        }
+
+        private async Task<ActionResult> PostInstanceRequestAsync(string endpoint, object data, string badRequestMessage)
         {
             try
             {
-                var response = await PostAsync("status/remove", new
-                {
-                    Instance = instance,
-                    Email = email,
-                    Password = pwd,
-                    CreateAccount = false
-                });
+                var response = await PostAsync(endpoint, data);
 
-                return response.IsSuccessStatusCode;
+                if (response.IsSuccessStatusCode)
+                {
+                    return new ActionResult("OK", true);
+                }
+
+                var statusCode = (int)response.StatusCode;
+
+                return statusCode == 400
+                    ? new ActionResult(badRequestMessage, false)
+                    : new ActionResult($"The Certify The Web API returned an error (HTTP {statusCode}).", false);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                return new ActionResult($"The Certify The Web API could not be reached: {ex.Message}", false);
             }
         }
     }

@@ -298,11 +298,12 @@ namespace Certify.Management
                     return new ActionResult("Managed instance not found.", false);
                 }
 
-                var registrationSucceeded = await _dashboardClient.RegisterInstance(registration, username, password, createAccount: false);
+                var registrationResult = await _dashboardClient.RegisterInstance(registration, username, password, createAccount: false);
 
-                if (!registrationSucceeded)
+                if (!registrationResult.IsSuccess)
                 {
-                    return new ActionResult("Dashboard registration could not be completed. Check that the stored dashboard account credentials are correct and that the hub can reach the Certify The Web API.", false);
+                    _serviceLog?.Warning("Dashboard registration failed for managed instance {instanceId}: {reason}", instanceId, registrationResult.Message);
+                    return new ActionResult($"Dashboard registration could not be completed. {registrationResult.Message}", false);
                 }
 
                 var updateResult = await UpdateManagedInstanceDashboardState(instanceInfo, true);
@@ -340,10 +341,12 @@ namespace Certify.Management
                     InstanceId = instanceInfo.InternalInstanceId
                 };
 
-                var removalSucceeded = await _dashboardClient.RemoveInstance(registration, username, password);
+                var removalResult = await _dashboardClient.RemoveInstance(registration, username, password);
 
-                if (!removalSucceeded)
+                if (!removalResult.IsSuccess)
                 {
+                    _serviceLog?.Warning("Dashboard removal failed for managed instance {instanceId}: {reason}", instanceId, removalResult.Message);
+
                     if (instanceInfo != null)
                     {
                         var localUpdateResult = await UpdateManagedInstanceDashboardState(instanceInfo, false);
@@ -436,8 +439,9 @@ namespace Certify.Management
 
                 return new ActionResult<Dictionary<string, string>>("OK", true, dashboardCredentials);
             }
-            catch
+            catch (Exception ex)
             {
+                _serviceLog?.Error(ex, "The dashboard registration credential could not be read from the internal credentials store.");
                 return new ActionResult<Dictionary<string, string>>("The dashboard registration credential could not be read from the internal credentials store.", false);
             }
         }

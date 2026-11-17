@@ -87,12 +87,12 @@ namespace Certify.UI.Windows
                         MachineName = Environment.MachineName
                     };
 
-                    var resultOK = IsRemovalMode
+                    var result = IsRemovalMode
                         ? await dashboardClient.RemoveInstance(instance, email, pwd)
                         : await dashboardClient.RegisterInstance(instance, email, pwd, createAccount: false);
                     Mouse.OverrideCursor = Cursors.Arrow;
 
-                    if (resultOK)
+                    if (result.IsSuccess)
                     {
                         if (IsRemovalMode)
                         {
@@ -135,7 +135,7 @@ namespace Certify.UI.Windows
                         }
                         else
                         {
-                            MessageBox.Show("Server registration could not complete. Check your username and password is correct and that outgoing https connections are allowed from this machine.");
+                            MessageBox.Show($"Server registration could not complete. {result.Message}");
                         }
                     }
                 }
