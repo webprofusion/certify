@@ -366,6 +366,26 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task ConfigureStandardUsersAndRolesReplacesAnUnreadableJoiningKey()
+        {
+            var creds = new TestCredentialsManager();
+
+            await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
+
+            // hub data moved to another server: the stored key is still there but can no longer be decrypted
+            creds.UnreadableKeys.Add(HubSharedConstants.MgmtHubJoiningCredId);
+
+            var result = await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
+
+            AssertNoProblems(result);
+            Assert.IsFalse(creds.UnreadableKeys.Contains(HubSharedConstants.MgmtHubJoiningCredId), "the unreadable joining key should be written out again");
+
+            var joiningToken = (await _access.GetAssignedAccessTokens(AdminId, includeSecrets: true)).Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle);
+            var storedSecret = await creds.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
+            StringAssert.Contains(storedSecret, joiningToken.AccessTokens.Single().Secret, "the rewritten joining key should hold the current joining token");
+        }
+
+        [TestMethod]
         public async Task ConfigureStandardUsersAndRolesRepairsAMissingManagedInstanceRoleAssignment()
         {
             var creds = new TestCredentialsManager();
@@ -500,15 +520,29 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             private readonly Dictionary<string, StoredCredential> _credentials = new();
 
+            /// <summary>
+            /// Stored credentials which fail to decrypt, as the real stores do, until they are written again
+            /// </summary>
+            public HashSet<string> UnreadableKeys { get; } = new();
+
             public bool Init(string connectionString, ILog log, string instanceId = null) => true;
             public Task<bool> IsInitialised() => Task.FromResult(true);
             public Task<ActionResult> Delete(IManagedItemStore itemStore, string storageKey) { _credentials.Remove(storageKey); return Task.FromResult(new ActionResult("OK", true)); }
             public Task<List<StoredCredential>> GetCredentials(string type = null, string storageKey = null)
                 => Task.FromResult(_credentials.Values.Where(c => storageKey == null || c.StorageKey == storageKey).ToList());
             public Task<StoredCredential> GetCredential(string storageKey) { _credentials.TryGetValue(storageKey, out var c); return Task.FromResult(c); }
-            public Task<string> GetUnlockedCredential(string storageKey) { _credentials.TryGetValue(storageKey, out var c); return Task.FromResult(c?.Secret); }
+            public Task<string> GetUnlockedCredential(string storageKey)
+            {
+                if (UnreadableKeys.Contains(storageKey))
+                {
+                    throw new AggregateException($"Failed to decrypt Credential [{storageKey}]");
+                }
+
+                _credentials.TryGetValue(storageKey, out var c);
+                return Task.FromResult(c?.Secret);
+            }
             public Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey) => Task.FromResult<Dictionary<string, string>>(null);
-            public Task<StoredCredential> Update(StoredCredential credentialInfo) { _credentials[credentialInfo.StorageKey] = credentialInfo; return Task.FromResult(credentialInfo); }
+            public Task<StoredCredential> Update(StoredCredential credentialInfo) { UnreadableKeys.Remove(credentialInfo.StorageKey); _credentials[credentialInfo.StorageKey] = credentialInfo; return Task.FromResult(credentialInfo); }
         }
     }
 }

@@ -1116,7 +1116,18 @@ namespace Certify.Models.Hub
 
             // if we don't have a stored credential as a client secret for the managed instance to join it's own hub, create one
             // direct instances don't really need this, but remote backends do so they can join back to their own hub.
-            var existingJoiningKey = await creds.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
+            string? existingJoiningKey;
+
+            try
+            {
+                existingJoiningKey = await creds.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
+            }
+            catch (AggregateException)
+            {
+                // credential stores raise this when a stored value cannot be decrypted, e.g. after the hub data was
+                // moved to another server. The key is useless as it stands, so it is replaced like a missing one.
+                existingJoiningKey = null;
+            }
 
             // a newly issued token also has to be written out, otherwise the stored credential keeps pointing at the
             // token it replaced and joining fails with credentials which look present but are not accepted

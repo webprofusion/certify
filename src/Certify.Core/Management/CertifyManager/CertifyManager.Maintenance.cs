@@ -170,6 +170,16 @@ namespace Certify.Management
                         hasError: true
                     );
                 }
+                else
+                {
+                    // a healthy status is what lets the hub resolve a problem reported before a restart
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_ACCESS_CONFIG,
+                        title: "Access Control Config",
+                        description: "Standard roles and policies applied."
+                    );
+                }
 
                 return result;
             }
