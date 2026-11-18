@@ -78,6 +78,17 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             // externally managed items have no local log file, their log is fetched from the certificate manager which owns them
             OpenLogFile.Visibility = Visibility.Visible;
+
+            // an item from another certificate manager can be migrated here, and an imported one shows its migration progress
+            var item = ItemViewModel.SelectedItem;
+            Migrate.Visibility = item.IsExternallyManaged || item.MigrationInfo != null ? Visibility.Visible : Visibility.Collapsed;
+            MigrateText.Text = item.MigrationInfo != null ? "Migration" : "Migrate to Certify";
+        }
+
+        private void Migrate_Click(object sender, RoutedEventArgs e)
+        {
+            var d = new Windows.ExternalMigrationWindow(ItemViewModel.SelectedItem) { Owner = Window.GetWindow(this) };
+            d.ShowDialog();
         }
 
         private async void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)

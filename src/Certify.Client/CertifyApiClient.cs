@@ -677,6 +677,36 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<DnsZoneQueryResult>(json);
         }
 
+        public async Task<Models.Config.Migration.ExternalMigrationPlan> PreviewExternalItemMigration(string externalItemId, Models.Config.Migration.ExternalMigrationRequest request, AuthContext authContext = null)
+        {
+            var response = await PostAsync($"managedcertificates/migration/preview/{Uri.EscapeDataString(externalItemId)}", request ?? new Models.Config.Migration.ExternalMigrationRequest(), authContext);
+            return JsonConvert.DeserializeObject<Models.Config.Migration.ExternalMigrationPlan>(await response.Content.ReadAsStringAsync());
+        }
+
+        public async Task<Models.Config.Migration.ExternalMigrationResult> PerformExternalItemImport(string externalItemId, Models.Config.Migration.ExternalMigrationRequest request, AuthContext authContext = null)
+        {
+            var response = await PostAsync($"managedcertificates/migration/import/{Uri.EscapeDataString(externalItemId)}", request, authContext);
+            return JsonConvert.DeserializeObject<Models.Config.Migration.ExternalMigrationResult>(await response.Content.ReadAsStringAsync());
+        }
+
+        public Task<Models.Config.Migration.ExternalMigrationResult> TestExternalItemMigration(string managedItemId, AuthContext authContext = null)
+            => PostMigrationStage("test", managedItemId, null, authContext);
+
+        public Task<Models.Config.Migration.ExternalMigrationResult> CutOverExternalItemMigration(string managedItemId, AuthContext authContext = null)
+            => PostMigrationStage("cutover", managedItemId, null, authContext);
+
+        public Task<Models.Config.Migration.ExternalMigrationResult> RollbackExternalItemMigration(string managedItemId, AuthContext authContext = null)
+            => PostMigrationStage("rollback", managedItemId, null, authContext);
+
+        public Task<Models.Config.Migration.ExternalMigrationResult> RemoveExternalItemSource(string managedItemId, Models.Config.Migration.ExternalMigrationActionRequest request, AuthContext authContext = null)
+            => PostMigrationStage("removesource", managedItemId, request ?? new Models.Config.Migration.ExternalMigrationActionRequest(), authContext);
+
+        private async Task<Models.Config.Migration.ExternalMigrationResult> PostMigrationStage(string stage, string managedItemId, object body, AuthContext authContext)
+        {
+            var response = await PostAsync($"managedcertificates/migration/{stage}/{Uri.EscapeDataString(managedItemId)}", body ?? new { }, authContext);
+            return JsonConvert.DeserializeObject<Models.Config.Migration.ExternalMigrationResult>(await response.Content.ReadAsStringAsync());
+        }
+
         public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site, AuthContext authContext = null)
         {
             var response = await PostAsync($"managedcertificates/preview", site, authContext);

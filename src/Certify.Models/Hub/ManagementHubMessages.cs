@@ -99,6 +99,13 @@ namespace Certify.Models.Hub
         public const string LeaveManagementHub = "LeaveManagementHub";
         public const string RefreshExternalManagedCertificates = "RefreshExternalManagedCertificates";
 
+        public const string PreviewExternalItemMigration = "PreviewExternalItemMigration";
+        public const string PerformExternalItemImport = "PerformExternalItemImport";
+        public const string TestExternalItemMigration = "TestExternalItemMigration";
+        public const string CutOverExternalItemMigration = "CutOverExternalItemMigration";
+        public const string RollbackExternalItemMigration = "RollbackExternalItemMigration";
+        public const string RemoveExternalItemSource = "RemoveExternalItemSource";
+
         /// <summary>
         /// Notification messages are used to send topic specific info ad-hoc back to the mgmt hub
         /// </summary>

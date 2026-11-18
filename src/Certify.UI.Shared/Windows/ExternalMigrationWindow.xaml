@@ -1,0 +1,120 @@
+<Controls:MetroWindow
+    x:Class="Certify.UI.Windows.ExternalMigrationWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Migrate Certificate"
+    Width="760"
+    Height="720"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
+    BorderBrush="{DynamicResource MahApps.Brushes.Accent}"
+    BorderThickness="1"
+    ShowInTaskbar="False"
+    TitleCharacterCasing="Normal"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
+
+    <DockPanel Margin="16">
+        <StackPanel
+            Margin="0,16,0,0"
+            HorizontalAlignment="Right"
+            DockPanel.Dock="Bottom"
+            Orientation="Horizontal">
+            <Button x:Name="Preview" Margin="0,0,8,0" Click="Preview_Click">Preview</Button>
+            <Button x:Name="Import" Margin="0,0,8,0" Click="Import_Click">Import</Button>
+            <Button x:Name="Test" Margin="0,0,8,0" Click="Test_Click">Test</Button>
+            <Button x:Name="CutOver" Margin="0,0,8,0" Click="CutOver_Click">Cut Over</Button>
+            <Button x:Name="Rollback" Margin="0,0,8,0" Click="Rollback_Click">Roll Back</Button>
+            <Button x:Name="RemoveSource" Margin="0,0,8,0" Click="RemoveSource_Click">Remove Source</Button>
+            <Button x:Name="CloseWindow" Width="100" Click="Close_Click">Close</Button>
+        </StackPanel>
+
+        <Controls:ProgressRing
+            x:Name="Progress"
+            Width="24"
+            Height="24"
+            Margin="0,8,0,0"
+            DockPanel.Dock="Bottom"
+            IsActive="False"
+            Visibility="Collapsed" />
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock x:Name="Heading" Style="{StaticResource Subheading}" />
+                <TextBlock
+                    x:Name="Stage"
+                    Margin="0,4,0,8"
+                    Style="{StaticResource Instructions}"
+                    TextWrapping="Wrap" />
+
+                <TextBlock
+                    x:Name="Summary"
+                    Margin="0,0,0,8"
+                    FontWeight="Bold"
+                    TextWrapping="Wrap" />
+
+                <ItemsControl x:Name="Findings">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="0,0,0,8" LastChildFill="True">
+                                <TextBlock
+                                    Width="22"
+                                    DockPanel.Dock="Left"
+                                    FontFamily="Segoe UI Symbol"
+                                    FontWeight="Bold"
+                                    Foreground="{Binding GlyphBrush}"
+                                    Text="{Binding Glyph}"
+                                    ToolTip="{Binding LevelTitle}" />
+                                <StackPanel>
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run FontWeight="Bold" Text="{Binding Heading, Mode=OneWay}" />
+                                        <Run Text=" " />
+                                        <Run Text="{Binding Finding.Description, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <ComboBox
+                                        MaxWidth="400"
+                                        Margin="0,4,0,0"
+                                        HorizontalAlignment="Left"
+                                        Controls:TextBoxHelper.Watermark="{Binding InputPrompt}"
+                                        DisplayMemberPath="Label"
+                                        ItemsSource="{Binding Options}"
+                                        SelectedValue="{Binding Input}"
+                                        SelectedValuePath="Value"
+                                        SelectionChanged="Input_SelectionChanged"
+                                        Visibility="{Binding InputVisibility}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock
+                    x:Name="Secrets"
+                    Margin="0,0,0,8"
+                    TextWrapping="Wrap" />
+
+                <StackPanel x:Name="ImportOptions">
+                    <CheckBox x:Name="AdoptCurrent" Margin="0,4,0,0" IsChecked="True">Adopt the current certificate, instead of ordering a new one at the first renewal</CheckBox>
+                    <CheckBox x:Name="Acknowledge" Margin="0,4,0,0">I have reviewed the assumptions above, and accept them</CheckBox>
+                </StackPanel>
+
+                <CheckBox
+                    x:Name="ConfirmUnverified"
+                    Margin="0,4,0,0"
+                    Visibility="Collapsed">
+                    Remove the source although no renewal has yet succeeded since cut over
+                </CheckBox>
+
+                <TextBox
+                    x:Name="ResultText"
+                    Margin="0,16,0,0"
+                    IsReadOnly="True"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Controls:MetroWindow>

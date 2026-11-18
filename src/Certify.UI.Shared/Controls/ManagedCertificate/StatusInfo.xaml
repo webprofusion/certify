@@ -312,6 +312,27 @@
                                 Text="{x:Static Resources:SR.ManagedCertificateSettings_OpenLogFile}" />
                         </StackPanel>
                     </Button>
+                    <Button
+                        x:Name="Migrate"
+                        Margin="8,4,0,0"
+                        HorizontalAlignment="Left"
+                        Click="Migrate_Click"
+                        Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                Height="16"
+                                Margin="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Foreground="#FF6BB039"
+                                Icon="Exchange" />
+                            <TextBlock
+                                x:Name="MigrateText"
+                                Margin="8,0,0,0"
+                                HorizontalAlignment="Center"
+                                Text="Migrate to Certify" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
             </StackPanel>

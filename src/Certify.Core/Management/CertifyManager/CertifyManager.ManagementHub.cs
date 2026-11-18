@@ -1683,6 +1683,10 @@ namespace Certify.Management
                 });
                 val = new ActionResult("External certificate manager cache refresh initiated.", true);
             }
+            else if (ExternalMigrationCommands.Contains(arg.CommandType))
+            {
+                val = await PerformExternalMigrationCommand(arg);
+            }
             else if (arg.CommandType == ManagementHubCommands.PushSubscriptionUpdate)
             {
                 var update = JsonSerializer.Deserialize<SubscriptionUpdate>(arg.Value ?? "{}", JsonOptions.DefaultJsonSerializerOptions);

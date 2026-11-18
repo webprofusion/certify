@@ -2,6 +2,7 @@
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
@@ -231,6 +232,61 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
             return await _certifyManager.GetItemLog(managedItemId, limit);
+        }
+
+        // migration of externally managed certificates (win-acme etc), as used by the desktop app. The hub reaches the same
+        // operations through its own commands
+
+        [HttpPost, Route("migration/preview/{externalItemId}")]
+        public async Task<ExternalMigrationPlan> PreviewExternalItemMigration(string externalItemId, ExternalMigrationRequest? request)
+        {
+            DebugLog(externalItemId);
+            return await _certifyManager.PreviewExternalItemMigration(externalItemId, request);
+        }
+
+        [HttpPost, Route("migration/import/{externalItemId}")]
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>> PerformExternalItemImport(string externalItemId, ExternalMigrationRequest request)
+        {
+            DebugLog(externalItemId);
+            return MigrationRefusedLocally() ?? (Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>)await _certifyManager.PerformExternalItemImport(externalItemId, request);
+        }
+
+        [HttpPost, Route("migration/test/{managedItemId}")]
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>> TestExternalItemMigration(string managedItemId)
+        {
+            DebugLog(managedItemId);
+            return MigrationRefusedLocally() ?? (Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>)await _certifyManager.TestExternalItemMigration(managedItemId);
+        }
+
+        [HttpPost, Route("migration/cutover/{managedItemId}")]
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>> CutOverExternalItemMigration(string managedItemId)
+        {
+            DebugLog(managedItemId);
+            return MigrationRefusedLocally() ?? (Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>)await _certifyManager.CutOverExternalItemMigration(managedItemId);
+        }
+
+        [HttpPost, Route("migration/rollback/{managedItemId}")]
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>> RollbackExternalItemMigration(string managedItemId)
+        {
+            DebugLog(managedItemId);
+            return MigrationRefusedLocally() ?? (Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>)await _certifyManager.RollbackExternalItemMigration(managedItemId);
+        }
+
+        [HttpPost, Route("migration/removesource/{managedItemId}")]
+        public async Task<Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>> RemoveExternalItemSource(string managedItemId, ExternalMigrationActionRequest request)
+        {
+            DebugLog(managedItemId);
+            return MigrationRefusedLocally() ?? (Microsoft.AspNetCore.Mvc.ActionResult<ExternalMigrationResult>)await _certifyManager.RemoveExternalItemSource(managedItemId, request);
+        }
+
+        /// <summary>
+        /// A migration creates and changes managed certificates, which a hub may have restricted on this instance
+        /// </summary>
+        private static ContentResult? MigrationRefusedLocally()
+        {
+            return CoreAppSettings.Current.LocalChangeRestriction == LocalChangeRestriction.None
+                ? null
+                : LocalChangeRefused("Changes made on this instance are restricted by its management hub, so certificates cannot be migrated here. Use the hub instead.");
         }
 
         [HttpGet, Route("revoke/{managedItemId}")]

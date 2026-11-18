@@ -182,5 +182,13 @@ namespace Certify.Management
         Task<HubInfo> GetHubInfo();
 
         Task<List<ManagedCertificateSummary>> GetHubSubscribableManagedCertificates();
+
+        // migration from external certificate managers
+        Task<ExternalMigrationPlan> PreviewExternalItemMigration(string externalItemId, ExternalMigrationRequest? request);
+        Task<ExternalMigrationResult> PerformExternalItemImport(string externalItemId, ExternalMigrationRequest request);
+        Task<ExternalMigrationResult> TestExternalItemMigration(string managedCertId);
+        Task<ExternalMigrationResult> CutOverExternalItemMigration(string managedCertId);
+        Task<ExternalMigrationResult> RollbackExternalItemMigration(string managedCertId);
+        Task<ExternalMigrationResult> RemoveExternalItemSource(string managedCertId, ExternalMigrationActionRequest request);
     }
 }

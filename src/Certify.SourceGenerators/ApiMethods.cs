@@ -404,6 +404,84 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "PreviewExternalItemMigration",
+                    OperationMethod = HttpPost,
+                    Comment = "Preview migrating an externally managed certificate (win-acme etc) into a managed certificate on the same instance. Writes nothing",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/externalcertificates/{managedCertId}/migration/preview",
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationPlan)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" }, { "request", GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationRequest)) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate)],
+                    ManagedItemIdParam = "managedCertId"
+                },
+                new()
+                {
+                    OperationName = "PerformExternalItemImport",
+                    OperationMethod = HttpPost,
+                    Comment = "Import an externally managed certificate as a managed certificate with auto renewal off. The source is left as it is",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/externalcertificates/{managedCertId}/migration/import",
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationResult)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" }, { "request", GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationRequest)) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate)],
+                    ManagedItemIdParam = "managedCertId"
+                },
+                new()
+                {
+                    OperationName = "TestExternalItemMigration",
+                    OperationMethod = HttpPost,
+                    Comment = "Test a managed certificate imported from an external certificate manager, before cut over",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/certificates/{managedCertId}/migration/test",
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationResult)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate)],
+                    ManagedItemIdParam = "managedCertId"
+                },
+                new()
+                {
+                    OperationName = "CutOverExternalItemMigration",
+                    OperationMethod = HttpPost,
+                    Comment = "Disable the source of a migrated managed certificate and enable its auto renewal here",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/certificates/{managedCertId}/migration/cutover",
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationResult)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate)],
+                    ManagedItemIdParam = "managedCertId"
+                },
+                new()
+                {
+                    OperationName = "RollbackExternalItemMigration",
+                    OperationMethod = HttpPost,
+                    Comment = "Restore the source of a migrated managed certificate and turn off its auto renewal here",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/certificates/{managedCertId}/migration/rollback",
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationResult)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate)],
+                    ManagedItemIdParam = "managedCertId"
+                },
+                new()
+                {
+                    OperationName = "RemoveExternalItemSource",
+                    OperationMethod = HttpPost,
+                    Comment = "Delete the disabled source of a migrated managed certificate. Cannot be undone",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/certificates/{managedCertId}/migration/removesource",
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationResult)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" }, { "request", GetFormattedTypeName(typeof(Models.Config.Migration.ExternalMigrationActionRequest)) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemDelete)],
+                    ManagedItemIdParam = "managedCertId"
+                },
+                new()
+                {
                     OperationName = "RejoinAllManagedInstances",
                     OperationMethod = HttpPost,
                     Comment = "Command all connected managed instances to rejoin the management hub using the latest joining key",

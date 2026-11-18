@@ -103,6 +103,16 @@ namespace Certify.Models.Hub
         public bool IsManagedAcmeOrder { get; set; }
 
         /// <summary>
+        /// For an item migrated from an external certificate manager, the stage its migration has reached
+        /// </summary>
+        public Config.Migration.ExternalMigrationState? MigrationState { get; set; }
+
+        /// <summary>
+        /// For an externally managed item, the id of the item it has been imported as, while the migration is under way
+        /// </summary>
+        public string? MigratedToItemId { get; set; }
+
+        /// <summary>
         /// Tags assigned to this managed certificate
         /// </summary>
         public List<TagSummary> Tags { get; set; } = new();

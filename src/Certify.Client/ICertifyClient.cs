@@ -95,6 +95,13 @@ namespace Certify.Client
         Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info, AuthContext authContext = null);
         Task<LogItem[]> GetItemLog(string id, int limit, AuthContext authContext = null);
         Task<ManagedCertificate> ResetManagedCertificateStatus(string managedItemId, AuthContext authContext = null);
+
+        Task<Models.Config.Migration.ExternalMigrationPlan> PreviewExternalItemMigration(string externalItemId, Models.Config.Migration.ExternalMigrationRequest request, AuthContext authContext = null);
+        Task<Models.Config.Migration.ExternalMigrationResult> PerformExternalItemImport(string externalItemId, Models.Config.Migration.ExternalMigrationRequest request, AuthContext authContext = null);
+        Task<Models.Config.Migration.ExternalMigrationResult> TestExternalItemMigration(string managedItemId, AuthContext authContext = null);
+        Task<Models.Config.Migration.ExternalMigrationResult> CutOverExternalItemMigration(string managedItemId, AuthContext authContext = null);
+        Task<Models.Config.Migration.ExternalMigrationResult> RollbackExternalItemMigration(string managedItemId, AuthContext authContext = null);
+        Task<Models.Config.Migration.ExternalMigrationResult> RemoveExternalItemSource(string managedItemId, Models.Config.Migration.ExternalMigrationActionRequest request, AuthContext authContext = null);
         #endregion Managed Certificates
 
         #region Accounts

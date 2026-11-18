@@ -62,6 +62,12 @@ namespace Certify.Server.Hub.Api.Services
                 // a custom CA is defined on the instance itself, so its own titles come first
                 var instanceCATitles = mgmtAPI.GetInstanceCertificateAuthorityTitles(remote.InstanceId);
 
+                // an external item being migrated is listed alongside the item it was imported as
+                var migratedFrom = remote.Items
+                    .Where(m => !string.IsNullOrWhiteSpace(m.MigrationInfo?.SourceItemId))
+                    .GroupBy(m => m.MigrationInfo!.SourceItemId)
+                    .ToDictionary(g => g.Key, g => g.First().Id);
+
                 foreach (var i in remote.Items)
                 {
                     if (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword, StringComparison.InvariantCultureIgnoreCase) != true)
@@ -126,6 +132,8 @@ namespace Certify.Server.Hub.Api.Services
                         IsExternallyManaged = i.IsExternallyManaged,
                         IsSubscription = i.IsSubscription,
                         IsManagedAcmeOrder = i.IsManagedAcmeOrder,
+                        MigrationState = i.MigrationInfo?.State,
+                        MigratedToItemId = i.IsExternallyManaged ? migratedFrom.GetValueOrDefault(i.Id ?? "") : null,
                         Tags = tags
                     });
                 }

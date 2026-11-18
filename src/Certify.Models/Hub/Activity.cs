@@ -114,6 +114,12 @@ namespace Certify.Models.Hub
         public const string ItemStatusReset = "change.item.reset";
         public const string ItemRevoked = "change.item.revoked";
         public const string ItemTaskExecuted = "change.item.task";
+
+        /// <summary>
+        /// A migration stage was run for a certificate from an external certificate manager (import, test, cut over,
+        /// rollback or source removal). The detail names the stage and its outcome
+        /// </summary>
+        public const string ItemMigration = "change.item.migration";
     }
 
     /// <summary>

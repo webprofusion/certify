@@ -710,7 +710,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 HasCertificate = !string.IsNullOrEmpty(item.CertificatePath),
                 IsExternallyManaged = item.IsExternallyManaged,
                 IsSubscription = item.IsSubscription,
-                IsManagedAcmeOrder = item.IsManagedAcmeOrder
+                IsManagedAcmeOrder = item.IsManagedAcmeOrder,
+                MigrationState = item.MigrationInfo?.State
             };
         }
     }

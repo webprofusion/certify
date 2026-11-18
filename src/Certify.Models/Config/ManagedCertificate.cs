@@ -330,6 +330,12 @@ namespace Certify.Models
         public ExternalCertificateSubscription? ExternalSource { get; set; }
 
         /// <summary>
+        /// Set if this item was migrated from an external certificate manager (win-acme etc), recording the source and
+        /// how far the migration has progressed
+        /// </summary>
+        public Config.Migration.ExternalMigrationInfo? MigrationInfo { get; set; }
+
+        /// <summary>
         /// Display name for this item, for easier reference
         /// </summary>
         public string? Name { get; set; }

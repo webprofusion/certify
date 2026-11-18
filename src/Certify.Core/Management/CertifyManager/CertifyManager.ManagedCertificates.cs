@@ -352,6 +352,21 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate managedCert)
         {
+            // migration state is only changed by the migration stages, which act on the source too, so a saved edit keeps
+            // whatever is stored rather than what the client sent
+            if (!string.IsNullOrEmpty(managedCert.Id) && !ManagedCertificate.IsExternalItemId(managedCert.Id))
+            {
+                managedCert.MigrationInfo = (await _itemManager.GetById(managedCert.Id))?.MigrationInfo;
+            }
+
+            return await StoreManagedCertificate(managedCert);
+        }
+
+        /// <summary>
+        /// Store the item as given, including its migration state
+        /// </summary>
+        private async Task<ManagedCertificate> StoreManagedCertificate(ManagedCertificate managedCert)
+        {
             // an externally managed item is a read-only view of a certificate owned by an external certificate manager
             // provider, storing it here would create a duplicate this instance would then try to manage itself.
             // This is keyed on the id, the same signal DeleteManagedCertificate uses, because those items exist only in
@@ -405,6 +420,12 @@ namespace Certify.Management
                 managedCertificate.RenewalFailureCount = 0;
                 managedCertificate.LastRenewalStatus = RequestState.Success;
                 managedCertificate.RenewalFailureMessage = "";
+
+                // the first certificate of its own after cut over verifies a migrated item
+                if (managedCertificate.MigrationInfo?.RecordRenewalSuccess(managedCertificate.CertificateThumbprintHash, DateTimeOffset.UtcNow) == true)
+                {
+                    _serviceLog?.Information("Migration of {name} [{id}] from {source} is verified by a successful renewal.", managedCertificate.Name, managedCertificate.Id, managedCertificate.MigrationInfo.SourceProviderTitle);
+                }
             }
             else if (status == RequestState.Paused)
             {
@@ -709,6 +730,8 @@ namespace Certify.Management
                 var item = await _itemManager.GetById(id);
                 if (item != null)
                 {
+                    await RestoreMigrationSourceBeforeDelete(item);
+
                     await _itemManager.Delete(item);
 
                     RecordManagedItemsChanged();

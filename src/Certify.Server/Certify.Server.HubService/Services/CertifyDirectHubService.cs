@@ -257,6 +257,14 @@ namespace Certify.Server.HubService.Services
         public Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ManagedCertificate> ResetManagedCertificateStatus(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
 
+        // migration stages reach the hub's own instance as hub commands, like other managed certificate operations
+        public Task<ExternalMigrationPlan> PreviewExternalItemMigration(string externalItemId, ExternalMigrationRequest request, AuthContext authContext = null) => throw new NotImplementedException();
+        public Task<ExternalMigrationResult> PerformExternalItemImport(string externalItemId, ExternalMigrationRequest request, AuthContext authContext = null) => throw new NotImplementedException();
+        public Task<ExternalMigrationResult> TestExternalItemMigration(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
+        public Task<ExternalMigrationResult> CutOverExternalItemMigration(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
+        public Task<ExternalMigrationResult> RollbackExternalItemMigration(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
+        public Task<ExternalMigrationResult> RemoveExternalItemSource(string managedItemId, ExternalMigrationActionRequest request, AuthContext authContext = null) => throw new NotImplementedException();
+
         public Task<ActionResult> RemoveManagedLicense(string id, AuthContext authContext) => _licenseController(authContext).RemoveManagedLicense(id);
         public Task<ICollection<ManagedLicense>> GetManagedLicenses(AuthContext authContext) => _licenseController(authContext).GetManagedLicenses();
         public Task<ActionResult> AddManagedLicense(ManagedLicense item, AuthContext authContext) => _licenseController(authContext).AddManagedLicense(item);
