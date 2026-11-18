@@ -251,7 +251,14 @@ namespace Certify.Management
         /// Get decrypted list of all ACME accounts
         /// </summary>
         /// <returns></returns>
-        public async Task<List<AccountDetails>> GetAccountRegistrations()
+        public Task<List<AccountDetails>> GetAccountRegistrations() => GetAccountRegistrations(includeUnreadable: false);
+
+        /// <summary>
+        /// Get decrypted list of all ACME accounts
+        /// </summary>
+        /// <param name="includeUnreadable">if true, an account which cannot be decrypted is listed by its stored title with <see cref="AccountDetails.IsUnreadable"/> set, so that it can be shown and removed</param>
+        /// <returns></returns>
+        private async Task<List<AccountDetails>> GetAccountRegistrations(bool includeUnreadable)
         {
             var list = new List<AccountDetails>();
 
@@ -273,6 +280,11 @@ namespace Certify.Management
                     catch (Exception exp)
                     {
                         _serviceLog?.Error($"Failed to decrypt Account Credentials [{c.Title}] {exp.Message}");
+
+                        if (includeUnreadable)
+                        {
+                            list.Add(new AccountDetails { ID = c.StorageKey, StorageKey = c.StorageKey, Title = c.Title, IsUnreadable = true });
+                        }
                     }
                 }
             }
@@ -420,9 +432,12 @@ namespace Certify.Management
         {
             var (account, certAuthority, acmeProvider) = await GetAccountAndACMEProvider(storageKey);
 
-            if (account != null)
+            // an account which cannot be decrypted is not found above, but its stored credential can still be removed
+            var isUnreadable = account == null && (await _credentialsManager.GetCredential(storageKey))?.ProviderType == StandardAuthTypes.STANDARD_ACME_ACCOUNT;
+
+            if (account != null || isUnreadable)
             {
-                _serviceLog?.Information($"Deleting account {storageKey}: " + account.AccountURI);
+                _serviceLog?.Information($"Deleting account {storageKey}: " + (account?.AccountURI ?? "(could not be decrypted)"));
 
                 var result = await _credentialsManager.Delete(_itemManager, storageKey);
 
@@ -430,6 +445,12 @@ namespace Certify.Management
                 lock (_accountsLock)
                 {
                     _accounts?.Clear();
+                }
+
+                if (isUnreadable && result.IsSuccess)
+                {
+                    // the account no longer counts towards the stored credentials warning
+                    await CheckStoredCredentials();
                 }
 
                 // attempt acme account deactivation

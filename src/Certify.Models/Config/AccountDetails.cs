@@ -23,6 +23,11 @@ namespace Certify.Models
         public string? PreferredChain { get; set; }
 
         /// <summary>
+        /// If true, the stored account could not be decrypted, so only its stored title is known and it can only be removed
+        /// </summary>
+        public bool IsUnreadable { get; set; }
+
+        /// <summary>
         /// If true, account was selected based on fallback/failover criteria
         /// </summary>
         [JsonIgnore]

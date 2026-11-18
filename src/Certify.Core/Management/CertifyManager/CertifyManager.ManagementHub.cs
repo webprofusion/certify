@@ -1285,7 +1285,7 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.GetAcmeAccounts)
             {
                 // the account private key and EAB key are only used by this instance, so are not sent to the hub
-                var accounts = await GetAccountRegistrations();
+                var accounts = await GetAccountRegistrations(includeUnreadable: true);
 
                 foreach (var account in accounts)
                 {
