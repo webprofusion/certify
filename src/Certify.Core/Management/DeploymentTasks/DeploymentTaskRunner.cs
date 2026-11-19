@@ -153,6 +153,12 @@ namespace Certify.Core.Management.DeploymentTasks
 
                         var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower(), _deploymentTaskProviders);
 
+                        if (provider?.GetDefinition()?.RequiresManagementHub == true && _context?.IsManagementHubAvailable != true)
+                        {
+                            RecordTaskSetupFailure(steps, taskConfig, DeploymentProviderDefinition.RequiresManagementHubMessage, log);
+                            continue;
+                        }
+
                         Dictionary<string, string> credentials = null;
 
                         if (!string.IsNullOrEmpty(taskConfig.ChallengeCredentialKey))

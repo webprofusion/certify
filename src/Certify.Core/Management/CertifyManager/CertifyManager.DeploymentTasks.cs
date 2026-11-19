@@ -372,8 +372,17 @@ namespace Certify.Management
         private DeploymentContext GetDeploymentContext() => new DeploymentContext
         {
             PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy,
-            UseModernPFXAlgs = CoreAppSettings.Current.UseModernPFXAlgs
+            UseModernPFXAlgs = CoreAppSettings.Current.UseModernPFXAlgs,
+            IsManagementHubAvailable = IsManagementHubAvailable()
         };
+
+        /// <summary>
+        /// True if this instance is a Management Hub or is joined to one
+        /// </summary>
+        private bool IsManagementHubAvailable() => _isMgtmHubBackend
+            || _isDirectMgmtHubBackend
+            || _serverConfig.IsManagementHub
+            || !string.IsNullOrWhiteSpace(_serverConfig.ManagementServerHubAPI);
 
         /// <summary>
         /// Perform validation for a specific deployment task configuration
@@ -385,6 +394,11 @@ namespace Certify.Management
         {
 
             var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower(), _pluginManager.DeploymentTaskProviders);
+
+            if (provider?.GetDefinition()?.RequiresManagementHub == true && !IsManagementHubAvailable())
+            {
+                return new List<ActionResult> { new ActionResult(DeploymentProviderDefinition.RequiresManagementHubMessage, false) };
+            }
 
             Dictionary<string, string> credentials = null;
 

@@ -252,6 +252,19 @@
                             Text="{Binding DeploymentProvider.Description}"
                             TextWrapping="WrapWithOverflow" />
 
+                        <!--  Management Hub required  -->
+                        <Border
+                            x:Name="RequiresManagementHubBanner"
+                            Margin="8,8,8,0"
+                            Padding="8"
+                            Background="{DynamicResource MahApps.Brushes.Accent4}"
+                            BorderBrush="{DynamicResource MahApps.Brushes.Accent}"
+                            BorderThickness="1"
+                            DockPanel.Dock="Top"
+                            Visibility="{Binding ShowRequiresManagementHub, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                            <TextBlock Text="{Binding RequiresManagementHubMessage}" TextWrapping="Wrap" />
+                        </Border>
+
                         <StackPanel
                             Margin="0,8,0,0"
                             DockPanel.Dock="Top"

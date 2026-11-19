@@ -18,6 +18,11 @@ namespace Certify.Providers.DeploymentTasks
         /// If true, tasks which build PFX files should use modern encryption algorithms (as per the UseModernPFXAlgs preference)
         /// </summary>
         public bool UseModernPFXAlgs { get; set; }
+
+        /// <summary>
+        /// True if this instance is a Management Hub or is joined to one, so tasks which require the hub can run
+        /// </summary>
+        public bool IsManagementHubAvailable { get; set; }
     }
 
     public class DeploymentTaskExecutionParams

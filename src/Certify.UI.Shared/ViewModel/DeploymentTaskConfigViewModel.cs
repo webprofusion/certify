@@ -108,6 +108,16 @@ namespace Certify.UI.ViewModel
 
         }
 
+        /// <summary>
+        /// True if the selected task type requires a Management Hub and this instance is neither the hub nor joined to one
+        /// </summary>
+        [DependsOn(nameof(DeploymentProvider))]
+        public bool ShowRequiresManagementHub => DeploymentProvider?.RequiresManagementHub == true
+            && !_appViewModel.IsHubJoined
+            && _appViewModel.GetAppServiceConfig()?.IsManagementHub != true;
+
+        public string RequiresManagementHubMessage => DeploymentProviderDefinition.RequiresManagementHubMessage;
+
         [DependsOn(nameof(DeploymentProvider))]
         public bool UsesCredentials
         {

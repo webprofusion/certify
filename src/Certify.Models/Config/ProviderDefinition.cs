@@ -103,5 +103,12 @@ namespace Certify.Models.Config
         /// If set, challenge type of external credential required
         /// </summary>
         public string? ExternalCredentialType { get; set; }
+
+        /// <summary>
+        /// If true, the task only runs on a Management Hub or an instance joined to one
+        /// </summary>
+        public bool RequiresManagementHub { get; set; }
+
+        public const string RequiresManagementHubMessage = "This task requires an instance joined to Certify Management Hub.";
     }
 }
