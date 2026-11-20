@@ -47,8 +47,10 @@ namespace Certify.Providers.DeploymentTasks
                     }
                     else
                     {
+                        // preview only validates, so the task performs no action. Providers describe what they would do (or perform
+                        // a dry run) from Validate when execParams.IsPreviewOnly is set, so return their results rather than replacing them
                         var validation = await TaskProvider.Validate(execParams);
-                        if (validation == null || !validation.Any(r => r.IsSuccess == false))
+                        if (validation == null || !validation.Any())
                         {
                             return new List<ActionResult> { new ActionResult { IsSuccess = true, Message = "Task is valid and ready to execute." } };
                         }

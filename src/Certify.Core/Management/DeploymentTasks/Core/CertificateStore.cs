@@ -25,7 +25,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 IsExperimental = false,
                 UsageType = DeploymentProviderUsage.PostRequest,
                 Description = "[NOTE: not normally required as cert is stored automatically by standard auto deployment.] This task stores the certificate in the local Certificate Store with custom name.",
-                SupportedContexts = DeploymentContextType.LocalAsService | DeploymentContextType.LocalAsUser,
+                SupportedContexts = DeploymentContextType.LocalAsService,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
                      new ProviderParameter{ Key="storetype", Name="Store", IsRequired=true, IsCredential=false, OptionsList="default=Default; My=Personal (My); WebHosting=Web Hosting", Value="default"  },
@@ -53,15 +53,11 @@ namespace Certify.Providers.DeploymentTasks.Core
             var friendlyName = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value?.Trim();
 
             //store cert against primary domain, optionally with custom friendly name
-            var certStoreName = CertificateManager.DEFAULT_STORE_NAME;
+            var certStoreName = string.IsNullOrEmpty(requestedStore) || requestedStore == "default" ? CertificateManager.DEFAULT_STORE_NAME : requestedStore;
 
-            if (requestedStore != "default")
+            if (execParams.Credentials?.Any() == true)
             {
-                certStoreName = requestedStore;
-            }
-            else
-            {
-                certStoreName = CertificateManager.DEFAULT_STORE_NAME;
+                execParams.Log?.Warning("Certificate Store: this task always runs as the Certify service account, the credentials selected for the task are not used.");
             }
 
             X509Certificate2 storedCert = null;
@@ -77,38 +73,29 @@ namespace Certify.Providers.DeploymentTasks.Core
                 }
             }
 
-            if (!execParams.IsPreviewOnly)
+            try
             {
-                try
-                {
-                    storedCert = await CertificateManager.StoreCertificate(
-                        managedCert.RequestConfig.PrimaryDomain,
-                        managedCert.CertificatePath,
-                        isRetry: false,
-                        enableRetryBehaviour: _enableCertDoubleImportBehaviour,
-                        storeName: certStoreName,
-                        customFriendlyName: friendlyName,
-                        pwd: certPwd,
-                        storeIntermediates: CoreAppSettings.Current.StoreCertificateIntermediates,
-                        keyStorageProviderName: CoreAppSettings.Current.WindowsKeyStorageProvider,
-                        log: execParams.Log
-                       );
+                storedCert = await CertificateManager.StoreCertificate(
+                    managedCert.RequestConfig.PrimaryDomain,
+                    managedCert.CertificatePath,
+                    isRetry: false,
+                    enableRetryBehaviour: _enableCertDoubleImportBehaviour,
+                    storeName: certStoreName,
+                    customFriendlyName: friendlyName,
+                    pwd: certPwd,
+                    storeIntermediates: CoreAppSettings.Current.StoreCertificateIntermediates,
+                    keyStorageProviderName: CoreAppSettings.Current.WindowsKeyStorageProvider,
+                    log: execParams.Log
+                   );
 
-                    if (storedCert != null)
-                    {
-                        // certHash = storedCert.GetCertHash();
-
-                        results.Add(new ActionResult("Certificate stored OK", true));
-                    }
-                }
-                catch (Exception exp)
+                if (storedCert != null)
                 {
-                    results.Add(new ActionResult("Error storing certificate :: " + exp.Message, false));
+                    results.Add(new ActionResult("Certificate stored OK", true));
                 }
             }
-            else
+            catch (Exception exp)
             {
-                results.Add(new ActionResult($"Would store certificate in Local Certificate Store [{certStoreName}]", true));
+                results.Add(new ActionResult("Error storing certificate :: " + exp.Message, false));
             }
 
             return results;
@@ -118,17 +105,22 @@ namespace Certify.Providers.DeploymentTasks.Core
         {
             var results = new List<ActionResult>();
 
-            var requestedStore = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value.Trim().ToLower();
-            var friendlyName = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value;
+            var requestedStore = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value?.Trim().ToLower();
 
             if (!string.IsNullOrEmpty(requestedStore))
             {
                 // check store name is valid
 
-                if (!(requestedStore == "default" || requestedStore.ToLower() == "my" || requestedStore == "webhosting"))
+                if (!(requestedStore == "default" || requestedStore == "my" || requestedStore == "webhosting"))
                 {
                     results.Add(new ActionResult($"Invalid Certificate Store Name: {requestedStore}", false));
                 }
+            }
+
+            if (execParams.IsPreviewOnly && !results.Any())
+            {
+                var certStoreName = string.IsNullOrEmpty(requestedStore) || requestedStore == "default" ? CertificateManager.DEFAULT_STORE_NAME : requestedStore;
+                results.Add(new ActionResult($"Would store certificate in Local Certificate Store [{certStoreName}]", true));
             }
 
             return await Task.FromResult(results);

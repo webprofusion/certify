@@ -34,7 +34,6 @@ namespace Certify.Providers.DeploymentTasks.Core
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
                      new ProviderParameter{ Key="url", Name="Webhook URL", IsRequired=true, IsCredential=false , Description="The url for the webhook request" },
-                     new ProviderParameter{ Key="trigger", Name="Webhook Trigger", IsRequired=true, IsCredential=false , Description="The trigger for the webhook (None, Success, Error)", OptionsList="None;Success;Error", Value="None" },
                      new ProviderParameter{ Key="method", Name="Http Method", IsRequired=true, IsCredential=false , Description="The http method for the webhook request", OptionsList="GET;POST;", Value="POST" },
                      new ProviderParameter{ Key="contenttype", Name="Content Type", IsRequired=true, IsCredential=false , Description="The http content type header for the webhook request", Value="application/json" },
                      new ProviderParameter{ Key="contentbody", Name="Content Body", IsRequired=true, IsCredential=false , Description="The http body template for the webhook request" },
@@ -62,9 +61,16 @@ namespace Certify.Providers.DeploymentTasks.Core
 
                     var msg = $"Webhook invoked: Url: {webhookConfig.Url}, Success: {webHookResult.Success}, StatusCode: {webHookResult.StatusCode}";
 
-                    execParams.Log.Information(msg);
+                    if (webHookResult.Success)
+                    {
+                        execParams.Log.Information(msg);
+                    }
+                    else
+                    {
+                        execParams.Log.Error(msg);
+                    }
 
-                    return new List<ActionResult> { new ActionResult(msg, true) };
+                    return new List<ActionResult> { new ActionResult(msg, webHookResult.Success) };
                 }
                 else
                 {
@@ -91,7 +97,16 @@ namespace Certify.Providers.DeploymentTasks.Core
 
             if (string.IsNullOrEmpty(method))
             {
-                results.Add(new ActionResult($"The webhook HTTP method must be a selected.", false));
+                results.Add(new ActionResult($"The webhook HTTP method must be selected.", false));
+            }
+            else if (method != Certify.Models.Utils.Webhook.METHOD_GET && method != Certify.Models.Utils.Webhook.METHOD_POST)
+            {
+                results.Add(new ActionResult($"The webhook HTTP method must be GET or POST.", false));
+            }
+
+            if (execParams.IsPreviewOnly && !results.Any())
+            {
+                results.Add(new ActionResult($"Would send a webhook {method} request to {url}", true));
             }
 
             return await Task.FromResult(results);
@@ -125,7 +140,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                         message = new HttpRequestMessage(HttpMethod.Post, url)
                         {
                             Content = new StringContent(
-                                ParseValues(!string.IsNullOrEmpty(config.ContentBody) ? config.ContentBody : Certify.Models.Utils.Webhook.DEFAULT_BODY, item.RequestConfig, forSuccess, false),
+                                ParseValues(!string.IsNullOrEmpty(config.ContentBody) ? config.ContentBody : Certify.Models.Utils.Webhook.DEFAULT_BODY, item?.RequestConfig, forSuccess, false),
                                 Encoding.UTF8,
                                 string.IsNullOrEmpty(config.ContentType) ? "application/json" : config.ContentType
                                 )
@@ -143,62 +158,73 @@ namespace Certify.Providers.DeploymentTasks.Core
         }
 
         /// <summary>
+        /// Certificate request settings which may be used as template variables. Other settings (such as a custom private key or CSR) are never substituted.
+        /// </summary>
+        internal static readonly string[] AllowedTemplateProperties =
+        {
+            nameof(CertRequestConfig.PrimaryDomain),
+            nameof(CertRequestConfig.SubjectAlternativeNames),
+            nameof(CertRequestConfig.SubjectIPAddresses),
+            nameof(CertRequestConfig.ChallengeType),
+            nameof(CertRequestConfig.WebsiteRootPath),
+            nameof(CertRequestConfig.PreferredChain),
+            nameof(CertRequestConfig.AcmeProfile),
+            nameof(CertRequestConfig.PreferredExpiryDays),
+            nameof(CertRequestConfig.CSRKeyAlg),
+            nameof(CertRequestConfig.BindingIPAddress),
+            nameof(CertRequestConfig.BindingPort),
+            nameof(CertRequestConfig.BindingUseSNI),
+            nameof(CertRequestConfig.IncludeCN),
+            nameof(CertRequestConfig.DeploymentSiteOption),
+            nameof(CertRequestConfig.DeploymentBindingOption),
+            nameof(CertRequestConfig.DeploymentTargetType),
+        };
+
+        /// <summary>
         /// Provides templating variable replacement for Config values 
         /// </summary>
         /// <param name="template"></param>
         /// <param name="config"></param>
         /// <param name="forSuccess"></param>
         /// <returns></returns>
-        private static string ParseValues(string template, CertRequestConfig config, bool forSuccess, bool url_encode)
+        internal static string ParseValues(string template, CertRequestConfig config, bool forSuccess, bool url_encode)
         {
-            // add all config properties to template vars
-            var vars = new Dictionary<string, string>();
-
-            foreach (var prop in config.GetType().GetProperties())
+            if (string.IsNullOrEmpty(template))
             {
-                var objValue = prop.GetValue(config);
-
-                var value = "";
-                if (objValue != null && objValue is Array array)
-                {
-                    foreach (var i in array)
-                    {
-                        value += i.ToString() + " ";
-                    }
-                }
-                else
-                {
-                    value = objValue?.ToString() ?? "";
-                }
-
-                if (url_encode)
-                {
-                    value = WebUtility.UrlEncode(value);
-                }
-                else
-                {
-                    value = value.Replace(@"\", @"\\");
-                }
-
-                vars[prop.Name.ToLower()] = value;
+                return template;
             }
 
-            // ChallengeType can be multiple values, use the first one present
+            var vars = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            vars["challengetype"] = config.Challenges.FirstOrDefault()?.ChallengeType ?? vars["challengetype"];
-
-            // add special processing for these values
-            vars["success"] = forSuccess ? "true" : "false";
-            vars["subjectalternativenames"] = string.Join(",", config.SubjectAlternativeNames ?? new string[] { config.PrimaryDomain });
-
-            // process the template and replace values
-            return Regex.Replace(template, @"\$(\w+)(?=[\W$])", m =>
+            if (config != null)
             {
-                // replace var if it can be found, otherwise don't
-                var key = m.Groups[1].Value.ToLower();
-                return vars.ContainsKey(key) ? vars[key] : "$" + key;
-            },
-                RegexOptions.IgnoreCase);
+                foreach (var propName in AllowedTemplateProperties)
+                {
+                    var objValue = typeof(CertRequestConfig).GetProperty(propName).GetValue(config);
+
+                    vars[propName] = objValue is Array array
+                        ? string.Join(" ", array.Cast<object>())
+                        : Convert.ToString(objValue, System.Globalization.CultureInfo.InvariantCulture) ?? "";
+                }
+
+                // ChallengeType can be multiple values, use the first one present
+                vars[nameof(CertRequestConfig.ChallengeType)] = config.Challenges?.FirstOrDefault()?.ChallengeType ?? config.ChallengeType ?? "";
+
+                vars[nameof(CertRequestConfig.SubjectAlternativeNames)] = string.Join(",", config.SubjectAlternativeNames ?? new string[] { config.PrimaryDomain });
+            }
+
+            vars["success"] = forSuccess ? "true" : "false";
+
+            // process the template and replace values, leaving unknown variables as they are
+            return Regex.Replace(template, @"\$(\w+)", m =>
+            {
+                if (!vars.TryGetValue(m.Groups[1].Value, out var value))
+                {
+                    return m.Value;
+                }
+
+                return url_encode ? WebUtility.UrlEncode(value) : value.Replace(@"\", @"\\");
+            });
         }
     }
 }
