@@ -134,6 +134,22 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public void NewMigrationCredentialHasItsOwnStorageKey()
+        {
+            var draft = new ExternalMigrationCredentialDraft { Key = ExternalMigrationCredentialDraft.KeyPrefix + "0", ProviderType = "DNS01.API.Cloudflare", Title = "Cloudflare (win-acme vault://json/cf)" };
+            var values = new Dictionary<string, string> { ["apitoken"] = "token" };
+
+            var first = CertifyManager.NewMigrationCredential(draft, values);
+            var second = CertifyManager.NewMigrationCredential(draft, values);
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(first.StorageKey), "The credential stores save by the storage key they are given");
+            Assert.AreNotEqual(first.StorageKey, second.StorageKey);
+            Assert.AreEqual(draft.ProviderType, first.ProviderType);
+            Assert.AreEqual(draft.Title, first.Title);
+            Assert.AreEqual("token", Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(first.Secret)["apitoken"]);
+        }
+
+        [TestMethod]
         public void IdentifiersMatchTheLongestZone()
         {
             var root = new DnsZone { Name = "example.com", ZoneId = "1" };

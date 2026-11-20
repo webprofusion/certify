@@ -716,13 +716,7 @@ namespace Certify.Management
 
                 var values = await source.ResolveCredentialValues(externalItemId, draft);
 
-                var created = await _credentialsManager.Update(new StoredCredential
-                {
-                    ProviderType = draft.ProviderType,
-                    Title = draft.Title,
-                    DateCreated = DateTimeOffset.UtcNow,
-                    Secret = JsonConvert.SerializeObject(values)
-                });
+                var created = await _credentialsManager.Update(NewMigrationCredential(draft, values));
 
                 if (created?.StorageKey == null)
                 {
@@ -736,6 +730,18 @@ namespace Certify.Management
 
             return keys;
         }
+
+        /// <summary>
+        /// A new stored credential for a draft. The stores save by the caller's storage key, so it is given one here
+        /// </summary>
+        internal static StoredCredential NewMigrationCredential(ExternalMigrationCredentialDraft draft, Dictionary<string, string> values) => new StoredCredential
+        {
+            StorageKey = Guid.NewGuid().ToString(),
+            ProviderType = draft.ProviderType,
+            Title = draft.Title,
+            DateCreated = DateTimeOffset.UtcNow,
+            Secret = JsonConvert.SerializeObject(values)
+        };
 
         internal static void ApplyMigrationCredentialKeys(ManagedCertificate item, Dictionary<string, string> keys)
         {
